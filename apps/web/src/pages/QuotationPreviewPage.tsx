@@ -59,13 +59,13 @@ export const QuotationPreviewPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Bao_Gia_EUPLUS_${quotation.quotationNumber}.pdf`;
+      link.download = `Don_Hang_EUPLUS_${quotation.quotationNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      success(`Đã tải xuống file Bao_Gia_EUPLUS_${quotation.quotationNumber}.pdf`);
+      success(`Đã tải xuống file Don_Hang_EUPLUS_${quotation.quotationNumber}.pdf`);
     } catch (err: any) {
       error(err.message || 'Không thể xuất file PDF');
     } finally {
@@ -84,12 +84,12 @@ export const QuotationPreviewPage: React.FC = () => {
         <div className="p-4 bg-rose-50 text-rose-600 rounded-full mb-4">
           <FileQuestion className="w-10 h-10 sm:w-12 sm:h-12" />
         </div>
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Không tìm thấy báo giá</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Không tìm thấy đơn hàng</h2>
         <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed">
-          Báo giá này không tồn tại trong hệ thống hoặc đã bị xóa. Vui lòng kiểm tra lại đường dẫn.
+          Đơn hàng này không tồn tại trong hệ thống hoặc đã bị xóa. Vui lòng kiểm tra lại đường dẫn.
         </p>
         <Button variant="primary" onClick={() => navigate('/quotations')}>
-          Quay lại danh sách báo giá
+          Quay lại danh sách đơn hàng
         </Button>
       </div>
     );
@@ -207,14 +207,14 @@ export const QuotationPreviewPage: React.FC = () => {
           <div className="flex justify-between items-end mb-4">
             <div>
               <h1 className="text-lg font-black text-blue-900 uppercase tracking-tight">
-                {quotation.title || 'BÁO GIÁ PHỤ KIỆN TỦ BẾP EUPLUS'}
+                {quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP EUPLUS'}
               </h1>
               <p className="text-[11px] text-slate-500">
-                Báo giá phụ kiện tủ bếp thông minh Inox SUS304 chính hãng
+                Đơn hàng phụ kiện tủ bếp thông minh Inox SUS304 chính hãng
               </p>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-right text-[11px] text-slate-600 space-y-0.5">
-              <div>Số báo giá: <strong className="text-slate-900">{quotation.quotationNumber}</strong></div>
+              <div>Số đơn hàng: <strong className="text-slate-900">{quotation.quotationNumber}</strong></div>
               <div>Ngày lập: <strong className="text-slate-900">{formatDate(quotation.quotationDate)}</strong></div>
             </div>
           </div>

@@ -34,7 +34,7 @@ export const AppLayout: React.FC = () => {
 
   const mobileNavItems = [
     { label: 'Tổng quan', path: '/', icon: LayoutDashboard, exact: true },
-    { label: 'Báo giá', path: '/quotations', icon: FileText, exact: false },
+    { label: 'Đơn hàng', path: '/quotations', icon: FileText, exact: false },
     { label: 'Tạo mới', path: '/quotations/new', icon: PlusCircle, isAction: true },
     { label: 'Sản phẩm', path: '/products', icon: Package, exact: false },
     { label: 'Khách hàng', path: '/customers', icon: Users, exact: false },

@@ -91,7 +91,7 @@ export async function getQuotationById(req: Request, res: Response, next: NextFu
     if (!quotation) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy báo giá yêu cầu',
+        message: 'Không tìm thấy đơn hàng yêu cầu',
       });
     }
 
@@ -187,7 +187,7 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
     if (!existing) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy báo giá cần cập nhật',
+        message: 'Không tìm thấy đơn hàng cần cập nhật',
       });
     }
 
@@ -246,7 +246,7 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
 
     return res.json({
       success: true,
-      message: 'Cập nhật báo giá thành công',
+      message: 'Cập nhật đơn hàng thành công',
       data: updatedQuotation,
     });
   } catch (error) {
@@ -265,7 +265,7 @@ export async function deleteQuotation(req: Request, res: Response, next: NextFun
     if (!existing) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy báo giá',
+        message: 'Không tìm thấy đơn hàng',
       });
     }
 
@@ -275,7 +275,7 @@ export async function deleteQuotation(req: Request, res: Response, next: NextFun
 
     return res.json({
       success: true,
-      message: 'Đã xóa báo giá thành công',
+      message: 'Đã xóa đơn hàng thành công',
     });
   } catch (error) {
     next(error);
@@ -296,7 +296,7 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
     if (!source) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy báo giá gốc để nhân bản',
+        message: 'Không tìm thấy đơn hàng gốc để nhân bản',
       });
     }
 
@@ -347,7 +347,7 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
 
     return res.status(201).json({
       success: true,
-      message: `Đã nhân bản thành công sang báo giá ${newQuotationNumber}`,
+      message: `Đã nhân bản thành công sang đơn hàng ${newQuotationNumber}`,
       data: duplicated,
     });
   } catch (error) {
@@ -372,13 +372,13 @@ export async function downloadQuotationPdf(req: Request, res: Response, next: Ne
     if (!quotation) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy báo giá để xuất PDF',
+        message: 'Không tìm thấy đơn hàng để xuất PDF',
       });
     }
 
     const pdfBuffer = await generateQuotationPdf(quotation as any);
 
-    const safeFilename = `Bao_Gia_${quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+    const safeFilename = `Don_Hang_${quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);

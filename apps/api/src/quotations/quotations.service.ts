@@ -2,11 +2,11 @@ import { prisma } from '../prisma';
 import { calculateQuotationTotals } from '@taohoadon/shared';
 
 /**
- * Generates the next sequential quotation number in format: BG-YYYY-XXXX (e.g. BG-2026-0001)
+ * Generates the next sequential quotation number in format: DH-YYYY-XXXX (e.g. DH-2026-0001)
  */
 export async function generateQuotationNumber(): Promise<string> {
   const currentYear = new Date().getFullYear();
-  const prefix = `BG-${currentYear}-`;
+  const prefix = `DH-${currentYear}-`;
 
   const latestQuote = await prisma.quotation.findFirst({
     where: {

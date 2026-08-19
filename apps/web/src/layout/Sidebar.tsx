@@ -30,12 +30,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       icon: LayoutDashboard,
     },
     {
-      label: 'Báo giá',
+      label: 'Đơn hàng',
       path: '/quotations',
       icon: FileText,
       subItems: [
-        { label: 'Tất cả báo giá', path: '/quotations' },
-        { label: 'Tạo báo giá mới', path: '/quotations/new', icon: PlusCircle },
+        { label: 'Tất cả đơn hàng', path: '/quotations' },
+        { label: 'Tạo đơn hàng mới', path: '/quotations/new', icon: PlusCircle },
       ],
     },
     {

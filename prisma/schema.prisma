@@ -53,7 +53,7 @@ model Quotation {
   customer        Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
   quotationDate   DateTime        @default(now())
   validUntil      DateTime
-  title           String          @default("BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS")
+  title           String          @default("ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS")
   note            String?
   status          String          @default("DRAFT") // DRAFT, SENT, PAID
   subtotal        Float           @default(0)

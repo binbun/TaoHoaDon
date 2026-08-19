@@ -281,12 +281,12 @@ async function main() {
 
   const sampleQuotation = await prisma.quotation.create({
     data: {
-      quotationNumber: 'BG-2026-0001',
+      quotationNumber: 'DH-2026-0001',
       customerId: customer1.id,
       quotationDate,
       validUntil,
-      title: 'BÁO GIÁ PHỤ KIỆN TỦ BẾP INOX 304 CAO CẤP EUPLUS',
-      note: '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Đơn giá trên là giá phân phối đại lý/công trình, đã tính theo thuế suất VAT 8% hiện hành.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.',
+      title: 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP INOX 304 CAO CẤP EUPLUS',
+      note: '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.',
       status: 'SENT',
       subtotal: summary.subtotal,
       discountTotal: summary.discountTotal,

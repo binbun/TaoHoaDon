@@ -50,10 +50,10 @@ export function useCreateQuotation() {
     onSuccess: (newQuote) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
       queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
-      success(`Tạo báo giá ${newQuote.quotationNumber} thành công!`);
+      success(`Tạo đơn hàng ${newQuote.quotationNumber} thành công!`);
     },
     onError: (err: any) => {
-      error(err.message || 'Không thể tạo báo giá mới');
+      error(err.message || 'Không thể tạo đơn hàng mới');
     },
   });
 }
@@ -69,10 +69,10 @@ export function useUpdateQuotation() {
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(updatedQuote.id) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
-      success(`Cập nhật báo giá ${updatedQuote.quotationNumber} thành công!`);
+      success(`Cập nhật đơn hàng ${updatedQuote.quotationNumber} thành công!`);
     },
     onError: (err: any) => {
-      error(err.message || 'Không thể cập nhật báo giá');
+      error(err.message || 'Không thể cập nhật đơn hàng');
     },
   });
 }
@@ -86,10 +86,10 @@ export function useDeleteQuotation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
       queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
-      success('Đã xóa báo giá thành công');
+      success('Đã xóa đơn hàng thành công');
     },
     onError: (err: any) => {
-      error(err.message || 'Không thể xóa báo giá');
+      error(err.message || 'Không thể xóa đơn hàng');
     },
   });
 }
@@ -104,10 +104,10 @@ export function useDuplicateQuotation() {
     onSuccess: (newQuote) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
       queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
-      success(`Đã nhân bản sang báo giá ${newQuote.quotationNumber}!`);
+      success(`Đã nhân bản sang đơn hàng ${newQuote.quotationNumber}!`);
     },
     onError: (err: any) => {
-      error(err.message || 'Không thể nhân bản báo giá');
+      error(err.message || 'Không thể nhân bản đơn hàng');
     },
   });
 }

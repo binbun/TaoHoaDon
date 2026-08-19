@@ -60,11 +60,11 @@ export const QuotationItemSchema = z.object({
 export const QuotationSchema = z.object({
   quotationNumber: z.string().optional(),
   customerId: z.string().min(1, 'Vui lòng chọn hoặc tạo khách hàng'),
-  quotationDate: z.string().min(1, 'Ngày báo giá không được để trống'),
+  quotationDate: z.string().min(1, 'Ngày tạo đơn không được để trống'),
   validUntil: z.string().optional(),
-  title: z.string().min(1, 'Tiêu đề báo giá không được để trống').default('BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS'),
+  title: z.string().min(1, 'Tiêu đề đơn hàng không được để trống').default('ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS'),
   note: z.string().max(1000).optional().nullable(),
   status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
-  items: z.array(QuotationItemSchema).min(1, 'Báo giá phải có ít nhất 1 sản phẩm/dịch vụ'),
+  items: z.array(QuotationItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm/dịch vụ'),
 });

@@ -54,7 +54,7 @@ export const QuotationsListPage: React.FC = () => {
   const handleDownloadPdf = async (q: Quotation) => {
     try {
       setDownloadingId(q.id);
-      info(`Đang tạo PDF cho báo giá ${q.quotationNumber}...`);
+      info(`Đang tạo PDF cho đơn hàng ${q.quotationNumber}...`);
 
       const token = localStorage.getItem('auth_token');
       const response = await fetch(getFullApiUrl(`/quotations/${q.id}/pdf`), {
@@ -71,13 +71,13 @@ export const QuotationsListPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Bao_Gia_EUPLUS_${q.quotationNumber}.pdf`;
+      link.download = `Don_Hang_EUPLUS_${q.quotationNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      success(`Đã tải xuống file Bao_Gia_EUPLUS_${q.quotationNumber}.pdf`);
+      success(`Đã tải xuống file Don_Hang_EUPLUS_${q.quotationNumber}.pdf`);
     } catch (err: any) {
       error(err.message || 'Không thể xuất file PDF');
     } finally {
@@ -97,7 +97,7 @@ export const QuotationsListPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-900">Quản Lý Báo Giá Phụ Kiện & Tủ Bếp</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900">Quản Lý Đơn Hàng Phụ Kiện & Tủ Bếp</h1>
           <p className="text-xs sm:text-sm text-slate-500">
             Tạo, xem trước, nhân bản và xuất bản in PDF theo quy chuẩn EUPLUS Kitchen
           </p>
@@ -108,7 +108,7 @@ export const QuotationsListPage: React.FC = () => {
           leftIcon={<Plus className="w-4 h-4" />}
           onClick={() => navigate('/quotations/new')}
         >
-          Tạo báo giá mới
+          Tạo đơn hàng mới
         </Button>
       </div>
 
@@ -117,7 +117,7 @@ export const QuotationsListPage: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
           <div className="w-full md:w-96">
             <Input
-              placeholder="Tìm theo số báo giá, tên khách hàng..."
+              placeholder="Tìm theo số đơn hàng, tên khách hàng..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftElement={<Search className="w-4 h-4" />}
@@ -153,38 +153,33 @@ export const QuotationsListPage: React.FC = () => {
             <table className="min-w-[680px] sm:min-w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-3 sm:px-4">Số báo giá & Tiêu đề</th>
+                  <th className="py-3 px-3 sm:px-4">Số đơn hàng & Tiêu đề</th>
                   <th className="py-3 px-3 sm:px-4">Khách hàng / Đại lý</th>
                   <th className="py-3 px-3 sm:px-4 text-right">Tổng tiền</th>
-                  <th className="py-3 px-3 sm:px-4">Thời gian</th>
+                  <th className="py-3 px-3 sm:px-4">Ngày tạo</th>
                   <th className="py-3 px-3 sm:px-4 text-center">Trạng thái</th>
                   <th className="py-3 px-3 sm:px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {quotations.map((q) => (
-                  <tr key={q.id} className="hover:bg-slate-50/70 transition-colors">
+                  <tr key={q.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-3 sm:px-4">
-                      <div
+                      <span
                         onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                        className="font-mono font-bold text-blue-600 hover:underline cursor-pointer text-sm"
+                        className="font-bold text-blue-600 hover:underline cursor-pointer block text-sm"
                       >
                         {q.quotationNumber}
-                      </div>
-                      <div className="text-xs font-medium text-slate-800 line-clamp-1 mt-0.5 max-w-[200px] sm:max-w-sm">
+                      </span>
+                      <div className="text-xs text-slate-500 line-clamp-1 max-w-[200px] sm:max-w-xs mt-0.5">
                         {q.title}
                       </div>
                     </td>
 
                     <td className="py-3.5 px-3 sm:px-4">
-                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                        <Building className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="truncate max-w-[140px] sm:max-w-[200px]">{q.customer?.companyName || 'Khách lẻ'}</span>
-                      </div>
+                      <div className="font-medium text-slate-900 text-sm">{q.customer?.companyName || '---'}</div>
                       {q.customer?.contactName && (
-                        <div className="text-xs text-slate-500 mt-0.5 truncate max-w-[140px] sm:max-w-[200px]">
-                          LH: {q.customer.contactName}
-                        </div>
+                        <div className="text-xs text-slate-500">{q.customer.contactName}</div>
                       )}
                     </td>
 
@@ -212,7 +207,7 @@ export const QuotationsListPage: React.FC = () => {
                       <button
                         onClick={() => navigate(`/quotations/${q.id}/preview`)}
                         className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
-                        title="Xem bản in A4"
+                        title="Xem chi tiết đơn hàng"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -220,7 +215,7 @@ export const QuotationsListPage: React.FC = () => {
                       <button
                         onClick={() => navigate(`/quotations/${q.id}/edit`)}
                         className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors active:scale-95"
-                        title="Chỉnh sửa"
+                        title="Chỉnh sửa đơn hàng"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -229,7 +224,7 @@ export const QuotationsListPage: React.FC = () => {
                         onClick={() => duplicateMutation.mutate(q.id)}
                         disabled={duplicateMutation.isPending}
                         className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-40 active:scale-95"
-                        title="Nhân bản báo giá"
+                        title="Nhân bản đơn hàng"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
@@ -262,9 +257,9 @@ export const QuotationsListPage: React.FC = () => {
           </div>
         ) : (
           <EmptyState
-            title="Không tìm thấy báo giá nào"
-            description="Hãy bắt đầu tạo báo giá đầu tiên cho đối tác / đại lý của bạn."
-            actionText="Tạo báo giá mới"
+            title="Không tìm thấy đơn hàng nào"
+            description="Hãy bắt đầu tạo đơn hàng đầu tiên cho đối tác / đại lý của bạn."
+            actionText="Tạo đơn hàng mới"
             onAction={() => navigate('/quotations/new')}
             icon={<FileText className="w-10 h-10" />}
           />
@@ -276,8 +271,8 @@ export const QuotationsListPage: React.FC = () => {
         isOpen={!!deletingId}
         onClose={() => setDeletingId(null)}
         onConfirm={() => deletingId && deleteMutation.mutate(deletingId, { onSuccess: () => setDeletingId(null) })}
-        title="Xác nhận xóa báo giá"
-        message="Bạn có chắc chắn muốn xóa báo giá này? Toàn bộ danh sách chi tiết phụ kiện bên trong sẽ bị xóa và không thể khôi phục."
+        title="Xác nhận xóa đơn hàng"
+        message="Bạn có chắc chắn muốn xóa đơn hàng này? Toàn bộ danh sách chi tiết phụ kiện bên trong sẽ bị xóa và không thể khôi phục."
         isLoading={deleteMutation.isPending}
       />
     </div>

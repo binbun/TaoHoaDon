@@ -8,7 +8,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Báo giá ${quotation.quotationNumber} - EUPLUS</title>
+  <title>Đơn hàng ${quotation.quotationNumber} - EUPLUS</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -381,11 +381,11 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <!-- Title & Meta -->
     <div class="title-section">
       <div>
-        <div class="doc-title">${quotation.title || 'BÁO GIÁ PHỤ KIỆN TỦ BẾP EUPLUS'}</div>
-        <div class="doc-subtitle">Báo giá phụ kiện tủ bếp thông minh Inox SUS304 chính hãng</div>
+        <div class="doc-title">${quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP EUPLUS'}</div>
+        <div class="doc-subtitle">Đơn hàng phụ kiện tủ bếp thông minh Inox SUS304 chính hãng</div>
       </div>
       <div class="doc-meta-badge">
-        <div class="doc-meta-item">Số báo giá: <strong>${quotation.quotationNumber}</strong></div>
+        <div class="doc-meta-item">Số đơn hàng: <strong>${quotation.quotationNumber}</strong></div>
         <div class="doc-meta-item">Ngày lập: <strong>${formatDate(quotation.quotationDate)}</strong></div>
       </div>
     </div>
@@ -502,7 +502,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
 
     <!-- Footer -->
     <div class="footer">
-      Báo giá số ${quotation.quotationNumber} • EUPLUS Smart Kitchen Hardware • Trang 1/1
+      Đơn hàng số ${quotation.quotationNumber} • EUPLUS Smart Kitchen Hardware • Trang 1/1
     </div>
   </div>
 </body>

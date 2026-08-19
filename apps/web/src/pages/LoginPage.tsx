@@ -56,7 +56,7 @@ export const LoginPage: React.FC = () => {
             <Building2 className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">QuotationPro</h1>
-          <p className="text-sm text-slate-500 mt-1">Đăng nhập để quản lý và tạo báo giá chuyên nghiệp</p>
+          <p className="text-sm text-slate-500 mt-1">Đăng nhập để quản lý và tạo đơn hàng chuyên nghiệp</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,24 +91,6 @@ export const LoginPage: React.FC = () => {
             </Button>
           </div>
         </form>
-
-        {/* Demo Account Box */}
-        <div className="mt-8 p-3.5 bg-blue-50/70 rounded-xl border border-blue-100 flex items-center justify-between text-xs text-blue-900">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
-            <div>
-              <div className="font-semibold">Tài khoản mẫu:</div>
-              <div className="text-blue-700">admin@baogia.vn / 123456</div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleFillDemo}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline ml-2"
-          >
-            Điền nhanh
-          </button>
-        </div>
       </div>
     </div>
   );

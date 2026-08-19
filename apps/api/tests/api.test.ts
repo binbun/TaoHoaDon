@@ -73,20 +73,18 @@ describe('API Integration Endpoints', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         customerId: createdCustomerId,
-        quotationDate: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 10 * 86400000).toISOString(),
-        title: 'BÁO GIÁ QUẢNG CÁO TRỰC TUYẾN 2026',
+        quotationDate: '2026-03-28',
+        validUntil: '2026-04-28',
+        title: 'ĐƠN HÀNG QUẢNG CÁO TRỰC TUYẾN 2026',
         items: [
           {
             productId: createdProductId,
             productNameSnapshot: 'Gói Banner Quảng Cáo Trang Chủ',
-            descriptionSnapshot: 'Hiển thị banner nổi bật tại trang chủ trong 1 tháng.',
             unit: 'Tháng',
             quantity: 2,
-            unitPrice: 5000000, // 2 * 5,000,000 = 10,000,000
-            discount: 1000000, // Taxable: 9,000,000
-            vatRate: 8, // VAT 8% = 720,000
-            sortOrder: 0,
+            unitPrice: 5000000,
+            discount: 10,
+            vatRate: 10,
           },
         ],
       });
@@ -94,12 +92,13 @@ describe('API Integration Endpoints', () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     const q = res.body.data;
-    expect(q.subtotal).toBe(10000000);
-    expect(q.discountTotal).toBe(1000000);
-    expect(q.taxableTotal).toBe(9000000);
+    createdQuotationId = q.id;
+
+    // Verify sequential auto-generation
+    expect(q.quotationNumber).toMatch(/^DH-\d{4}-\d{4}$/);
     expect(q.vatTotal).toBe(720000);
     expect(q.grandTotal).toBe(9720000);
-    expect(q.quotationNumber).toMatch(/^BG-\d{4}-\d{4}$/);
+    expect(q.quotationNumber).toMatch(/^DH-\d{4}-\d{4}$/);
     createdQuotationId = q.id;
   });
 

@@ -28,11 +28,11 @@ export const DashboardPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-500/30 text-blue-200 text-xs font-semibold mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Hệ thống báo giá EUPLUS Kitchen</span>
+            <span>Hệ thống đơn hàng EUPLUS Kitchen</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Xin chào, NPP Bích Điều! 👋</h1>
           <p className="text-blue-100 text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
-            Quản lý báo giá phụ kiện tủ bếp thông minh Inox 304, module tủ bếp cao cấp và xuất file PDF chuẩn A4 gửi đối tác/đại lý nhanh chóng.
+            Quản lý đơn hàng phụ kiện tủ bếp thông minh Inox 304, module tủ bếp cao cấp và xuất file PDF chuẩn A4 gửi đối tác/đại lý nhanh chóng.
           </p>
         </div>
         <Button
@@ -42,7 +42,7 @@ export const DashboardPage: React.FC = () => {
           leftIcon={<PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-700" />}
           onClick={() => navigate('/quotations/new')}
         >
-          + Tạo báo giá mới
+          + Tạo đơn hàng mới
         </Button>
       </div>
 
@@ -51,7 +51,7 @@ export const DashboardPage: React.FC = () => {
         <Card className="border-l-4 border-l-blue-500 p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Báo Giá</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Hàng</p>
               {isLoading ? (
                 <Skeleton className="h-7 w-16 mt-2" />
               ) : (
@@ -123,8 +123,8 @@ export const DashboardPage: React.FC = () => {
 
       {/* Recent Quotations Table */}
       <Card
-        title="Báo Giá Gần Đây"
-        subtitle="Danh sách các báo giá phụ kiện và tủ bếp vừa được lập"
+        title="Đơn Hàng Gần Đây"
+        subtitle="Danh sách các đơn hàng phụ kiện và tủ bếp vừa được lập"
         action={
           <Button
             variant="ghost"
@@ -149,7 +149,7 @@ export const DashboardPage: React.FC = () => {
               <table className="min-w-[600px] sm:min-w-full text-left text-sm text-slate-600">
                 <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
                   <tr>
-                    <th className="py-3 px-3 sm:px-4">Số báo giá</th>
+                    <th className="py-3 px-3 sm:px-4">Số đơn hàng</th>
                     <th className="py-3 px-3 sm:px-4">Khách hàng / Đại lý</th>
                     <th className="py-3 px-3 sm:px-4 text-right">Tổng tiền</th>
                     <th className="py-3 px-3 sm:px-4">Ngày lập</th>
@@ -199,7 +199,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="py-8 text-center text-slate-500 text-sm">
-            Chưa có báo giá nào được tạo. Hãy bấm <strong>+ Tạo báo giá mới</strong> để bắt đầu.
+            Chưa có đơn hàng nào được tạo. Hãy bấm <strong>+ Tạo đơn hàng mới</strong> để bắt đầu.
           </div>
         )}
       </Card>

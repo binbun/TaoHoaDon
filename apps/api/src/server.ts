@@ -111,7 +111,7 @@ async function initPostgresDatabase() {
         "customerId" TEXT NOT NULL REFERENCES "Customer"("id") ON DELETE RESTRICT,
         "quotationDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "validUntil" TIMESTAMP(3) NOT NULL,
-        "title" TEXT NOT NULL DEFAULT 'BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS',
+        "title" TEXT NOT NULL DEFAULT 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS',
         "note" TEXT,
         "status" TEXT NOT NULL DEFAULT 'DRAFT',
         "subtotal" DOUBLE PRECISION NOT NULL DEFAULT 0,

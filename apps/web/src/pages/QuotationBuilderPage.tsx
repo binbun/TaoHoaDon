@@ -46,7 +46,7 @@ export const QuotationBuilderPage: React.FC = () => {
 
   // Quotation Info State
   const [quotationNumber, setQuotationNumber] = useState('');
-  const [title, setTitle] = useState('BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS');
+  const [title, setTitle] = useState('ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS');
   const [quotationDate, setQuotationDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
@@ -221,7 +221,7 @@ export const QuotationBuilderPage: React.FC = () => {
     }
 
     if (items.length === 0) {
-      error('Vui lòng thêm ít nhất 1 phụ kiện vào báo giá');
+      error('Vui lòng thêm ít nhất 1 phụ kiện vào đơn hàng');
       return;
     }
 
@@ -272,7 +272,7 @@ export const QuotationBuilderPage: React.FC = () => {
 
       if (isEditMode && id) {
         const res = await updateQuotationMutation.mutateAsync({ id, data: payload });
-        success('Đã cập nhật báo giá thành công');
+        success('Đã cập nhật đơn hàng thành công');
         if (redirectToPreview) {
           navigate(`/quotations/${res.id}/preview`);
         } else {
@@ -280,7 +280,7 @@ export const QuotationBuilderPage: React.FC = () => {
         }
       } else {
         const res = await createQuotationMutation.mutateAsync(payload);
-        success('Đã tạo mới báo giá thành công');
+        success('Đã tạo mới đơn hàng thành công');
         if (redirectToPreview) {
           navigate(`/quotations/${res.id}/preview`);
         } else {
@@ -288,7 +288,7 @@ export const QuotationBuilderPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      error(err.message || 'Không thể lưu báo giá, vui lòng thử lại');
+      error(err.message || 'Không thể lưu đơn hàng, vui lòng thử lại');
     }
   };
 
@@ -313,7 +313,7 @@ export const QuotationBuilderPage: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-              {isEditMode ? `Chỉnh Sửa Báo Giá #${quotationNumber || id}` : 'Tạo Báo Giá Mới'}
+              {isEditMode ? `Chỉnh Sửa Đơn Hàng #${quotationNumber || id}` : 'Tạo Đơn Hàng Mới'}
             </h1>
             <p className="text-[11px] sm:text-xs text-slate-500 hidden sm:block">
               Tiêu chuẩn phụ kiện tủ bếp thông minh EUPLUS
@@ -412,7 +412,7 @@ export const QuotationBuilderPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Input
-                  label="Email nhận báo giá"
+                  label="Email nhận đơn hàng"
                   type="email"
                   placeholder="VD: tuananh@homedecor.vn"
                   value={email}
@@ -433,21 +433,21 @@ export const QuotationBuilderPage: React.FC = () => {
             title={
               <div className="flex items-center gap-2 text-slate-900">
                 <Calendar className="w-5 h-5 text-indigo-600" />
-                <span className="font-bold text-base">2. Thông Tin Báo Giá & Dư Nợ Cũ</span>
+                <span className="font-bold text-base">2. Thông Tin Đơn Hàng & Dư Nợ Cũ</span>
               </div>
             }
           >
             <div className="space-y-3 sm:space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Input
-                  label="Số báo giá (Tự động)"
-                  placeholder="BG-2026-XXXX"
+                  label="Số đơn hàng (Tự động)"
+                  placeholder="DH-2026-XXXX"
                   value={quotationNumber}
                   onChange={(e) => setQuotationNumber(e.target.value)}
                   helperText="Tự sinh nếu để trống"
                 />
                 <Input
-                  label="Ngày báo giá"
+                  label="Ngày tạo đơn"
                   type="date"
                   value={quotationDate}
                   onChange={(e) => setQuotationDate(e.target.value)}
@@ -458,8 +458,8 @@ export const QuotationBuilderPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div className="sm:col-span-2">
                   <Input
-                    label="Tiêu đề báo giá"
-                    placeholder="VD: BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS"
+                    label="Tiêu đề đơn hàng"
+                    placeholder="VD: ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -532,7 +532,7 @@ export const QuotationBuilderPage: React.FC = () => {
             {items.length === 0 ? (
               <div className="p-6 sm:p-8 text-center border-2 border-dashed border-slate-200 rounded-xl">
                 <PackagePlus className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                <h4 className="font-bold text-slate-800 text-sm">Chưa có phụ kiện nào trong báo giá</h4>
+                <h4 className="font-bold text-slate-800 text-sm">Chưa có phụ kiện nào trong đơn hàng</h4>
                 <p className="text-xs text-slate-500 mt-1 mb-4">
                   Chọn phụ kiện từ catalogue EUPLUS (giá bát nâng hạ, giá xoong nồi, giá dao thớt, thùng gạo...)
                 </p>
@@ -710,7 +710,7 @@ export const QuotationBuilderPage: React.FC = () => {
           </Card>
 
           {/* Section 4: Notes */}
-          <Card title="4. Chính Sách Bảo Hành & Điều Khoản Báo Giá">
+          <Card title="4. Chính Sách Bảo Hành & Điều Khoản Đơn Hàng">
             <textarea
               rows={4}
               value={note}
@@ -725,7 +725,7 @@ export const QuotationBuilderPage: React.FC = () => {
         <div className="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
           <Card className="border-t-4 border-t-blue-600 shadow-md">
             <h3 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center justify-between">
-              <span>Tổng Kết Báo Giá EUPLUS</span>
+              <span>Tổng Kết Đơn Hàng EUPLUS</span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
                 {items.length} hạng mục
               </span>
@@ -782,7 +782,7 @@ export const QuotationBuilderPage: React.FC = () => {
                 onClick={() => handleSave(true)}
                 isLoading={isSaving}
               >
-                Lưu & Xem Trước Báo Giá
+                Lưu & Xem Trước Đơn Hàng
               </Button>
               <Button
                 type="button"

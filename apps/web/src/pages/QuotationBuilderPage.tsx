@@ -153,15 +153,13 @@ export const QuotationBuilderPage: React.FC = () => {
       sortOrder: items.length,
     };
     setItems((prev) => [...prev, newItem]);
-    setIsProductPickerOpen(false);
-    success(`Đã thêm phụ kiện "${prod.name}" vào báo giá`);
+    success(`Đã thêm: ${prod.name}`);
   };
 
-  // Add custom blank item
+  // Add blank custom item
   const handleAddBlankItem = () => {
     const newItem: QuotationItemInput = {
       id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-      productId: null,
       productNameSnapshot: '',
       descriptionSnapshot: '',
       unit: 'Bộ',
@@ -174,137 +172,138 @@ export const QuotationBuilderPage: React.FC = () => {
     setItems((prev) => [...prev, newItem]);
   };
 
-  // Update item field
+  // Item modifications
   const handleItemChange = (index: number, field: keyof QuotationItemInput, value: any) => {
     setItems((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
     });
   };
 
-  // Delete item row
+  const handleDuplicateItem = (index: number) => {
+    const target = items[index];
+    const duplicated: QuotationItemInput = {
+      ...target,
+      id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      sortOrder: index + 1,
+    };
+    const next = [...items];
+    next.splice(index + 1, 0, duplicated);
+    setItems(next);
+  };
+
   const handleDeleteItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Duplicate item row
-  const handleDuplicateItem = (index: number) => {
-    const source = items[index];
-    const duplicated: QuotationItemInput = {
-      ...source,
-      id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-      sortOrder: items.length,
-    };
-    setItems((prev) => [...prev.slice(0, index + 1), duplicated, ...prev.slice(index + 1)]);
-  };
-
-  // Move item row up/down
   const handleMoveItem = (index: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === items.length - 1) return;
-
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    setItems((prev) => {
-      const copy = [...prev];
-      const temp = copy[index];
-      copy[index] = copy[targetIndex];
-      copy[targetIndex] = temp;
-      return copy.map((item, idx) => ({ ...item, sortOrder: idx }));
-    });
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    const next = [...items];
+    const temp = next[index];
+    next[index] = next[targetIndex];
+    next[targetIndex] = temp;
+    setItems(next);
   };
 
-  // Real-time calculation using shared logic
-  const { calculatedItems, summary } = calculateQuotationTotals(items);
+  // Calculate live totals
+  const { summary, calculatedItems } = calculateQuotationTotals(
+    items.map((it, idx) => ({
+      ...it,
+      sortOrder: idx,
+    }))
+  );
 
-  // Save Quotation Handler
-  const handleSave = async (redirectAfterSave: boolean) => {
-    try {
-      let finalCustomerId = selectedCustomerId;
-      if (!finalCustomerId) {
-        if (!companyName.trim()) {
-          error('Vui lòng nhập tên khách hàng / đại lý');
-          return;
-        }
-        const newCust = await createCustomerMutation.mutateAsync({
-          companyName: companyName.trim(),
-          contactName: contactName.trim() || null,
-          email: email.trim() || null,
-          phone: phone.trim() || null,
-          address: address.trim() || null,
-          taxCode: taxCode.trim() || null,
-        });
-        finalCustomerId = newCust.id;
-      }
+  // Save Quotation
+  const handleSave = async (redirectToPreview = false) => {
+    if (!companyName.trim()) {
+      error('Vui lòng nhập tên công ty hoặc khách hàng');
+      return;
+    }
 
-      if (items.length === 0) {
-        error('Báo giá phải có ít nhất 1 sản phẩm / phụ kiện');
+    if (items.length === 0) {
+      error('Vui lòng thêm ít nhất 1 phụ kiện vào báo giá');
+      return;
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      if (!items[i].productNameSnapshot.trim()) {
+        error(`Dòng thứ ${i + 1} chưa có tên phụ kiện`);
         return;
       }
+    }
 
-      for (let i = 0; i < items.length; i++) {
-        if (!items[i].productNameSnapshot?.trim()) {
-          error(`Dòng số ${i + 1} chưa có tên phụ kiện/sản phẩm`);
-          return;
-        }
-        if (items[i].quantity <= 0) {
-          error(`Dòng số ${i + 1} phải có số lượng lớn hơn 0`);
-          return;
-        }
+    try {
+      let customerId = selectedCustomerId;
+
+      // If new customer name typed and not picked from list, create or link
+      if (!customerId) {
+        const newCust = await createCustomerMutation.mutateAsync({
+          companyName: companyName.trim(),
+          contactName: contactName.trim() || undefined,
+          email: email.trim() || undefined,
+          phone: phone.trim() || undefined,
+          address: address.trim() || undefined,
+          taxCode: taxCode.trim() || undefined,
+        });
+        customerId = newCust.id;
+        setSelectedCustomerId(customerId);
       }
 
       const payload = {
-        quotationNumber: quotationNumber ? quotationNumber.trim() : undefined,
-        customerId: finalCustomerId,
+        quotationNumber: quotationNumber.trim() || undefined,
+        title: title.trim(),
         quotationDate,
         validUntil,
-        title: title.trim(),
-        note: note.trim() || null,
-        status,
-        items: items.map((item, index) => ({
-          productId: item.productId || null,
-          productNameSnapshot: item.productNameSnapshot.trim(),
-          descriptionSnapshot: item.descriptionSnapshot?.trim() || null,
-          unit: item.unit?.trim() || 'Bộ',
-          quantity: Number(item.quantity) || 1,
-          unitPrice: Number(item.unitPrice) || 0,
-          discount: Number(item.discount) || 0,
-          vatRate: Number(item.vatRate) || 8,
-          sortOrder: index,
+        status: status as any,
+        note: note.trim() || undefined,
+        customerId,
+        items: items.map((it, idx) => ({
+          productId: it.productId || undefined,
+          productNameSnapshot: it.productNameSnapshot.trim(),
+          descriptionSnapshot: it.descriptionSnapshot?.trim() || undefined,
+          unit: it.unit?.trim() || 'Bộ',
+          quantity: Number(it.quantity) || 1,
+          unitPrice: Number(it.unitPrice) || 0,
+          discount: Number(it.discount) || 0,
+          vatRate: Number(it.vatRate) || 0,
+          sortOrder: idx,
         })),
       };
 
       if (isEditMode && id) {
-        const updated = await updateQuotationMutation.mutateAsync({ id, data: payload });
-        if (redirectAfterSave) {
-          navigate(`/quotations/${updated.id}/preview`);
+        const res = await updateQuotationMutation.mutateAsync({ id, data: payload });
+        success('Đã cập nhật báo giá thành công');
+        if (redirectToPreview) {
+          navigate(`/quotations/${res.id}/preview`);
         } else {
           navigate('/quotations');
         }
       } else {
-        const created = await createQuotationMutation.mutateAsync(payload);
-        if (redirectAfterSave) {
-          navigate(`/quotations/${created.id}/preview`);
+        const res = await createQuotationMutation.mutateAsync(payload);
+        success('Đã tạo mới báo giá thành công');
+        if (redirectToPreview) {
+          navigate(`/quotations/${res.id}/preview`);
         } else {
           navigate('/quotations');
         }
       }
     } catch (err: any) {
-      error(err.message || 'Lưu báo giá thất bại, vui lòng kiểm tra lại');
+      error(err.message || 'Không thể lưu báo giá, vui lòng thử lại');
     }
   };
 
   const filteredProducts = products.filter(
     (p) =>
       p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      p.code.toLowerCase().includes(productSearch.toLowerCase()) ||
-      (p.shortDescription && p.shortDescription.toLowerCase().includes(productSearch.toLowerCase()))
+      p.code.toLowerCase().includes(productSearch.toLowerCase())
   );
 
   return (
-    <div className="space-y-6">
-      {/* Top Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Top Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -312,97 +311,93 @@ export const QuotationBuilderPage: React.FC = () => {
             leftIcon={<ArrowLeft className="w-4 h-4" />}
             onClick={() => navigate('/quotations')}
           >
-            Quay lại
+            Danh sách
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">
-              {isEditMode ? `Chỉnh Sửa Báo Giá ${quotationNumber || ''}` : 'Tạo Báo Giá Phụ Kiện Tủ Bếp Mới'}
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              {isEditMode ? `Chỉnh Sửa Báo Giá #${quotationNumber || id}` : 'Tạo Báo Giá Mới'}
             </h1>
-            <p className="text-xs text-slate-500">
-              Điền thông tin đại lý/công trình, chọn phụ kiện EUPLUS và kiểm tra tổng chi phí
+            <p className="text-[11px] sm:text-xs text-slate-500 hidden sm:block">
+              Tiêu chuẩn phụ kiện tủ bếp thông minh EUPLUS
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 self-stretch sm:self-auto">
           <Button
             variant="outline"
-            size="md"
+            size="sm"
+            className="flex-1 sm:flex-initial justify-center"
             leftIcon={<Save className="w-4 h-4" />}
             onClick={() => handleSave(false)}
             isLoading={isSaving}
           >
-            Lưu danh sách
+            Lưu lại
           </Button>
           <Button
             variant="primary"
-            size="md"
+            size="sm"
+            className="flex-1 sm:flex-initial justify-center shadow-xs"
             leftIcon={<Eye className="w-4 h-4" />}
             onClick={() => handleSave(true)}
             isLoading={isSaving}
           >
-            Lưu & Xem Preview
+            Lưu & Xem Trước
           </Button>
         </div>
       </div>
 
-      {/* 2-Column Responsive Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left 8 Columns */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Section 1: Customer Information */}
+      {/* Main Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+        {/* Left 8 Columns: Form and Items */}
+        <div className="lg:col-span-8 space-y-4 sm:space-y-6">
+          {/* Section 1: Customer Info */}
           <Card
             title={
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <Building className="w-5 h-5 text-blue-600" />
-                  <span className="font-bold text-base">1. Thông Tin Khách Hàng / Đại Lý / Công Trình</span>
-                </div>
-                {customers.length > 0 && (
-                  <select
-                    value={selectedCustomerId}
-                    onChange={(e) => handleSelectCustomer(e.target.value)}
-                    className="text-xs bg-blue-50/70 border border-blue-200 text-blue-800 rounded-lg px-3 py-1.5 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">-- Chọn khách hàng / đại lý có sẵn --</option>
-                    {customers.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.companyName} ({c.contactName || 'Chưa có tên đại diện'})
-                      </option>
-                    ))}
-                  </select>
-                )}
+              <div className="flex items-center gap-2 text-slate-900">
+                <Building className="w-5 h-5 text-blue-600" />
+                <span className="font-bold text-base">1. Thông Tin Khách Hàng / Đối Tác</span>
               </div>
             }
           >
-            <div className="space-y-4">
-              <Input
-                label="Tên Khách Hàng / Công Ty / Đại Lý"
-                placeholder="VD: Công ty Cổ phần Xây Dựng & Nội Thất HomeDecor"
-                value={companyName}
-                onChange={(e) => {
-                  setCompanyName(e.target.value);
-                  setSelectedCustomerId('');
-                }}
-                required
-              />
+            <div className="space-y-3 sm:space-y-4">
+              {/* Quick Pick Existing Customer */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Chọn nhanh khách hàng đã lưu
+                </label>
+                <select
+                  value={selectedCustomerId}
+                  onChange={(e) => handleSelectCustomer(e.target.value)}
+                  className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">-- Nhập thông tin khách hàng mới --</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.companyName} {c.contactName ? `(${c.contactName})` : ''} - {c.phone || ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <Input
+                  label="Tên Công Ty / Tên Khách Hàng *"
+                  placeholder="VD: Cty TNHH Nội Thất Minh Quân"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  required
+                />
                 <Input
                   label="Người liên hệ đại diện"
-                  placeholder="VD: KTS. Nguyễn Tuấn Anh"
+                  placeholder="VD: Anh Tuấn Anh"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
                 />
-                <Input
-                  label="Mã số thuế (nếu có)"
-                  placeholder="VD: 0108668899"
-                  value={taxCode}
-                  onChange={(e) => setTaxCode(e.target.value)}
-                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Input
                   label="Số điện thoại"
                   placeholder="VD: 0988 567 890"
@@ -410,20 +405,28 @@ export const QuotationBuilderPage: React.FC = () => {
                   onChange={(e) => setPhone(e.target.value)}
                 />
                 <Input
+                  label="Mã số thuế (nếu có)"
+                  placeholder="VD: 0108992345"
+                  value={taxCode}
+                  onChange={(e) => setTaxCode(e.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <Input
                   label="Email nhận báo giá"
                   type="email"
                   placeholder="VD: tuananh@homedecor.vn"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+                <Input
+                  label="Địa chỉ công trình / giao hàng"
+                  placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
               </div>
-
-              <Input
-                label="Địa chỉ công trình / giao hàng"
-                placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Bắc Từ Liêm, Hà Nội"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
             </div>
           </Card>
 
@@ -436,14 +439,14 @@ export const QuotationBuilderPage: React.FC = () => {
               </div>
             }
           >
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <Input
                   label="Số báo giá (Tự động)"
                   placeholder="BG-2026-XXXX"
                   value={quotationNumber}
                   onChange={(e) => setQuotationNumber(e.target.value)}
-                  helperText="Hệ thống tự sinh mã liên tiếp nếu để trống"
+                  helperText="Tự sinh nếu để trống"
                 />
                 <Input
                   label="Ngày báo giá"
@@ -453,7 +456,7 @@ export const QuotationBuilderPage: React.FC = () => {
                   required
                 />
                 <Input
-                  label="Ngày hết hạn hiệu lực"
+                  label="Hạn hiệu lực"
                   type="date"
                   value={validUntil}
                   onChange={(e) => setValidUntil(e.target.value)}
@@ -461,7 +464,7 @@ export const QuotationBuilderPage: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div className="sm:col-span-2">
                   <Input
                     label="Tiêu đề báo giá"
@@ -478,7 +481,7 @@ export const QuotationBuilderPage: React.FC = () => {
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="DRAFT">Bản nháp (Draft)</option>
                     <option value="SENT">Đã gửi khách (Sent)</option>
@@ -494,42 +497,44 @@ export const QuotationBuilderPage: React.FC = () => {
           {/* Section 3: Products / Items Table */}
           <Card
             title={
-              <div className="flex items-center justify-between w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2.5">
                 <div className="flex items-center gap-2 text-slate-900">
-                  <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
-                  <span className="font-bold text-base">3. Danh Sách Phụ Kiện & Thiết Bị ({items.length})</span>
+                  <FileSpreadsheet className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <span className="font-bold text-base">3. Danh Sách Phụ Kiện ({items.length})</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="text-xs px-2.5 py-1.5"
                     leftIcon={<Plus className="w-3.5 h-3.5" />}
                     onClick={handleAddBlankItem}
                   >
-                    Thêm dòng trống
+                    + Dòng trống
                   </Button>
                   <Button
                     type="button"
                     variant="primary"
                     size="sm"
+                    className="text-xs px-2.5 py-1.5"
                     leftIcon={<PackagePlus className="w-3.5 h-3.5" />}
                     onClick={() => setIsProductPickerOpen(true)}
                   >
-                    + Chọn từ Catalogue EUPLUS
+                    + Catalogue EUPLUS
                   </Button>
                 </div>
               </div>
             }
           >
             {items.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl">
+              <div className="p-6 sm:p-8 text-center border-2 border-dashed border-slate-200 rounded-xl">
                 <PackagePlus className="w-10 h-10 text-slate-400 mx-auto mb-2" />
                 <h4 className="font-bold text-slate-800 text-sm">Chưa có phụ kiện nào trong báo giá</h4>
                 <p className="text-xs text-slate-500 mt-1 mb-4">
                   Chọn phụ kiện từ catalogue EUPLUS (giá bát nâng hạ, giá xoong nồi, giá dao thớt, thùng gạo...)
                 </p>
-                <div className="flex justify-center gap-3">
+                <div className="flex flex-col sm:flex-row justify-center gap-2.5">
                   <Button
                     type="button"
                     variant="primary"
@@ -549,32 +554,32 @@ export const QuotationBuilderPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {items.map((item, index) => {
                   const calculatedRow = calculatedItems[index];
                   return (
                     <div
                       key={item.id || index}
-                      className="p-4 bg-slate-50/70 border border-slate-200 rounded-xl space-y-3 relative group"
+                      className="p-3.5 sm:p-4 bg-slate-50/70 border border-slate-200 rounded-xl space-y-3 relative group"
                     >
-                      {/* Row Top */}
-                      <div className="flex items-start justify-between gap-3">
+                      {/* Row Top Header */}
+                      <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
                             {index + 1}
                           </span>
-                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
                             Phụ kiện #{index + 1}
                           </span>
                         </div>
 
-                        {/* Reorder & Row Actions */}
+                        {/* Row Actions */}
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
                             onClick={() => handleMoveItem(index, 'up')}
                             disabled={index === 0}
-                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                            className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95"
                             title="Di chuyển lên"
                           >
                             <ArrowUp className="w-4 h-4" />
@@ -583,7 +588,7 @@ export const QuotationBuilderPage: React.FC = () => {
                             type="button"
                             onClick={() => handleMoveItem(index, 'down')}
                             disabled={index === items.length - 1}
-                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                            className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95"
                             title="Di chuyển xuống"
                           >
                             <ArrowDown className="w-4 h-4" />
@@ -591,7 +596,7 @@ export const QuotationBuilderPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleDuplicateItem(index)}
-                            className="p-1 text-slate-400 hover:text-blue-600"
+                            className="p-1.5 text-slate-400 hover:text-blue-600 active:scale-95"
                             title="Nhân bản dòng này"
                           >
                             <Copy className="w-4 h-4" />
@@ -599,7 +604,7 @@ export const QuotationBuilderPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleDeleteItem(index)}
-                            className="p-1 text-slate-400 hover:text-rose-600"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 active:scale-95"
                             title="Xóa dòng này"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -608,7 +613,7 @@ export const QuotationBuilderPage: React.FC = () => {
                       </div>
 
                       {/* Inputs */}
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3">
                         <div className="sm:col-span-8">
                           <Input
                             placeholder="Tên phụ kiện / thiết bị tủ bếp *"
@@ -619,7 +624,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         </div>
                         <div className="sm:col-span-4">
                           <Input
-                            placeholder="Đơn vị tính (Bộ, Chiếc, Mét dài, Hệ...)"
+                            placeholder="ĐVT (Bộ, Chiếc, Mét dài...)"
                             value={item.unit}
                             onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                           />
@@ -637,7 +642,7 @@ export const QuotationBuilderPage: React.FC = () => {
                       </div>
 
                       {/* Numeric Inputs */}
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1 items-end">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 pt-1 items-end">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase">
                             Số lượng
@@ -654,7 +659,7 @@ export const QuotationBuilderPage: React.FC = () => {
 
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                            Đơn giá phân phối (đ)
+                            Đơn giá (đ)
                           </label>
                           <Input
                             type="number"
@@ -722,8 +727,8 @@ export const QuotationBuilderPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Right 4 Columns */}
-        <div className="lg:col-span-4 sticky top-20 space-y-4">
+        {/* Right 4 Columns: Summary Panel (Desktop sticky, Mobile inline) */}
+        <div className="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
           <Card className="border-t-4 border-t-blue-600 shadow-md">
             <h3 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center justify-between">
               <span>Tổng Kết Báo Giá EUPLUS</span>
@@ -734,12 +739,12 @@ export const QuotationBuilderPage: React.FC = () => {
 
             <div className="space-y-3 py-4 text-sm divide-y divide-slate-100">
               <div className="flex items-center justify-between text-slate-600">
-                <span>Tạm tính (Subtotal):</span>
+                <span>Tạm tính:</span>
                 <span className="font-bold text-slate-900">{formatCurrency(summary.subtotal)}</span>
               </div>
 
               <div className="flex items-center justify-between text-rose-600 pt-3">
-                <span>Chiết khấu (Discount):</span>
+                <span>Chiết khấu:</span>
                 <span className="font-bold">-{formatCurrency(summary.discountTotal)}</span>
               </div>
 
@@ -769,7 +774,7 @@ export const QuotationBuilderPage: React.FC = () => {
               <Button
                 type="button"
                 variant="primary"
-                className="w-full py-2.5 font-bold shadow-md shadow-blue-500/20"
+                className="w-full py-2.5 font-bold shadow-md shadow-blue-500/20 justify-center"
                 leftIcon={<Eye className="w-4 h-4" />}
                 onClick={() => handleSave(true)}
                 isLoading={isSaving}
@@ -779,7 +784,7 @@ export const QuotationBuilderPage: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full justify-center"
                 leftIcon={<Save className="w-4 h-4" />}
                 onClick={() => handleSave(false)}
                 isLoading={isSaving}
@@ -809,7 +814,7 @@ export const QuotationBuilderPage: React.FC = () => {
         title="Chọn Phụ Kiện Từ Catalogue EUPLUS"
         maxWidth="2xl"
       >
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <Input
             placeholder="Tìm theo tên hoặc mã phụ kiện (EV.I80, EV.80B, EV.35, B30.1...)"
             value={productSearch}
@@ -817,31 +822,31 @@ export const QuotationBuilderPage: React.FC = () => {
             leftElement={<Search className="w-4 h-4" />}
           />
 
-          <div className="max-h-96 overflow-y-auto space-y-2 pr-1">
+          <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto space-y-2 pr-1">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((p) => (
                 <div
                   key={p.id}
                   onClick={() => handleAddProductFromCatalog(p)}
-                  className="p-3.5 border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+                  className="p-3 sm:p-3.5 border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group active:scale-[0.99]"
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-1 min-w-0 pr-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded flex-shrink-0">
                         {p.code}
                       </span>
-                      <span className="font-bold text-slate-900 group-hover:text-blue-600 text-sm">
+                      <span className="font-bold text-slate-900 group-hover:text-blue-600 text-sm truncate">
                         {p.name}
                       </span>
                     </div>
                     {p.shortDescription && (
-                      <p className="text-xs text-slate-500 max-w-lg line-clamp-1">
+                      <p className="text-xs text-slate-500 line-clamp-1">
                         {p.shortDescription}
                       </p>
                     )}
                   </div>
-                  <div className="text-right flex-shrink-0 pl-4">
-                    <div className="font-extrabold text-slate-900 text-sm">
+                  <div className="text-right flex-shrink-0 pl-2">
+                    <div className="font-extrabold text-slate-900 text-sm whitespace-nowrap">
                       {formatCurrency(p.price)}
                     </div>
                     <div className="text-[11px] text-slate-400">

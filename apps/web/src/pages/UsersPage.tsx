@@ -160,21 +160,21 @@ export const UsersPage: React.FC = () => {
     switch (userRole) {
       case 'SUPER_ADMIN':
         return (
-          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-300/80 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs">
+          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-300/80 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs whitespace-nowrap">
             <Crown className="w-3.5 h-3.5 text-amber-600" />
             <span>SUPER ADMIN</span>
           </span>
         );
       case 'ADMIN':
         return (
-          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
             <Shield className="w-3.5 h-3.5 text-blue-600" />
             <span>Quản trị viên</span>
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-medium">
+          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">
             <UserIcon className="w-3.5 h-3.5 text-emerald-600" />
             <span>Nhân viên</span>
           </span>
@@ -183,15 +183,15 @@ export const UsersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-blue-600" />
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
             <span>Quản Lý Tài Khoản & Phân Quyền</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             {isSuperAdmin
               ? 'Tài khoản Super Admin có quyền tạo thêm Quản trị viên (ADMIN) và Nhân viên (USER).'
               : 'Tài khoản Quản trị viên (ADMIN) có quyền tạo và quản lý tài khoản Nhân viên (USER).'}
@@ -200,6 +200,7 @@ export const UsersPage: React.FC = () => {
 
         <Button
           variant="primary"
+          className="self-stretch sm:self-auto justify-center"
           leftIcon={<UserPlus className="w-4 h-4" />}
           onClick={handleOpenCreateModal}
         >
@@ -208,10 +209,10 @@ export const UsersPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <Card className="p-4">
+      <Card className="p-3 sm:p-4">
         <div className="max-w-md">
           <Input
-            placeholder="Tìm theo họ tên hoặc email người dùng..."
+            placeholder="Tìm theo họ tên hoặc email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftElement={<Search className="w-4 h-4" />}
@@ -220,19 +221,19 @@ export const UsersPage: React.FC = () => {
       </Card>
 
       {/* Users Table */}
-      <Card>
+      <Card className="overflow-hidden">
         {isLoading ? (
           <TableSkeleton rows={4} cols={5} />
         ) : filteredUsers.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
+            <table className="min-w-[650px] sm:min-w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Người dùng</th>
-                  <th className="py-3 px-4">Email đăng nhập</th>
-                  <th className="py-3 px-4 text-center">Vai trò phân quyền</th>
-                  <th className="py-3 px-4">Ngày tạo</th>
-                  <th className="py-3 px-4 text-right">Thao tác</th>
+                  <th className="py-3 px-3 sm:px-4">Người dùng</th>
+                  <th className="py-3 px-3 sm:px-4">Email đăng nhập</th>
+                  <th className="py-3 px-3 sm:px-4 text-center">Vai trò phân quyền</th>
+                  <th className="py-3 px-3 sm:px-4">Ngày tạo</th>
+                  <th className="py-3 px-3 sm:px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -249,9 +250,9 @@ export const UsersPage: React.FC = () => {
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-3 sm:px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-300">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-300 flex-shrink-0">
                             {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
                           </div>
                           <div>
@@ -267,23 +268,23 @@ export const UsersPage: React.FC = () => {
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono text-xs text-slate-700">
+                      <td className="py-3.5 px-3 sm:px-4 font-mono text-xs text-slate-700">
                         {u.email}
                       </td>
 
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-3.5 px-3 sm:px-4 text-center">
                         {renderRoleBadge(u.role)}
                       </td>
 
-                      <td className="py-3.5 px-4 text-xs text-slate-500">
+                      <td className="py-3.5 px-3 sm:px-4 text-xs text-slate-500 whitespace-nowrap">
                         {formatDate(u.createdAt)}
                       </td>
 
-                      <td className="py-3.5 px-4 text-right space-x-1">
+                      <td className="py-3.5 px-3 sm:px-4 text-right space-x-1 whitespace-nowrap">
                         {canResetPassword && (
                           <button
                             onClick={() => handleOpenResetPasswordModal(u)}
-                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors active:scale-95"
                             title="Đặt lại mật khẩu"
                           >
                             <Key className="w-4 h-4" />
@@ -293,7 +294,7 @@ export const UsersPage: React.FC = () => {
                         {canEdit && (
                           <button
                             onClick={() => handleOpenEditModal(u)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
                             title="Chỉnh sửa thông tin"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -303,7 +304,7 @@ export const UsersPage: React.FC = () => {
                         {canDelete && (
                           <button
                             onClick={() => setDeletingUser(u)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                            className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-95"
                             title="Xóa tài khoản"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -334,7 +335,7 @@ export const UsersPage: React.FC = () => {
         title="Thêm Tài Khoản Mới"
         maxWidth="md"
       >
-        <form onSubmit={handleCreateSubmit} className="space-y-4">
+        <form onSubmit={handleCreateSubmit} className="space-y-3 sm:space-y-4">
           <Input
             label="Họ và tên"
             placeholder="VD: Nguyễn Văn Nam"
@@ -385,7 +386,7 @@ export const UsersPage: React.FC = () => {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
             <Button
               type="button"
               variant="outline"
@@ -411,7 +412,7 @@ export const UsersPage: React.FC = () => {
         title="Chỉnh Sửa Tài Khoản"
         maxWidth="md"
       >
-        <form onSubmit={handleEditSubmit} className="space-y-4">
+        <form onSubmit={handleEditSubmit} className="space-y-3 sm:space-y-4">
           <Input
             label="Họ và tên"
             value={name}
@@ -443,7 +444,7 @@ export const UsersPage: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
             <Button
               type="button"
               variant="outline"
@@ -469,7 +470,7 @@ export const UsersPage: React.FC = () => {
         title={`Đặt Lại Mật Khẩu: ${resettingUser?.name || ''}`}
         maxWidth="sm"
       >
-        <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+        <form onSubmit={handleResetPasswordSubmit} className="space-y-3 sm:space-y-4">
           <p className="text-xs text-slate-500">
             Nhập mật khẩu mới cho tài khoản <strong className="text-slate-800">{resettingUser?.email}</strong>
           </p>
@@ -483,7 +484,7 @@ export const UsersPage: React.FC = () => {
             required
           />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
             <Button
               type="button"
               variant="outline"

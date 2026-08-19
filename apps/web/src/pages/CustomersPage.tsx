@@ -23,7 +23,6 @@ import {
   Building,
   Phone,
   Mail,
-  FileText,
 } from 'lucide-react';
 
 export const CustomersPage: React.FC = () => {
@@ -107,29 +106,30 @@ export const CustomersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Danh Sách Khách Hàng & Đại Lý</h1>
-          <p className="text-sm text-slate-500">
-            Quản lý thông tin doanh nghiệp, đại lý cấp 1/2 và các xưởng sản xuất tủ bếp đối tác
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900">Danh Bạ Khách Hàng & Đại Lý</h1>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Quản lý thông tin công ty, liên hệ đại lý và công trình tủ bếp
           </p>
         </div>
         <Button
           variant="primary"
+          className="self-stretch sm:self-auto justify-center"
           leftIcon={<Plus className="w-4 h-4" />}
           onClick={openCreateModal}
         >
-          Thêm khách hàng mới
+          Thêm khách hàng
         </Button>
       </div>
 
       {/* Filter Toolbar */}
-      <Card className="p-4">
-        <div className="w-full md:w-96">
+      <Card className="p-3 sm:p-4">
+        <div className="w-full sm:w-96">
           <Input
-            placeholder="Tìm theo tên công ty, người liên hệ, SĐT, MST..."
+            placeholder="Tìm theo tên công ty, số điện thoại, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftElement={<Search className="w-4 h-4" />}
@@ -138,79 +138,66 @@ export const CustomersPage: React.FC = () => {
       </Card>
 
       {/* Customers Table */}
-      <Card>
+      <Card className="overflow-hidden">
         {isLoading ? (
-          <TableSkeleton rows={4} cols={5} />
+          <TableSkeleton rows={5} cols={5} />
         ) : customers.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
+            <table className="min-w-[650px] sm:min-w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Tên Khách Hàng / Công Ty</th>
-                  <th className="py-3 px-4">Người liên hệ</th>
-                  <th className="py-3 px-4">Thông tin liên lạc</th>
-                  <th className="py-3 px-4 text-center">Số báo giá</th>
-                  <th className="py-3 px-4 text-right">Hành động</th>
+                  <th className="py-3 px-3 sm:px-4">Khách hàng / Công ty</th>
+                  <th className="py-3 px-3 sm:px-4">Người đại diện</th>
+                  <th className="py-3 px-3 sm:px-4">Liên hệ</th>
+                  <th className="py-3 px-3 sm:px-4">Địa chỉ</th>
+                  <th className="py-3 px-3 sm:px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {customers.map((cust: any) => (
-                  <tr key={cust.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900 flex items-center gap-2">
+                {customers.map((c: Customer) => (
+                  <tr key={c.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3.5 px-3 sm:px-4">
+                      <div className="font-semibold text-slate-900 flex items-center gap-2">
                         <Building className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                        <span>{cust.companyName}</span>
+                        <span>{c.companyName}</span>
                       </div>
-                      {cust.taxCode && (
-                        <div className="text-xs text-slate-400 mt-0.5 font-mono">
-                          MST: {cust.taxCode}
-                        </div>
-                      )}
-                      {cust.address && (
-                        <div className="text-xs text-slate-500 mt-0.5 line-clamp-1 max-w-sm">
-                          {cust.address}
+                      {c.taxCode && (
+                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          MST: {c.taxCode}
                         </div>
                       )}
                     </td>
-
-                    <td className="py-3.5 px-4 font-medium text-slate-800">
-                      {cust.contactName || '---'}
+                    <td className="py-3.5 px-3 sm:px-4 font-medium text-slate-800">
+                      {c.contactName || '---'}
                     </td>
-
-                    <td className="py-3.5 px-4 space-y-1">
-                      {cust.phone && (
-                        <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                          <Phone className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{cust.phone}</span>
+                    <td className="py-3.5 px-3 sm:px-4 text-xs space-y-0.5">
+                      {c.phone && (
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                          <span>{c.phone}</span>
                         </div>
                       )}
-                      {cust.email && (
-                        <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                          <Mail className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="font-mono">{cust.email}</span>
+                      {c.email && (
+                        <div className="flex items-center gap-1.5 text-slate-500">
+                          <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                          <span className="truncate max-w-[150px]">{c.email}</span>
                         </div>
                       )}
-                      {!cust.phone && !cust.email && <span className="text-slate-400 text-xs">---</span>}
                     </td>
-
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>{cust._count?.quotations || 0}</span>
-                      </span>
+                    <td className="py-3.5 px-3 sm:px-4 text-xs text-slate-600 max-w-xs truncate">
+                      {c.address || '---'}
                     </td>
-
-                    <td className="py-3.5 px-4 text-right space-x-1">
+                    <td className="py-3.5 px-3 sm:px-4 text-right space-x-1 whitespace-nowrap">
                       <button
-                        onClick={() => openEditModal(cust)}
-                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                        onClick={() => openEditModal(c)}
+                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
                         title="Chỉnh sửa"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => setDeletingCustomerId(cust.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                        onClick={() => setDeletingCustomerId(c.id)}
+                        className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-95"
                         title="Xóa"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -224,8 +211,8 @@ export const CustomersPage: React.FC = () => {
         ) : (
           <EmptyState
             title="Không tìm thấy khách hàng nào"
-            description="Hãy tạo khách hàng mới để quản lý thông tin và gửi báo giá."
-            actionText="Tạo khách hàng đầu tiên"
+            description="Hãy thêm khách hàng hoặc đại lý đầu tiên vào hệ thống."
+            actionText="Thêm khách hàng mới"
             onAction={openCreateModal}
             icon={<Users className="w-10 h-10" />}
           />
@@ -236,34 +223,34 @@ export const CustomersPage: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingCustomer ? 'Chỉnh Sửa Khách Hàng / Đại Lý' : 'Thêm Khách Hàng / Đại Lý Mới'}
+        title={editingCustomer ? 'Chỉnh Sửa Khách Hàng' : 'Thêm Khách Hàng / Đại Lý Mới'}
         maxWidth="lg"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <Input
-            label="Tên Khách Hàng / Công Ty / Đại Lý"
-            placeholder="VD: Xưởng Tủ Bếp & Nội Thất Mộc Gia"
+            label="Tên công ty / Tên khách hàng *"
+            placeholder="VD: Cty TNHH Nội Thất Minh Quân"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             required
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
               label="Người liên hệ đại diện"
-              placeholder="VD: Anh Vũ Đình Thắng"
+              placeholder="VD: Anh Tuấn Anh"
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
             />
             <Input
               label="Mã số thuế"
-              placeholder="VD: 0108668899"
+              placeholder="VD: 0108992345"
               value={taxCode}
               onChange={(e) => setTaxCode(e.target.value)}
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
               label="Số điện thoại"
               placeholder="VD: 0988 567 890"
@@ -271,22 +258,22 @@ export const CustomersPage: React.FC = () => {
               onChange={(e) => setPhone(e.target.value)}
             />
             <Input
-              label="Email nhận báo giá"
+              label="Email"
               type="email"
-              placeholder="VD: noithatmocgia@gmail.com"
+              placeholder="VD: tuananh@homedecor.vn"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <Input
-            label="Địa chỉ giao hàng / công trình"
-            placeholder="VD: Thôn 1, xã Thạch Thất, Hà Nội"
+            label="Địa chỉ công trình / văn phòng"
+            placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
 
-          <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="mt-6 flex justify-end gap-2.5 pt-4 border-t border-slate-100">
             <Button
               type="button"
               variant="outline"
@@ -311,7 +298,7 @@ export const CustomersPage: React.FC = () => {
         onClose={() => setDeletingCustomerId(null)}
         onConfirm={handleDelete}
         title="Xác nhận xóa khách hàng"
-        message="Bạn có chắc chắn muốn xóa khách hàng này? Nếu khách hàng đã có báo giá, hệ thống sẽ bảo vệ dữ liệu lịch sử."
+        message="Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống?"
         isLoading={deleteMutation.isPending}
       />
     </div>

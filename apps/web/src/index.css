@@ -8,7 +8,26 @@
   }
 }
 
-/* Custom Scrollbars */
+/* Safe Area Inset Utility Classes for iOS Devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Custom Scrollbars & Touch Smoothness */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.overflow-x-auto, .overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -36,6 +55,14 @@
   background: #ffffff;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
+}
+
+@media screen and (max-width: 640px) {
+  .a4-sheet-mobile-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1rem;
+  }
 }
 
 @media print {

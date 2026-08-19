@@ -113,17 +113,18 @@ export const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Header & Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Danh Mục Phụ Kiện Tủ Bếp EUPLUS</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900">Danh Mục Phụ Kiện Tủ Bếp EUPLUS</h1>
+          <p className="text-xs sm:text-sm text-slate-500">
             Quản lý giá phân phối phụ kiện Inox 304, thùng rác, thùng gạo và tủ bếp
           </p>
         </div>
         <Button
           variant="primary"
+          className="self-stretch sm:self-auto justify-center"
           leftIcon={<Plus className="w-4 h-4" />}
           onClick={openCreateModal}
         >
@@ -132,23 +133,23 @@ export const ProductsPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="w-full md:w-80">
+      <Card className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+          <div className="w-full sm:w-80">
             <Input
-              placeholder="Tìm theo mã hàng (EV.I80, EV.80B...) hoặc tên..."
+              placeholder="Tìm theo mã hàng (EV.I80...) hoặc tên..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftElement={<Search className="w-4 h-4" />}
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Trạng thái:</span>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <span className="text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Trạng thái:</span>
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
-              className="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 sm:flex-initial"
             >
               <option value="">Tất cả</option>
               <option value="true">Đang kích hoạt (Active)</option>
@@ -159,30 +160,30 @@ export const ProductsPage: React.FC = () => {
       </Card>
 
       {/* Products Table */}
-      <Card>
+      <Card className="overflow-hidden">
         {isLoading ? (
           <TableSkeleton rows={5} cols={6} />
         ) : products.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
+            <table className="min-w-[650px] sm:min-w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Mã hàng</th>
-                  <th className="py-3 px-4">Tên phụ kiện & Quy cách</th>
-                  <th className="py-3 px-4 text-center">ĐVT</th>
-                  <th className="py-3 px-4 text-right">Giá phân phối</th>
-                  <th className="py-3 px-4 text-center">VAT</th>
-                  <th className="py-3 px-4 text-center">Trạng thái</th>
-                  <th className="py-3 px-4 text-right">Hành động</th>
+                  <th className="py-3 px-3 sm:px-4">Mã hàng</th>
+                  <th className="py-3 px-3 sm:px-4">Tên phụ kiện & Quy cách</th>
+                  <th className="py-3 px-3 sm:px-4 text-center">ĐVT</th>
+                  <th className="py-3 px-3 sm:px-4 text-right">Giá phân phối</th>
+                  <th className="py-3 px-3 sm:px-4 text-center">VAT</th>
+                  <th className="py-3 px-3 sm:px-4 text-center">Trạng thái</th>
+                  <th className="py-3 px-3 sm:px-4 text-right">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((prod) => (
                   <tr key={prod.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-blue-700 text-xs">
+                    <td className="py-3.5 px-3 sm:px-4 font-mono font-bold text-blue-700 text-xs whitespace-nowrap">
                       {prod.code}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3 sm:px-4">
                       <div className="font-semibold text-slate-900">{prod.name}</div>
                       {prod.shortDescription && (
                         <div className="text-xs text-slate-500 line-clamp-1 mt-0.5 max-w-md">
@@ -190,35 +191,35 @@ export const ProductsPage: React.FC = () => {
                         </div>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-center text-xs text-slate-600 font-medium">
+                    <td className="py-3.5 px-3 sm:px-4 text-center text-xs text-slate-600 font-medium whitespace-nowrap">
                       {prod.unit}
                     </td>
-                    <td className="py-3.5 px-4 text-right font-bold text-slate-900">
+                    <td className="py-3.5 px-3 sm:px-4 text-right font-bold text-slate-900 whitespace-nowrap">
                       {formatCurrency(prod.price)}
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-3 sm:px-4 text-center whitespace-nowrap">
                       <span className="inline-block bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded">
                         {prod.vatRate}%
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-3 sm:px-4 text-center whitespace-nowrap">
                       {prod.active ? (
                         <Badge variant="success">Hoạt động</Badge>
                       ) : (
                         <Badge variant="default">Tạm ngưng</Badge>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-right space-x-1">
+                    <td className="py-3.5 px-3 sm:px-4 text-right space-x-1 whitespace-nowrap">
                       <button
                         onClick={() => openEditModal(prod)}
-                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
                         title="Chỉnh sửa"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setDeletingProductId(prod.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                        className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-95"
                         title="Xóa"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -247,8 +248,8 @@ export const ProductsPage: React.FC = () => {
         title={editingProduct ? 'Chỉnh Sửa Phụ Kiện' : 'Thêm Phụ Kiện Mới'}
         maxWidth="lg"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
               label="Mã hàng / Mã SP"
               placeholder="VD: EV.I80, EV.80B..."
@@ -275,22 +276,22 @@ export const ProductsPage: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Mô tả ngắn gọn (Quy cách, Inox 304, bảo hành, xuất xứ...)
+              Mô tả ngắn gọn (Quy cách, Inox 304, xuất xứ...)
             </label>
             <textarea
               rows={2}
               maxLength={250}
-              placeholder="Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp, giảm chấn êm ái, khay hứng nước..."
+              placeholder="Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp, giảm chấn..."
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
               className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <div className="text-right text-[11px] text-slate-400 mt-1">
-              {shortDescription.length} / 200 ký tự (Tối giản theo quy chuẩn báo giá hiện đại)
+              {shortDescription.length} / 200 ký tự
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
               label="Đơn giá phân phối (đ)"
               type="number"
@@ -326,7 +327,7 @@ export const ProductsPage: React.FC = () => {
             </label>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="mt-6 flex justify-end gap-2.5 pt-4 border-t border-slate-100">
             <Button
               type="button"
               variant="outline"

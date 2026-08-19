@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import {
+  useUsers,
+  useCreateUser,
+  useUpdateUser,
+  useResetPassword,
+  useDeleteUser,
+} from '../hooks';
 import { User, UserRole, formatDate } from '@taohoadon/shared';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -21,14 +26,11 @@ import {
   User as UserIcon,
   Crown,
   Search,
-  Check,
-  AlertCircle,
 } from 'lucide-react';
 
 export const UsersPage: React.FC = () => {
   const { user: currentUser } = useAuth();
-  const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { error } = useToast();
 
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
@@ -50,11 +52,12 @@ export const UsersPage: React.FC = () => {
   // Reset password form
   const [newPassword, setNewPassword] = useState('');
 
-  // Fetch Users
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ['users'],
-    queryFn: () => apiClient('/users'),
-  });
+  // Custom Hooks
+  const { data: users = [], isLoading } = useUsers();
+  const createMutation = useCreateUser();
+  const updateMutation = useUpdateUser();
+  const resetPasswordMutation = useResetPassword();
+  const deleteMutation = useDeleteUser();
 
   // Open Create Modal
   const handleOpenCreateModal = () => {
@@ -79,59 +82,6 @@ export const UsersPage: React.FC = () => {
     setNewPassword('');
   };
 
-  // Create Mutation
-  const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient('/users', { method: 'POST', data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      success('Tạo tài khoản người dùng mới thành công!');
-      setIsCreateModalOpen(false);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể tạo tài khoản');
-    },
-  });
-
-  // Update Mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      apiClient(`/users/${id}`, { method: 'PATCH', data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      success('Cập nhật tài khoản thành công!');
-      setEditingUser(null);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể cập nhật tài khoản');
-    },
-  });
-
-  // Reset Password Mutation
-  const resetPasswordMutation = useMutation({
-    mutationFn: ({ id, newPassword }: { id: string; newPassword: string }) =>
-      apiClient(`/users/${id}/reset-password`, { method: 'POST', data: { newPassword } }),
-    onSuccess: () => {
-      success('Đặt lại mật khẩu thành công!');
-      setResettingUser(null);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể đặt lại mật khẩu');
-    },
-  });
-
-  // Delete Mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiClient(`/users/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      success('Đã xóa tài khoản thành công!');
-      setDeletingUser(null);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể xóa tài khoản');
-    },
-  });
-
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password) {
@@ -139,12 +89,17 @@ export const UsersPage: React.FC = () => {
       return;
     }
 
-    createMutation.mutate({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password,
-      role,
-    });
+    createMutation.mutate(
+      {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        role,
+      },
+      {
+        onSuccess: () => setIsCreateModalOpen(false),
+      }
+    );
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -154,14 +109,19 @@ export const UsersPage: React.FC = () => {
       return;
     }
 
-    updateMutation.mutate({
-      id: editingUser.id,
-      data: {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        role: isSuperAdmin ? role : undefined,
+    updateMutation.mutate(
+      {
+        id: editingUser.id,
+        data: {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          role: isSuperAdmin ? role : undefined,
+        },
       },
-    });
+      {
+        onSuccess: () => setEditingUser(null),
+      }
+    );
   };
 
   const handleResetPasswordSubmit = (e: React.FormEvent) => {
@@ -171,10 +131,23 @@ export const UsersPage: React.FC = () => {
       return;
     }
 
-    resetPasswordMutation.mutate({
-      id: resettingUser.id,
-      newPassword,
-    });
+    resetPasswordMutation.mutate(
+      {
+        id: resettingUser.id,
+        newPassword,
+      },
+      {
+        onSuccess: () => setResettingUser(null),
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (deletingUser) {
+      deleteMutation.mutate(deletingUser.id, {
+        onSuccess: () => setDeletingUser(null),
+      });
+    }
   };
 
   const filteredUsers = users.filter(
@@ -533,7 +506,7 @@ export const UsersPage: React.FC = () => {
       <ConfirmDialog
         isOpen={!!deletingUser}
         onClose={() => setDeletingUser(null)}
-        onConfirm={() => deletingUser && deleteMutation.mutate(deletingUser.id)}
+        onConfirm={handleDelete}
         title="Xác nhận xóa tài khoản"
         message={`Bạn có chắc chắn muốn xóa tài khoản "${deletingUser?.name}" (${deletingUser?.email})? Hành động này không thể khôi phục.`}
         isLoading={deleteMutation.isPending}

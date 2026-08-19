@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import {
+  useCustomers,
+  useCreateCustomer,
+  useUpdateCustomer,
+  useDeleteCustomer,
+} from '../hooks';
 import { Customer } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
@@ -23,8 +27,7 @@ import {
 } from 'lucide-react';
 
 export const CustomersPage: React.FC = () => {
-  const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { error } = useToast();
 
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,15 +42,11 @@ export const CustomersPage: React.FC = () => {
   const [address, setAddress] = useState('');
   const [taxCode, setTaxCode] = useState('');
 
-  // Fetch Customers
-  const { data: customers = [], isLoading } = useQuery<(Customer & { _count?: { quotations: number } })[]>({
-    queryKey: ['customers', search],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      return apiClient(`/customers?${params.toString()}`);
-    },
-  });
+  // Hooks
+  const { data: customers = [], isLoading } = useCustomers(search) as any;
+  const createMutation = useCreateCustomer();
+  const updateMutation = useUpdateCustomer();
+  const deleteMutation = useDeleteCustomer();
 
   const openCreateModal = () => {
     setEditingCustomer(null);
@@ -71,50 +70,10 @@ export const CustomersPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Create Mutation
-  const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient('/customers', { method: 'POST', data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      success('Thêm mới khách hàng thành công');
-      setIsModalOpen(false);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể tạo khách hàng');
-    },
-  });
-
-  // Update Mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      apiClient(`/customers/${id}`, { method: 'PATCH', data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      success('Cập nhật thông tin khách hàng thành công');
-      setIsModalOpen(false);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể cập nhật khách hàng');
-    },
-  });
-
-  // Delete Mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiClient(`/customers/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      success('Đã xóa khách hàng');
-      setDeletingCustomerId(null);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể xóa khách hàng');
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyName.trim()) {
-      error('Vui lòng nhập tên công ty hoặc tên khách hàng');
+      error('Vui lòng nhập tên công ty / khách hàng');
       return;
     }
 
@@ -128,9 +87,22 @@ export const CustomersPage: React.FC = () => {
     };
 
     if (editingCustomer) {
-      updateMutation.mutate({ id: editingCustomer.id, data: payload });
+      updateMutation.mutate(
+        { id: editingCustomer.id, data: payload },
+        { onSuccess: () => setIsModalOpen(false) }
+      );
     } else {
-      createMutation.mutate(payload);
+      createMutation.mutate(payload, {
+        onSuccess: () => setIsModalOpen(false),
+      });
+    }
+  };
+
+  const handleDelete = () => {
+    if (deletingCustomerId) {
+      deleteMutation.mutate(deletingCustomerId, {
+        onSuccess: () => setDeletingCustomerId(null),
+      });
     }
   };
 
@@ -139,8 +111,10 @@ export const CustomersPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Quản Lý Danh Bạ Khách Hàng</h1>
-          <p className="text-sm text-slate-500">Thông tin đối tác, doanh nghiệp và người đại diện nhận báo giá</p>
+          <h1 className="text-xl font-bold text-slate-900">Danh Sách Khách Hàng & Đại Lý</h1>
+          <p className="text-sm text-slate-500">
+            Quản lý thông tin doanh nghiệp, đại lý cấp 1/2 và các xưởng sản xuất tủ bếp đối tác
+          </p>
         </div>
         <Button
           variant="primary"
@@ -151,11 +125,11 @@ export const CustomersPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Search Toolbar */}
+      {/* Filter Toolbar */}
       <Card className="p-4">
-        <div className="max-w-md">
+        <div className="w-full md:w-96">
           <Input
-            placeholder="Tìm theo tên công ty, MST, người liên hệ, email..."
+            placeholder="Tìm theo tên công ty, người liên hệ, SĐT, MST..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftElement={<Search className="w-4 h-4" />}
@@ -166,70 +140,76 @@ export const CustomersPage: React.FC = () => {
       {/* Customers Table */}
       <Card>
         {isLoading ? (
-          <TableSkeleton rows={5} cols={5} />
+          <TableSkeleton rows={4} cols={5} />
         ) : customers.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Tên công ty / Khách hàng</th>
+                  <th className="py-3 px-4">Tên Khách Hàng / Công Ty</th>
                   <th className="py-3 px-4">Người liên hệ</th>
-                  <th className="py-3 px-4">Liên hệ (SĐT & Email)</th>
-                  <th className="py-3 px-4">Mã số thuế</th>
-                  <th className="py-3 px-4 text-center">Báo giá</th>
+                  <th className="py-3 px-4">Thông tin liên lạc</th>
+                  <th className="py-3 px-4 text-center">Số báo giá</th>
                   <th className="py-3 px-4 text-right">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {customers.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/70 transition-colors">
+                {customers.map((cust: any) => (
+                  <tr key={cust.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-slate-900 flex items-center gap-2">
-                        <Building className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                        <span>{c.companyName}</span>
+                        <Building className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span>{cust.companyName}</span>
                       </div>
-                      {c.address && (
-                        <div className="text-xs text-slate-500 mt-0.5 max-w-sm truncate">
-                          {c.address}
+                      {cust.taxCode && (
+                        <div className="text-xs text-slate-400 mt-0.5 font-mono">
+                          MST: {cust.taxCode}
+                        </div>
+                      )}
+                      {cust.address && (
+                        <div className="text-xs text-slate-500 mt-0.5 line-clamp-1 max-w-sm">
+                          {cust.address}
                         </div>
                       )}
                     </td>
+
                     <td className="py-3.5 px-4 font-medium text-slate-800">
-                      {c.contactName || '---'}
+                      {cust.contactName || '---'}
                     </td>
-                    <td className="py-3.5 px-4 text-xs space-y-1">
-                      {c.phone && (
-                        <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+
+                    <td className="py-3.5 px-4 space-y-1">
+                      {cust.phone && (
+                        <div className="flex items-center gap-1.5 text-xs text-slate-700">
                           <Phone className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{c.phone}</span>
+                          <span>{cust.phone}</span>
                         </div>
                       )}
-                      {c.email && (
-                        <div className="flex items-center gap-1.5 text-slate-500">
+                      {cust.email && (
+                        <div className="flex items-center gap-1.5 text-xs text-slate-700">
                           <Mail className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{c.email}</span>
+                          <span className="font-mono">{cust.email}</span>
                         </div>
                       )}
+                      {!cust.phone && !cust.email && <span className="text-slate-400 text-xs">---</span>}
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-xs text-slate-700">
-                      {c.taxCode || '---'}
-                    </td>
+
                     <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">
-                        <FileText className="w-3 h-3" />
-                        {c._count?.quotations ?? 0}
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>{cust._count?.quotations || 0}</span>
                       </span>
                     </td>
+
                     <td className="py-3.5 px-4 text-right space-x-1">
                       <button
-                        onClick={() => openEditModal(c)}
+                        onClick={() => openEditModal(cust)}
                         className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                         title="Chỉnh sửa"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => setDeletingCustomerId(c.id)}
+                        onClick={() => setDeletingCustomerId(cust.id)}
                         className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                         title="Xóa"
                       >
@@ -243,9 +223,9 @@ export const CustomersPage: React.FC = () => {
           </div>
         ) : (
           <EmptyState
-            title="Chưa có thông tin khách hàng"
-            description="Hãy thêm khách hàng mới để bắt đầu tạo báo giá và gửi cho đối tác."
-            actionText="Thêm khách hàng đầu tiên"
+            title="Không tìm thấy khách hàng nào"
+            description="Hãy tạo khách hàng mới để quản lý thông tin và gửi báo giá."
+            actionText="Tạo khách hàng đầu tiên"
             onAction={openCreateModal}
             icon={<Users className="w-10 h-10" />}
           />
@@ -256,13 +236,13 @@ export const CustomersPage: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingCustomer ? 'Chỉnh Sửa Thông Tin Khách Hàng' : 'Thêm Khách Hàng Mới'}
+        title={editingCustomer ? 'Chỉnh Sửa Khách Hàng / Đại Lý' : 'Thêm Khách Hàng / Đại Lý Mới'}
         maxWidth="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Tên Công Ty / Doanh Nghiệp"
-            placeholder="VD: Công ty Cổ phần Công nghệ ABC"
+            label="Tên Khách Hàng / Công Ty / Đại Lý"
+            placeholder="VD: Xưởng Tủ Bếp & Nội Thất Mộc Gia"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             required
@@ -271,13 +251,13 @@ export const CustomersPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Người liên hệ đại diện"
-              placeholder="VD: Nguyễn Văn A"
+              placeholder="VD: Anh Vũ Đình Thắng"
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
             />
             <Input
-              label="Mã số thuế (MST)"
-              placeholder="VD: 0108999999"
+              label="Mã số thuế"
+              placeholder="VD: 0108668899"
               value={taxCode}
               onChange={(e) => setTaxCode(e.target.value)}
             />
@@ -286,22 +266,22 @@ export const CustomersPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Số điện thoại"
-              placeholder="VD: 0900000000"
+              placeholder="VD: 0988 567 890"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
             <Input
-              label="Địa chỉ Email"
+              label="Email nhận báo giá"
               type="email"
-              placeholder="VD: contact@abc.com"
+              placeholder="VD: noithatmocgia@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <Input
-            label="Địa chỉ trụ sở / văn phòng"
-            placeholder="VD: Tòa nhà Innovation, Cầu Giấy, Hà Nội"
+            label="Địa chỉ giao hàng / công trình"
+            placeholder="VD: Thôn 1, xã Thạch Thất, Hà Nội"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
@@ -329,9 +309,9 @@ export const CustomersPage: React.FC = () => {
       <ConfirmDialog
         isOpen={!!deletingCustomerId}
         onClose={() => setDeletingCustomerId(null)}
-        onConfirm={() => deletingCustomerId && deleteMutation.mutate(deletingCustomerId)}
+        onConfirm={handleDelete}
         title="Xác nhận xóa khách hàng"
-        message="Bạn có chắc chắn muốn xóa khách hàng này? Nếu khách hàng đang có báo giá trong hệ thống, hệ thống sẽ ngăn việc xóa."
+        message="Bạn có chắc chắn muốn xóa khách hàng này? Nếu khách hàng đã có báo giá, hệ thống sẽ bảo vệ dữ liệu lịch sử."
         isLoading={deleteMutation.isPending}
       />
     </div>

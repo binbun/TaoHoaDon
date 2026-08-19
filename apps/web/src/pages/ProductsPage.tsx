@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import {
+  useProducts,
+  useCreateProduct,
+  useUpdateProduct,
+  useDeleteProduct,
+} from '../hooks';
 import { Product, formatCurrency } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
@@ -17,13 +21,10 @@ import {
   Search,
   Edit2,
   Trash2,
-  CheckCircle,
-  XCircle,
 } from 'lucide-react';
 
 export const ProductsPage: React.FC = () => {
-  const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { error } = useToast();
 
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('');
@@ -40,16 +41,15 @@ export const ProductsPage: React.FC = () => {
   const [vatRate, setVatRate] = useState<number | string>(8);
   const [active, setActive] = useState(true);
 
-  // Fetch Products
-  const { data: products = [], isLoading } = useQuery<Product[]>({
-    queryKey: ['products', search, activeFilter],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (activeFilter) params.append('active', activeFilter);
-      return apiClient(`/products?${params.toString()}`);
-    },
+  // Queries & Mutations from custom hooks
+  const { data: products = [], isLoading } = useProducts({
+    search,
+    active: activeFilter,
   });
+
+  const createMutation = useCreateProduct();
+  const updateMutation = useUpdateProduct();
+  const deleteMutation = useDeleteProduct();
 
   const openCreateModal = () => {
     setEditingProduct(null);
@@ -75,49 +75,9 @@ export const ProductsPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Create Mutation
-  const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient('/products', { method: 'POST', data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      success('Thêm mới sản phẩm phụ kiện thành công');
-      setIsModalOpen(false);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể tạo sản phẩm');
-    },
-  });
-
-  // Update Mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      apiClient(`/products/${id}`, { method: 'PATCH', data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      success('Cập nhật sản phẩm thành công');
-      setIsModalOpen(false);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể cập nhật sản phẩm');
-    },
-  });
-
-  // Delete Mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiClient(`/products/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      success('Đã xóa sản phẩm');
-      setDeletingProductId(null);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể xóa sản phẩm');
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code || !name) {
+    if (!code.trim() || !name.trim()) {
       error('Vui lòng nhập đầy đủ mã và tên sản phẩm');
       return;
     }
@@ -133,9 +93,22 @@ export const ProductsPage: React.FC = () => {
     };
 
     if (editingProduct) {
-      updateMutation.mutate({ id: editingProduct.id, data: payload });
+      updateMutation.mutate(
+        { id: editingProduct.id, data: payload },
+        { onSuccess: () => setIsModalOpen(false) }
+      );
     } else {
-      createMutation.mutate(payload);
+      createMutation.mutate(payload, {
+        onSuccess: () => setIsModalOpen(false),
+      });
+    }
+  };
+
+  const handleDelete = () => {
+    if (deletingProductId) {
+      deleteMutation.mutate(deletingProductId, {
+        onSuccess: () => setDeletingProductId(null),
+      });
     }
   };
 
@@ -145,7 +118,9 @@ export const ProductsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Danh Mục Phụ Kiện Tủ Bếp EUPLUS</h1>
-          <p className="text-sm text-slate-500">Quản lý giá phân phối phụ kiện Inox 304, thùng rác, thùng gạo và tủ bếp</p>
+          <p className="text-sm text-slate-500">
+            Quản lý giá phân phối phụ kiện Inox 304, thùng rác, thùng gạo và tủ bếp
+          </p>
         </div>
         <Button
           variant="primary"
@@ -374,7 +349,7 @@ export const ProductsPage: React.FC = () => {
       <ConfirmDialog
         isOpen={!!deletingProductId}
         onClose={() => setDeletingProductId(null)}
-        onConfirm={() => deletingProductId && deleteMutation.mutate(deletingProductId)}
+        onConfirm={handleDelete}
         title="Xác nhận xóa sản phẩm"
         message="Bạn có chắc chắn muốn xóa phụ kiện này? Các báo giá cũ đã lưu bản chụp (snapshot) vẫn sẽ giữ nguyên số liệu."
         isLoading={deleteMutation.isPending}

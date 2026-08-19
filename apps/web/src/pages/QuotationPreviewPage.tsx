@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, getFullApiUrl } from '../api/client';
-import { Quotation, formatCurrency, formatDate, getStatusInfo } from '@taohoadon/shared';
+import { useQuotation, useDuplicateQuotation } from '../hooks';
+import { formatCurrency, formatDate } from '@taohoadon/shared';
+import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
@@ -13,41 +13,28 @@ import {
   Download,
   Printer,
   Copy,
-  Building,
   Loader2,
-  AlertCircle,
   FileQuestion,
-  Share2,
 } from 'lucide-react';
 
 export const QuotationPreviewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { success, error, info } = useToast();
 
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Fetch Quotation Details
-  const { data: quotation, isLoading, isError } = useQuery<Quotation>({
-    queryKey: ['quotation', id],
-    queryFn: () => apiClient(`/quotations/${id}`),
-    retry: 1,
-  });
+  // Fetch Quotation Details & Duplicate Mutation from custom hooks
+  const { data: quotation, isLoading, isError } = useQuotation(id);
+  const duplicateMutation = useDuplicateQuotation();
 
-  // Duplicate Mutation
-  const duplicateMutation = useMutation({
-    mutationFn: (quoteId: string) => apiClient(`/quotations/${quoteId}/duplicate`, { method: 'POST' }),
-    onSuccess: (newQuote: Quotation) => {
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      success(`Đã nhân bản sang báo giá ${newQuote.quotationNumber}!`);
-      navigate(`/quotations/${newQuote.id}/preview`);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Nhân bản báo giá thất bại');
-    },
-  });
+  const handleDuplicate = () => {
+    if (id) {
+      duplicateMutation.mutate(id, {
+        onSuccess: (newQuote) => navigate(`/quotations/${newQuote.id}/preview`),
+      });
+    }
+  };
 
   // Download Server-Side Puppeteer PDF
   const handleDownloadPdf = async () => {
@@ -89,7 +76,7 @@ export const QuotationPreviewPage: React.FC = () => {
     window.print();
   };
 
-  // If Error / Not Found (Requirement #21)
+  // If Error / Not Found
   if (isError || (!isLoading && !quotation)) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-slate-200 my-8 max-w-lg mx-auto shadow-sm">
@@ -153,7 +140,7 @@ export const QuotationPreviewPage: React.FC = () => {
             variant="outline"
             size="sm"
             leftIcon={<Copy className="w-4 h-4" />}
-            onClick={() => duplicateMutation.mutate(quotation.id)}
+            onClick={handleDuplicate}
             isLoading={duplicateMutation.isPending}
           >
             Nhân bản
@@ -353,7 +340,7 @@ export const QuotationPreviewPage: React.FC = () => {
 
         {/* Footer info */}
         <div className="mt-8 pt-2 border-t border-slate-200 text-center text-[9px] text-slate-400">
-          Báo giá số ${quotation.quotationNumber} • EUPLUS Smart Kitchen Hardware • Trang 1/1
+          Báo giá số {quotation.quotationNumber} • EUPLUS Smart Kitchen Hardware • Trang 1/1
         </div>
       </div>
     </div>

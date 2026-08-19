@@ -1,8 +1,7 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../api/client';
-import { DashboardStats, formatCurrency, formatDate } from '@taohoadon/shared';
+import { useDashboardStats } from '../hooks';
+import { formatCurrency, formatDate } from '@taohoadon/shared';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
@@ -10,22 +9,17 @@ import { Skeleton } from '../components/Skeleton';
 import {
   FileText,
   Calendar,
-  DollarSign,
-  CheckCircle2,
   PlusCircle,
   ArrowRight,
   TrendingUp,
   ExternalLink,
   Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats'],
-    queryFn: () => apiClient('/dashboard/stats'),
-  });
+  const { data: stats, isLoading } = useDashboardStats();
 
   return (
     <div className="space-y-8">
@@ -54,7 +48,6 @@ export const DashboardPage: React.FC = () => {
 
       {/* 4 KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Card 1: Total Quotations */}
         <Card className="border-l-4 border-l-blue-500">
           <div className="flex items-center justify-between">
             <div>
@@ -73,7 +66,6 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Card 2: This Month */}
         <Card className="border-l-4 border-l-indigo-500">
           <div className="flex items-center justify-between">
             <div>
@@ -92,7 +84,6 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Card 3: Total Value */}
         <Card className="border-l-4 border-l-emerald-500">
           <div className="flex items-center justify-between">
             <div>
@@ -111,7 +102,6 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Card 4: Accepted Value */}
         <Card className="border-l-4 border-l-amber-500">
           <div className="flex items-center justify-between">
             <div>

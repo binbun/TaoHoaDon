@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import {
+  useCustomers,
+  useProducts,
+  useQuotation,
+  useCreateQuotation,
+  useUpdateQuotation,
+  useCreateCustomer,
+} from '../hooks';
 import {
   Customer,
   Product,
-  Quotation,
   QuotationItemInput,
   calculateQuotationTotals,
   formatCurrency,
@@ -15,7 +20,6 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
-import { Badge } from '../components/Badge';
 import {
   Plus,
   Trash2,
@@ -28,7 +32,6 @@ import {
   Eye,
   Search,
   PackagePlus,
-  UserPlus,
   Info,
   ArrowLeft,
   FileSpreadsheet,
@@ -38,8 +41,7 @@ export const QuotationBuilderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { success, error, info } = useToast();
+  const { success, error } = useToast();
 
   // Quotation Info State
   const [quotationNumber, setQuotationNumber] = useState('');
@@ -71,23 +73,19 @@ export const QuotationBuilderPage: React.FC = () => {
   const [isProductPickerOpen, setIsProductPickerOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
 
-  // Fetch Customers & Products
-  const { data: customers = [] } = useQuery<Customer[]>({
-    queryKey: ['customers'],
-    queryFn: () => apiClient('/customers'),
-  });
+  // Custom Hooks
+  const { data: customers = [] } = useCustomers();
+  const { data: products = [] } = useProducts({ active: true });
+  const { data: existingQuote } = useQuotation(id);
 
-  const { data: products = [] } = useQuery<Product[]>({
-    queryKey: ['products'],
-    queryFn: () => apiClient('/products?active=true'),
-  });
+  const createQuotationMutation = useCreateQuotation();
+  const updateQuotationMutation = useUpdateQuotation();
+  const createCustomerMutation = useCreateCustomer();
 
-  // If Edit Mode, fetch existing quotation
-  const { data: existingQuote, isLoading: isLoadingQuote } = useQuery<Quotation>({
-    queryKey: ['quotation', id],
-    queryFn: () => apiClient(`/quotations/${id}`),
-    enabled: isEditMode,
-  });
+  const isSaving =
+    createQuotationMutation.isPending ||
+    updateQuotationMutation.isPending ||
+    createCustomerMutation.isPending;
 
   // Populate data when editing
   useEffect(() => {
@@ -219,41 +217,39 @@ export const QuotationBuilderPage: React.FC = () => {
   // Real-time calculation using shared logic
   const { calculatedItems, summary } = calculateQuotationTotals(items);
 
-  // Save / Submit Mutation
-  const saveMutation = useMutation({
-    mutationFn: async (redirectAfterSave: boolean) => {
-      // Validate customer
+  // Save Quotation Handler
+  const handleSave = async (redirectAfterSave: boolean) => {
+    try {
       let finalCustomerId = selectedCustomerId;
       if (!finalCustomerId) {
         if (!companyName.trim()) {
-          throw new Error('Vui lòng nhập tên khách hàng / đại lý');
+          error('Vui lòng nhập tên khách hàng / đại lý');
+          return;
         }
-        // Auto create customer
-        const newCust = await apiClient<Customer>('/customers', {
-          method: 'POST',
-          data: {
-            companyName: companyName.trim(),
-            contactName: contactName.trim() || null,
-            email: email.trim() || null,
-            phone: phone.trim() || null,
-            address: address.trim() || null,
-            taxCode: taxCode.trim() || null,
-          },
+        const newCust = await createCustomerMutation.mutateAsync({
+          companyName: companyName.trim(),
+          contactName: contactName.trim() || null,
+          email: email.trim() || null,
+          phone: phone.trim() || null,
+          address: address.trim() || null,
+          taxCode: taxCode.trim() || null,
         });
         finalCustomerId = newCust.id;
       }
 
       if (items.length === 0) {
-        throw new Error('Báo giá phải có ít nhất 1 sản phẩm / phụ kiện');
+        error('Báo giá phải có ít nhất 1 sản phẩm / phụ kiện');
+        return;
       }
 
-      // Check item validity
       for (let i = 0; i < items.length; i++) {
         if (!items[i].productNameSnapshot?.trim()) {
-          throw new Error(`Dòng số ${i + 1} chưa có tên phụ kiện/sản phẩm`);
+          error(`Dòng số ${i + 1} chưa có tên phụ kiện/sản phẩm`);
+          return;
         }
         if (items[i].quantity <= 0) {
-          throw new Error(`Dòng số ${i + 1} phải có số lượng lớn hơn 0`);
+          error(`Dòng số ${i + 1} phải có số lượng lớn hơn 0`);
+          return;
         }
       }
 
@@ -278,35 +274,25 @@ export const QuotationBuilderPage: React.FC = () => {
         })),
       };
 
-      let result: Quotation;
-      if (isEditMode) {
-        result = await apiClient<Quotation>(`/quotations/${id}`, {
-          method: 'PATCH',
-          data: payload,
-        });
+      if (isEditMode && id) {
+        const updated = await updateQuotationMutation.mutateAsync({ id, data: payload });
+        if (redirectAfterSave) {
+          navigate(`/quotations/${updated.id}/preview`);
+        } else {
+          navigate('/quotations');
+        }
       } else {
-        result = await apiClient<Quotation>('/quotations', {
-          method: 'POST',
-          data: payload,
-        });
+        const created = await createQuotationMutation.mutateAsync(payload);
+        if (redirectAfterSave) {
+          navigate(`/quotations/${created.id}/preview`);
+        } else {
+          navigate('/quotations');
+        }
       }
-
-      return { result, redirectAfterSave };
-    },
-    onSuccess: ({ result, redirectAfterSave }) => {
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      success(isEditMode ? 'Cập nhật báo giá thành công!' : 'Tạo báo giá thành công!');
-      if (redirectAfterSave) {
-        navigate(`/quotations/${result.id}/preview`);
-      } else {
-        navigate('/quotations');
-      }
-    },
-    onError: (err: any) => {
+    } catch (err: any) {
       error(err.message || 'Lưu báo giá thất bại, vui lòng kiểm tra lại');
-    },
-  });
+    }
+  };
 
   const filteredProducts = products.filter(
     (p) =>
@@ -343,8 +329,8 @@ export const QuotationBuilderPage: React.FC = () => {
             variant="outline"
             size="md"
             leftIcon={<Save className="w-4 h-4" />}
-            onClick={() => saveMutation.mutate(false)}
-            isLoading={saveMutation.isPending}
+            onClick={() => handleSave(false)}
+            isLoading={isSaving}
           >
             Lưu danh sách
           </Button>
@@ -352,17 +338,17 @@ export const QuotationBuilderPage: React.FC = () => {
             variant="primary"
             size="md"
             leftIcon={<Eye className="w-4 h-4" />}
-            onClick={() => saveMutation.mutate(true)}
-            isLoading={saveMutation.isPending}
+            onClick={() => handleSave(true)}
+            isLoading={isSaving}
           >
             Lưu & Xem Preview
           </Button>
         </div>
       </div>
 
-      {/* 2-Column Responsive Layout: Left Form (8 cols) + Right Financial Summary (4 cols) */}
+      {/* 2-Column Responsive Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left 8 Columns: Forms & Items */}
+        {/* Left 8 Columns */}
         <div className="lg:col-span-8 space-y-6">
           {/* Section 1: Customer Information */}
           <Card
@@ -571,7 +557,7 @@ export const QuotationBuilderPage: React.FC = () => {
                       key={item.id || index}
                       className="p-4 bg-slate-50/70 border border-slate-200 rounded-xl space-y-3 relative group"
                     >
-                      {/* Row Top: STT, Product Name, Actions */}
+                      {/* Row Top */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">
@@ -621,7 +607,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Product Name & Short Description Inputs */}
+                      {/* Inputs */}
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                         <div className="sm:col-span-8">
                           <Input
@@ -650,7 +636,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         />
                       </div>
 
-                      {/* Numeric Inputs: Qty, Unit Price, Discount, VAT, Row Total */}
+                      {/* Numeric Inputs */}
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1 items-end">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase">
@@ -713,7 +699,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         <div className="col-span-2 sm:col-span-1 bg-white p-2 rounded-lg border border-slate-200 text-right">
                           <div className="text-[10px] font-bold text-slate-400 uppercase">Thành tiền</div>
                           <div className="font-extrabold text-slate-900 text-sm truncate">
-                            {formatCurrency(calculatedRow ? calculatedRow.total : 0)}
+                            {formatCurrency(calculatedRow?.total ?? 0)}
                           </div>
                         </div>
                       </div>
@@ -724,7 +710,7 @@ export const QuotationBuilderPage: React.FC = () => {
             )}
           </Card>
 
-          {/* Section 4: Notes & Terms */}
+          {/* Section 4: Notes */}
           <Card title="4. Chính Sách Bảo Hành & Điều Khoản Báo Giá">
             <textarea
               rows={4}
@@ -736,7 +722,7 @@ export const QuotationBuilderPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Right 4 Columns: Sticky Summary Card */}
+        {/* Right 4 Columns */}
         <div className="lg:col-span-4 sticky top-20 space-y-4">
           <Card className="border-t-4 border-t-blue-600 shadow-md">
             <h3 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center justify-between">
@@ -785,8 +771,8 @@ export const QuotationBuilderPage: React.FC = () => {
                 variant="primary"
                 className="w-full py-2.5 font-bold shadow-md shadow-blue-500/20"
                 leftIcon={<Eye className="w-4 h-4" />}
-                onClick={() => saveMutation.mutate(true)}
-                isLoading={saveMutation.isPending}
+                onClick={() => handleSave(true)}
+                isLoading={isSaving}
               >
                 Lưu & Xem Trước Báo Giá
               </Button>
@@ -795,8 +781,8 @@ export const QuotationBuilderPage: React.FC = () => {
                 variant="outline"
                 className="w-full"
                 leftIcon={<Save className="w-4 h-4" />}
-                onClick={() => saveMutation.mutate(false)}
-                isLoading={saveMutation.isPending}
+                onClick={() => handleSave(false)}
+                isLoading={isSaving}
               >
                 Lưu lại danh sách
               </Button>

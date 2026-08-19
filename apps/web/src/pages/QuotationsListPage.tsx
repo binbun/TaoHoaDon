@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../api/client';
+import {
+  useQuotations,
+  useDeleteQuotation,
+  useDuplicateQuotation,
+} from '../hooks';
 import { Quotation, QuotationStatus, formatCurrency, formatDate } from '@taohoadon/shared';
+import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -28,7 +32,6 @@ import { clsx } from 'clsx';
 
 export const QuotationsListPage: React.FC = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { success, error, info } = useToast();
 
   const [search, setSearch] = useState('');
@@ -36,55 +39,25 @@ export const QuotationsListPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  // Fetch Quotations
-  const { data: responseData, isLoading } = useQuery<{ data: Quotation[]; pagination: any }>({
-    queryKey: ['quotations', search, statusFilter],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (statusFilter && statusFilter !== 'ALL') params.append('status', statusFilter);
-      return apiClient(`/quotations?${params.toString()}`);
-    },
-  });
+  // Custom Hooks
+  const { data: responseData, isLoading } = useQuotations({
+    search,
+    status: statusFilter !== 'ALL' ? statusFilter : undefined,
+  }) as any;
+
+  const deleteMutation = useDeleteQuotation();
+  const duplicateMutation = useDuplicateQuotation();
 
   const quotations: Quotation[] = responseData?.data || (Array.isArray(responseData) ? responseData : []);
 
-  // Delete Mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiClient(`/quotations/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      success('Đã xóa báo giá thành công');
-      setDeletingId(null);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể xóa báo giá');
-    },
-  });
-
-  // Duplicate Mutation
-  const duplicateMutation = useMutation({
-    mutationFn: (id: string) => apiClient(`/quotations/${id}/duplicate`, { method: 'POST' }),
-    onSuccess: (newQuote: Quotation) => {
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      success(`Đã nhân bản sang báo giá mới: ${newQuote.quotationNumber}`);
-      navigate(`/quotations/${newQuote.id}/preview`);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Nhân bản báo giá thất bại');
-    },
-  });
-
-  // Handle PDF Download
+  // Download PDF
   const handleDownloadPdf = async (q: Quotation) => {
     try {
       setDownloadingId(q.id);
-      info('Đang sinh file PDF chuẩn A4 trên server...');
+      info(`Đang tạo PDF cho báo giá ${q.quotationNumber}...`);
 
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/quotations/${q.id}/pdf`, {
+      const response = await fetch(getFullApiUrl(`/quotations/${q.id}/pdf`), {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
@@ -98,13 +71,13 @@ export const QuotationsListPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Bao_Gia_${q.quotationNumber}.pdf`;
+      link.download = `Bao_Gia_EUPLUS_${q.quotationNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      success(`Đã tải xuống file Bao_Gia_${q.quotationNumber}.pdf thành công!`);
+      success(`Đã tải xuống file Bao_Gia_EUPLUS_${q.quotationNumber}.pdf`);
     } catch (err: any) {
       error(err.message || 'Không thể xuất file PDF');
     } finally {
@@ -112,13 +85,13 @@ export const QuotationsListPage: React.FC = () => {
     }
   };
 
-  const statusTabs: { label: string; value: string }[] = [
-    { label: 'Tất cả', value: 'ALL' },
-    { label: 'Bản nháp (Draft)', value: 'DRAFT' },
-    { label: 'Đã gửi (Sent)', value: 'SENT' },
-    { label: 'Đã duyệt (Accepted)', value: 'ACCEPTED' },
-    { label: 'Từ chối (Rejected)', value: 'REJECTED' },
-    { label: 'Hết hạn (Expired)', value: 'EXPIRED' },
+  const statusTabs: { key: string; label: string }[] = [
+    { key: 'ALL', label: 'Tất cả' },
+    { key: 'DRAFT', label: 'Bản nháp' },
+    { key: 'SENT', label: 'Đã gửi' },
+    { key: 'ACCEPTED', label: 'Đã duyệt' },
+    { key: 'REJECTED', label: 'Từ chối' },
+    { key: 'EXPIRED', label: 'Hết hạn' },
   ];
 
   return (
@@ -126,8 +99,10 @@ export const QuotationsListPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Danh Sách Báo Giá</h1>
-          <p className="text-sm text-slate-500">Quản lý, chỉnh sửa, nhân bản và xuất PDF báo giá cho đối tác</p>
+          <h1 className="text-xl font-bold text-slate-900">Quản Lý Báo Giá Phụ Kiện & Tủ Bếp</h1>
+          <p className="text-sm text-slate-500">
+            Tạo, xem trước, nhân bản và xuất bản in PDF theo quy chuẩn EUPLUS Kitchen
+          </p>
         </div>
         <Button
           variant="primary"
@@ -138,40 +113,39 @@ export const QuotationsListPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div className="space-y-3">
-        {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200">
-          {statusTabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setStatusFilter(tab.value)}
-              className={clsx(
-                'px-4 py-2 text-xs font-semibold rounded-t-lg transition-all whitespace-nowrap border-b-2',
-                statusFilter === tab.value
-                  ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search Input */}
-        <Card className="p-4">
-          <div className="max-w-md">
+      {/* Filter Toolbar & Status Pills */}
+      <Card className="p-4 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="w-full md:w-96">
             <Input
-              placeholder="Tìm theo số báo giá, tiêu đề, tên khách hàng..."
+              placeholder="Tìm theo số báo giá (BG-2026-...), tên khách hàng..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftElement={<Search className="w-4 h-4" />}
             />
           </div>
-        </Card>
-      </div>
 
-      {/* Quotation Table */}
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+            {statusTabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={clsx(
+                  'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
+                  statusFilter === tab.key
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Quotations Table */}
       <Card>
         {isLoading ? (
           <TableSkeleton rows={5} cols={6} />
@@ -180,94 +154,110 @@ export const QuotationsListPage: React.FC = () => {
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Số báo giá</th>
-                  <th className="py-3 px-4">Khách hàng & Tiêu đề</th>
-                  <th className="py-3 px-4">Thời hạn</th>
-                  <th className="py-3 px-4 text-right">Tổng thanh toán</th>
+                  <th className="py-3 px-4">Số báo giá & Tiêu đề</th>
+                  <th className="py-3 px-4">Khách hàng / Đại lý</th>
+                  <th className="py-3 px-4 text-right">Tổng tiền</th>
+                  <th className="py-3 px-4">Thời gian</th>
                   <th className="py-3 px-4 text-center">Trạng thái</th>
                   <th className="py-3 px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {quotations.map((q) => (
-                  <tr key={q.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-blue-600">
-                      <span
-                        onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                        className="cursor-pointer hover:underline flex items-center gap-1.5"
-                      >
-                        <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                        <span>{q.quotationNumber}</span>
-                      </span>
-                    </td>
+                  <tr key={q.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4">
-                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                        <Building className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{q.customer?.companyName || '---'}</span>
+                      <div
+                        onClick={() => navigate(`/quotations/${q.id}/preview`)}
+                        className="font-mono font-bold text-blue-600 hover:underline cursor-pointer text-sm"
+                      >
+                        {q.quotationNumber}
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5 max-w-sm truncate">
+                      <div className="text-xs font-medium text-slate-800 line-clamp-1 mt-0.5 max-w-sm">
                         {q.title}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-xs text-slate-600 space-y-0.5">
+
+                    <td className="py-3.5 px-4">
+                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
+                        <Building className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{q.customer?.companyName || 'Khách lẻ'}</span>
+                      </div>
+                      {q.customer?.contactName && (
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          LH: {q.customer.contactName}
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="font-extrabold text-slate-900 text-sm">
+                        {formatCurrency(q.grandTotal)}
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        {q.items?.length || 0} sản phẩm
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-xs text-slate-500 space-y-0.5">
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         <span>Lập: {formatDate(q.quotationDate)}</span>
                       </div>
-                      <div className="text-slate-400 text-[11px]">
+                      <div className="text-[11px] text-slate-400">
                         Hạn: {formatDate(q.validUntil)}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-right font-extrabold text-slate-900 text-sm">
-                      {formatCurrency(q.grandTotal)}
-                    </td>
+
                     <td className="py-3.5 px-4 text-center">
                       <Badge status={q.status} />
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                          title="Xem trước & In"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/quotations/${q.id}/edit`)}
-                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                          title="Chỉnh sửa"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => duplicateMutation.mutate(q.id)}
-                          disabled={duplicateMutation.isPending}
-                          className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors disabled:opacity-50"
-                          title="Nhân bản báo giá"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDownloadPdf(q)}
-                          disabled={downloadingId === q.id}
-                          className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors disabled:opacity-50"
-                          title="Tải PDF"
-                        >
-                          {downloadingId === q.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                          ) : (
-                            <Download className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => setDeletingId(q.id)}
-                          className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-                          title="Xóa"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+
+                    <td className="py-3.5 px-4 text-right space-x-1">
+                      <button
+                        onClick={() => navigate(`/quotations/${q.id}/preview`)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                        title="Xem bản in A4"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/quotations/${q.id}/edit`)}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => duplicateMutation.mutate(q.id)}
+                        disabled={duplicateMutation.isPending}
+                        className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors disabled:opacity-40"
+                        title="Nhân bản báo giá"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleDownloadPdf(q)}
+                        disabled={downloadingId === q.id}
+                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors disabled:opacity-40"
+                        title="Tải file PDF"
+                      >
+                        {downloadingId === q.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => setDeletingId(q.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                        title="Xóa"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -277,7 +267,7 @@ export const QuotationsListPage: React.FC = () => {
         ) : (
           <EmptyState
             title="Không tìm thấy báo giá nào"
-            description="Bạn chưa có báo giá nào phù hợp với bộ lọc hiện tại."
+            description="Hãy bắt đầu tạo báo giá đầu tiên cho đối tác / đại lý của bạn."
             actionText="Tạo báo giá mới"
             onAction={() => navigate('/quotations/new')}
             icon={<FileText className="w-10 h-10" />}
@@ -289,9 +279,9 @@ export const QuotationsListPage: React.FC = () => {
       <ConfirmDialog
         isOpen={!!deletingId}
         onClose={() => setDeletingId(null)}
-        onConfirm={() => deletingId && deleteMutation.mutate(deletingId)}
+        onConfirm={() => deletingId && deleteMutation.mutate(deletingId, { onSuccess: () => setDeletingId(null) })}
         title="Xác nhận xóa báo giá"
-        message="Hành động này sẽ xóa vĩnh viễn báo giá và toàn bộ các dòng sản phẩm liên quan. Bạn có chắc chắn muốn xóa?"
+        message="Bạn có chắc chắn muốn xóa báo giá này? Toàn bộ danh sách chi tiết phụ kiện bên trong sẽ bị xóa và không thể khôi phục."
         isLoading={deleteMutation.isPending}
       />
     </div>

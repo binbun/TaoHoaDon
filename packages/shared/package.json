@@ -2,25 +2,26 @@
   "name": "@taohoadon/shared",
   "version": "1.0.0",
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "import": "./dist/index.mjs",
       "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "default": "./dist/index.mjs"
     }
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
   },
   "dependencies": {
     "decimal.js": "^10.4.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   }
 }

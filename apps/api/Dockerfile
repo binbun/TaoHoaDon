@@ -14,8 +14,8 @@ COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
 RUN npm run build --workspace=@taohoadon/shared
-RUN npm run build --workspace=@taohoadon/api
 RUN npx prisma generate --schema=./prisma/schema.prisma
+RUN npm run build --workspace=@taohoadon/api
 
 FROM node:20-alpine AS runner
 

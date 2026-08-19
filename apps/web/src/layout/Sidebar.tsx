@@ -6,6 +6,8 @@ import {
   PlusCircle,
   Package,
   Users,
+  UserCheck,
+  ShieldCheck,
   LogOut,
   Sparkles,
 } from 'lucide-react';
@@ -14,6 +16,8 @@ import { clsx } from 'clsx';
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
+
+  const isManager = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
   const navItems = [
     {
@@ -41,6 +45,26 @@ export const Sidebar: React.FC = () => {
       icon: Users,
     },
   ];
+
+  if (isManager) {
+    navItems.push({
+      label: 'Quản lý tài khoản',
+      path: '/users',
+      icon: ShieldCheck,
+      subItems: undefined as any,
+    });
+  }
+
+  const getRoleBadge = (role?: string) => {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return <span className="text-[9px] font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded">SUPER ADMIN</span>;
+      case 'ADMIN':
+        return <span className="text-[9px] font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-1.5 py-0.5 rounded">QUẢN TRỊ VIÊN</span>;
+      default:
+        return <span className="text-[9px] font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 rounded">NHÂN VIÊN</span>;
+    }
+  };
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen fixed left-0 top-0 z-30 shadow-xl border-r border-slate-800">
@@ -118,7 +142,9 @@ export const Sidebar: React.FC = () => {
             </div>
             <div className="truncate">
               <div className="text-xs font-semibold text-white truncate">{user?.name || 'NPP Bích Điều'}</div>
-              <div className="text-[10px] text-slate-400 truncate">{user?.email || 'admin@baogia.vn'}</div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {getRoleBadge(user?.role)}
+              </div>
             </div>
           </div>
           <button

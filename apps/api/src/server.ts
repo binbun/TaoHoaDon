@@ -6,6 +6,7 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import authRoutes from './auth/auth.routes';
+import usersRoutes from './users/users.routes';
 import productsRoutes from './products/products.routes';
 import customersRoutes from './customers/customers.routes';
 import quotationsRoutes from './quotations/quotations.routes';
@@ -36,6 +37,7 @@ app.get(['/', '/health', '/api/health'], (req, res) => {
 
 // API Routes (Supports both with /api prefix and without /api prefix)
 app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api/users', '/users'], usersRoutes);
 app.use(['/api/products', '/products'], productsRoutes);
 app.use(['/api/customers', '/customers'], customersRoutes);
 app.use(['/api/quotations', '/quotations'], quotationsRoutes);
@@ -64,7 +66,7 @@ async function initPostgresDatabase() {
         "name" TEXT NOT NULL,
         "email" TEXT UNIQUE NOT NULL,
         "passwordHash" TEXT NOT NULL,
-        "role" TEXT NOT NULL DEFAULT 'ADMIN',
+        "role" TEXT NOT NULL DEFAULT 'USER',
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
@@ -148,21 +150,32 @@ async function initPostgresDatabase() {
 
     console.log('✅ Cấu trúc bảng PostgreSQL đã sẵn sàng!');
 
-    // 6. Check and Seed Admin & Catalog
-    const userCount = await prisma.user.count();
-    if (userCount === 0) {
-      console.log('🌱 Đang nạp tài khoản Admin và danh mục phụ kiện EUPLUS...');
+    // 6. Ensure default Super Admin exists
+    const superAdmin = await prisma.user.findUnique({
+      where: { email: 'admin@baogia.vn' },
+    });
+
+    if (!superAdmin) {
+      console.log('🌱 Đang tạo tài khoản SUPER_ADMIN mặc định...');
       const passwordHash = await bcrypt.hash('123456', 10);
       await prisma.user.create({
         data: {
-          name: 'Nhà Phân Phối Bích Điều',
+          name: 'Nhà Phân Phối Bích Điều (Super Admin)',
           email: 'admin@baogia.vn',
           passwordHash,
-          role: 'ADMIN',
+          role: 'SUPER_ADMIN',
         },
       });
+    } else if (superAdmin.role !== 'SUPER_ADMIN') {
+      await prisma.user.update({
+        where: { email: 'admin@baogia.vn' },
+        data: { role: 'SUPER_ADMIN' },
+      });
+    }
 
-      // Sample Products
+    // 7. Seed Catalog Products if empty
+    const productCount = await prisma.product.count();
+    if (productCount === 0) {
       const initialProducts = [
         { code: 'EV.I80', name: 'Giá bát nâng hạ thông minh SUS304 - KT 800', shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp, giảm chấn êm ái, khay hứng nước PVC.', unit: 'Bộ', price: 2596320, vatRate: 8, active: true },
         { code: 'EV.I90', name: 'Giá bát nâng hạ thông minh SUS304 - KT 900', shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp cho khoang tủ 900mm.', unit: 'Bộ', price: 2682720, vatRate: 8, active: true },
@@ -196,7 +209,7 @@ async function initPostgresDatabase() {
         },
       });
 
-      console.log('🎉 Đã nạp thành công tài khoản admin@baogia.vn và dữ liệu mẫu EUPLUS vào Supabase!');
+      console.log('🎉 Đã nạp thành công tài khoản SUPER_ADMIN và dữ liệu mẫu EUPLUS vào Supabase!');
     }
   } catch (err) {
     console.error('Lỗi khi khởi tạo PostgreSQL database:', err);

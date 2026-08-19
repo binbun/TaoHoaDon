@@ -16,12 +16,12 @@ async function main() {
   const passwordHash = await bcrypt.hash('123456', 10);
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@baogia.vn' },
-    update: {},
+    update: { role: 'SUPER_ADMIN' },
     create: {
       name: 'Nhà Phân Phối Bích Điều',
       email: 'admin@baogia.vn',
       passwordHash,
-      role: 'ADMIN',
+      role: 'SUPER_ADMIN',
     },
   });
   console.log(`✅ Đã tạo User Admin: ${adminUser.email} (Mật khẩu: 123456)`);

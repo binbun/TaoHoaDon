@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'STAFF';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'USER';
 
 export type QuotationStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
 
@@ -9,6 +9,20 @@ export interface User {
   role: UserRole;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: UserRole;
 }
 
 export interface Customer {

@@ -4,7 +4,6 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
-import { exec } from 'child_process';
 import { prisma } from './prisma';
 import authRoutes from './auth/auth.routes';
 import productsRoutes from './products/products.routes';
@@ -53,13 +52,106 @@ app.use('*', (req, res) => {
 // Global Error Handler
 app.use(errorHandler);
 
-// Background sync & seed
-async function syncAndSeedDatabase() {
+// Ensure PostgreSQL tables and seed admin data automatically
+async function initPostgresDatabase() {
   try {
-    // 1. Check & Seed Admin & Catalog
+    console.log('🔄 Đang kiểm tra và khởi tạo cấu trúc bảng trên PostgreSQL / Supabase...');
+
+    // 1. Create User table
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "User" (
+        "id" TEXT PRIMARY KEY,
+        "name" TEXT NOT NULL,
+        "email" TEXT UNIQUE NOT NULL,
+        "passwordHash" TEXT NOT NULL,
+        "role" TEXT NOT NULL DEFAULT 'ADMIN',
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 2. Create Customer table
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Customer" (
+        "id" TEXT PRIMARY KEY,
+        "companyName" TEXT NOT NULL,
+        "contactName" TEXT,
+        "email" TEXT,
+        "phone" TEXT,
+        "address" TEXT,
+        "taxCode" TEXT,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 3. Create Product table
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Product" (
+        "id" TEXT PRIMARY KEY,
+        "code" TEXT UNIQUE NOT NULL,
+        "name" TEXT NOT NULL,
+        "shortDescription" TEXT,
+        "unit" TEXT NOT NULL DEFAULT 'Bộ',
+        "price" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "vatRate" DOUBLE PRECISION NOT NULL DEFAULT 8,
+        "active" BOOLEAN NOT NULL DEFAULT true,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 4. Create Quotation table
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Quotation" (
+        "id" TEXT PRIMARY KEY,
+        "quotationNumber" TEXT UNIQUE NOT NULL,
+        "customerId" TEXT NOT NULL REFERENCES "Customer"("id") ON DELETE RESTRICT,
+        "quotationDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "validUntil" TIMESTAMP(3) NOT NULL,
+        "title" TEXT NOT NULL DEFAULT 'BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS',
+        "note" TEXT,
+        "status" TEXT NOT NULL DEFAULT 'DRAFT',
+        "subtotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "discountTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "taxableTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "vatTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "grandTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "createdBy" TEXT REFERENCES "User"("id") ON DELETE SET NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 5. Create QuotationItem table
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "QuotationItem" (
+        "id" TEXT PRIMARY KEY,
+        "quotationId" TEXT NOT NULL REFERENCES "Quotation"("id") ON DELETE CASCADE,
+        "productId" TEXT REFERENCES "Product"("id") ON DELETE SET NULL,
+        "productNameSnapshot" TEXT NOT NULL,
+        "descriptionSnapshot" TEXT,
+        "unit" TEXT NOT NULL DEFAULT 'Bộ',
+        "quantity" DOUBLE PRECISION NOT NULL DEFAULT 1,
+        "unitPrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "discount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "vatRate" DOUBLE PRECISION NOT NULL DEFAULT 8,
+        "subtotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "taxableAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "vatAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "total" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "sortOrder" INTEGER NOT NULL DEFAULT 0,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log('✅ Cấu trúc bảng PostgreSQL đã sẵn sàng!');
+
+    // 6. Check and Seed Admin & Catalog
     const userCount = await prisma.user.count();
     if (userCount === 0) {
-      console.log('🌱 Đang tự động nạp tài khoản Admin và danh mục EUPLUS...');
+      console.log('🌱 Đang nạp tài khoản Admin và danh mục phụ kiện EUPLUS...');
       const passwordHash = await bcrypt.hash('123456', 10);
       await prisma.user.create({
         data: {
@@ -104,21 +196,18 @@ async function syncAndSeedDatabase() {
         },
       });
 
-      console.log('✅ Đã nạp thành công tài khoản admin@baogia.vn và 10+ phụ kiện EUPLUS vào Database!');
+      console.log('🎉 Đã nạp thành công tài khoản admin@baogia.vn và dữ liệu mẫu EUPLUS vào Supabase!');
     }
-  } catch (e) {
-    console.error('Lỗi khi seed database:', e);
+  } catch (err) {
+    console.error('Lỗi khi khởi tạo PostgreSQL database:', err);
   }
 }
 
-// Start server on 0.0.0.0 (required for Render / Docker host binding)
+// Start server on 0.0.0.0
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Quotation API Server is live and listening on 0.0.0.0:${PORT}`);
-    // Run seed asynchronously after server is already open and responding
-    setTimeout(() => {
-      syncAndSeedDatabase();
-    }, 1000);
+    initPostgresDatabase();
   });
 }
 

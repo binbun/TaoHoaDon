@@ -1,6 +1,6 @@
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'USER';
 
-export type QuotationStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
+export type QuotationStatus = 'DRAFT' | 'SENT' | 'PAID';
 
 export interface User {
   id: string;

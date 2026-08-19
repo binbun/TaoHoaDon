@@ -105,7 +105,7 @@ export const DashboardPage: React.FC = () => {
         <Card className="border-l-4 border-l-amber-500 p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đã Ký Đơn</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đã Thanh Toán</p>
               {isLoading ? (
                 <Skeleton className="h-7 w-28 mt-2" />
               ) : (

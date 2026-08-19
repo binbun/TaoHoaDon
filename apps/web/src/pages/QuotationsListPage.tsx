@@ -89,9 +89,7 @@ export const QuotationsListPage: React.FC = () => {
     { key: 'ALL', label: 'Tất cả' },
     { key: 'DRAFT', label: 'Bản nháp' },
     { key: 'SENT', label: 'Đã gửi' },
-    { key: 'ACCEPTED', label: 'Đã duyệt' },
-    { key: 'REJECTED', label: 'Từ chối' },
-    { key: 'EXPIRED', label: 'Hết hạn' },
+    { key: 'PAID', label: 'Đã thanh toán' },
   ];
 
   return (

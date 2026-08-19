@@ -46,12 +46,9 @@ export function getStatusInfo(status: string): { label: string; color: string; b
       return { label: 'Bản nháp', color: 'gray', bg: 'bg-slate-100', text: 'text-slate-700' };
     case 'SENT':
       return { label: 'Đã gửi', color: 'blue', bg: 'bg-blue-100', text: 'text-blue-700' };
+    case 'PAID':
     case 'ACCEPTED':
-      return { label: 'Đã duyệt', color: 'green', bg: 'bg-emerald-100', text: 'text-emerald-700' };
-    case 'REJECTED':
-      return { label: 'Từ chối', color: 'red', bg: 'bg-rose-100', text: 'text-rose-700' };
-    case 'EXPIRED':
-      return { label: 'Hết hạn', color: 'amber', bg: 'bg-amber-100', text: 'text-amber-700' };
+      return { label: 'Đã thanh toán', color: 'green', bg: 'bg-emerald-100', text: 'text-emerald-700' };
     default:
       return { label: status, color: 'gray', bg: 'bg-slate-100', text: 'text-slate-700' };
   }

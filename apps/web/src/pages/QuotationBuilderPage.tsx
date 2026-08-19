@@ -479,15 +479,13 @@ export const QuotationBuilderPage: React.FC = () => {
                     Trạng thái
                   </label>
                   <select
-                    value={status}
+                    value={status === 'ACCEPTED' ? 'PAID' : status}
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="DRAFT">Bản nháp (Draft)</option>
-                    <option value="SENT">Đã gửi khách (Sent)</option>
-                    <option value="ACCEPTED">Đã chấp thuận (Accepted)</option>
-                    <option value="REJECTED">Bị từ chối (Rejected)</option>
-                    <option value="EXPIRED">Đã hết hạn (Expired)</option>
+                    <option value="SENT">Đã gửi (Sent)</option>
+                    <option value="PAID">Đã thanh toán (Paid)</option>
                   </select>
                 </div>
               </div>
@@ -629,16 +627,6 @@ export const QuotationBuilderPage: React.FC = () => {
                             onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                           />
                         </div>
-                      </div>
-
-                      <div>
-                        <textarea
-                          rows={1}
-                          placeholder="Mô tả quy cách, kích thước, chất liệu Inox 304, xuất xứ..."
-                          value={item.descriptionSnapshot || ''}
-                          onChange={(e) => handleItemChange(index, 'descriptionSnapshot', e.target.value)}
-                          className="w-full text-xs rounded-lg border border-slate-300 p-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                        />
                       </div>
 
                       {/* Numeric Inputs */}

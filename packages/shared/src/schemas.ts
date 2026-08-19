@@ -64,7 +64,7 @@ export const QuotationSchema = z.object({
   validUntil: z.string().min(1, 'Ngày hết hạn không được để trống'),
   title: z.string().min(1, 'Tiêu đề báo giá không được để trống').default('BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS'),
   note: z.string().max(1000).optional().nullable(),
-  status: z.enum(['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED']).default('DRAFT'),
+  status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
   items: z.array(QuotationItemSchema).min(1, 'Báo giá phải có ít nhất 1 sản phẩm/dịch vụ'),
 }).refine((data) => {
   if (data.quotationDate && data.validUntil) {

@@ -41,17 +41,15 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
     const statusDistribution: Record<string, number> = {
       DRAFT: 0,
       SENT: 0,
-      ACCEPTED: 0,
-      REJECTED: 0,
-      EXPIRED: 0,
+      PAID: 0,
     };
 
     allQuotations.forEach((q) => {
       totalGrandTotal += q.grandTotal;
-      if (q.status === 'ACCEPTED') {
+      if (q.status === 'PAID' || q.status === 'ACCEPTED') {
         acceptedGrandTotal += q.grandTotal;
-      }
-      if (statusDistribution[q.status] !== undefined) {
+        statusDistribution.PAID = (statusDistribution.PAID || 0) + 1;
+      } else if (statusDistribution[q.status] !== undefined) {
         statusDistribution[q.status]++;
       }
     });

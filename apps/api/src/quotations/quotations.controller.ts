@@ -16,7 +16,11 @@ export async function getQuotations(req: Request, res: Response, next: NextFunct
     const where: any = {};
 
     if (status && typeof status === 'string' && status !== 'ALL') {
-      where.status = status;
+      if (status === 'PAID') {
+        where.status = { in: ['PAID', 'ACCEPTED'] };
+      } else {
+        where.status = status;
+      }
     }
 
     if (customerId && typeof customerId === 'string') {

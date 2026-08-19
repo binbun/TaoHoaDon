@@ -55,7 +55,7 @@ model Quotation {
   validUntil      DateTime
   title           String          @default("BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS")
   note            String?
-  status          String          @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED, EXPIRED
+  status          String          @default("DRAFT") // DRAFT, SENT, PAID
   subtotal        Float           @default(0)
   discountTotal   Float           @default(0)
   taxableTotal    Float           @default(0)

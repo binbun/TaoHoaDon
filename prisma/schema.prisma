@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x", "linux-musl"]
 }
 
 datasource db {
@@ -36,7 +37,7 @@ model Product {
   code             String          @unique
   name             String
   shortDescription String?
-  unit             String          @default("Gói")
+  unit             String          @default("Bộ")
   price            Float           @default(0)
   vatRate          Float           @default(8)
   active           Boolean         @default(true)
@@ -52,7 +53,7 @@ model Quotation {
   customer        Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
   quotationDate   DateTime        @default(now())
   validUntil      DateTime
-  title           String          @default("BÁO GIÁ DỊCH VỤ")
+  title           String          @default("BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS")
   note            String?
   status          String          @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED, EXPIRED
   subtotal        Float           @default(0)
@@ -75,7 +76,7 @@ model QuotationItem {
   product             Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
   productNameSnapshot String
   descriptionSnapshot String?
-  unit                String     @default("Gói")
+  unit                String     @default("Bộ")
   quantity            Float      @default(1)
   unitPrice           Float      @default(0)
   discount            Float      @default(0)

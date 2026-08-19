@@ -1,6 +1,9 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
+
+# Install openssl for prisma
+RUN apt-get update -y && apt-get install -y openssl
 
 # Install build dependencies
 COPY package.json package-lock.json* ./
@@ -17,21 +20,25 @@ RUN npm run build --workspace=@taohoadon/shared
 RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build --workspace=@taohoadon/api
 
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
 
-# Install chromium for puppeteer
-RUN apk add --no-cache \
-      chromium \
-      nss \
-      freetype \
-      harfbuzz \
-      ca-certificates \
-      ttf-freefont
+# Install chromium & dependencies for puppeteer and openssl for prisma
+RUN apt-get update -y && apt-get install -y \
+    openssl \
+    chromium \
+    fonts-ipafont-gothic \
+    fonts-wqy-zenhei \
+    fonts-thai-tlwg \
+    fonts-kacst \
+    fonts-freefont-ttf \
+    libxss1 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 COPY --from=builder /app ./
 

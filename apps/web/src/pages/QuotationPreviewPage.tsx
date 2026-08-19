@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import { apiClient, getFullApiUrl } from '../api/client';
 import { Quotation, formatCurrency, formatDate, getStatusInfo } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
@@ -57,7 +57,7 @@ export const QuotationPreviewPage: React.FC = () => {
       info('Đang sinh file PDF chuẩn A4 từ máy chủ Puppeteer...');
 
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/quotations/${quotation.id}/pdf`, {
+      const response = await fetch(getFullApiUrl(`/quotations/${quotation.id}/pdf`), {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },

@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors({
-  origin: '*', // Allow web client
+  origin: '*', // Allow web client from any domain (Vercel, Localhost, etc.)
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -23,8 +23,8 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health Check
-app.get('/api/health', (req, res) => {
+// Health Check (Supports both /health and /api/health)
+app.get(['/health', '/api/health'], (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -32,12 +32,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productsRoutes);
-app.use('/api/customers', customersRoutes);
-app.use('/api/quotations', quotationsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+// API Routes (Supports both with /api prefix and without /api prefix)
+app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api/products', '/products'], productsRoutes);
+app.use(['/api/customers', '/customers'], customersRoutes);
+app.use(['/api/quotations', '/quotations'], quotationsRoutes);
+app.use(['/api/dashboard', '/dashboard'], dashboardRoutes);
 
 // 404 Handler
 app.use('*', (req, res) => {

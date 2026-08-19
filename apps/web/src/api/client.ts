@@ -1,4 +1,5 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const rawBaseUrl = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+export const API_BASE_URL = rawBaseUrl;
 
 interface RequestOptions extends RequestInit {
   data?: any;
@@ -13,6 +14,12 @@ export class ApiError extends Error {
     this.statusCode = statusCode;
     this.errors = errors;
   }
+}
+
+export function getFullApiUrl(endpoint: string): string {
+  if (endpoint.startsWith('http')) return endpoint;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${API_BASE_URL}${cleanEndpoint}`;
 }
 
 export async function apiClient<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
@@ -35,7 +42,7 @@ export async function apiClient<T = any>(endpoint: string, options: RequestOptio
     config.body = JSON.stringify(data);
   }
 
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const url = getFullApiUrl(endpoint);
   const response = await fetch(url, config);
 
   if (response.status === 401) {

@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid())
+  name         String
+  email        String      @unique
+  passwordHash String
+  role         String      @default("ADMIN") // ADMIN, STAFF
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  quotations   Quotation[]
+}
+
+model Customer {
+  id          String      @id @default(uuid())
+  companyName String
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  taxCode     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  quotations  Quotation[]
+}
+
+model Product {
+  id               String          @id @default(uuid())
+  code             String          @unique
+  name             String
+  shortDescription String?
+  unit             String          @default("Gói")
+  price            Float           @default(0)
+  vatRate          Float           @default(8)
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  quotationItems   QuotationItem[]
+}
+
+model Quotation {
+  id              String          @id @default(uuid())
+  quotationNumber String          @unique
+  customerId      String
+  customer        Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quotationDate   DateTime        @default(now())
+  validUntil      DateTime
+  title           String          @default("BÁO GIÁ DỊCH VỤ")
+  note            String?
+  status          String          @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED, EXPIRED
+  subtotal        Float           @default(0)
+  discountTotal   Float           @default(0)
+  taxableTotal    Float           @default(0)
+  vatTotal        Float           @default(0)
+  grandTotal      Float           @default(0)
+  createdBy       String?
+  creator         User?           @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  items           QuotationItem[]
+}
+
+model QuotationItem {
+  id                  String     @id @default(uuid())
+  quotationId         String
+  quotation           Quotation  @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  productId           String?
+  product             Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productNameSnapshot String
+  descriptionSnapshot String?
+  unit                String     @default("Gói")
+  quantity            Float      @default(1)
+  unitPrice           Float      @default(0)
+  discount            Float      @default(0)
+  vatRate             Float      @default(8)
+  subtotal            Float      @default(0)
+  taxableAmount       Float      @default(0)
+  vatAmount           Float      @default(0)
+  total               Float      @default(0)
+  sortOrder           Int        @default(0)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}

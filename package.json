@@ -1,0 +1,22 @@
+{
+  "name": "tao-hoa-don-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev --workspace=@taohoadon/api",
+    "dev:web": "npm run dev --workspace=@taohoadon/web",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:generate": "npm run db:generate --workspace=@taohoadon/api",
+    "db:push": "npm run db:push --workspace=@taohoadon/api",
+    "db:seed": "npm run db:seed --workspace=@taohoadon/api"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

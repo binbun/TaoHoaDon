@@ -1,0 +1,58 @@
+/**
+ * Formats a number to Vietnamese Dong currency string (e.g. 2.887.500 ₫)
+ */
+export function formatCurrency(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return '0 ₫';
+  }
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount));
+}
+
+/**
+ * Formats standard number without currency symbol (e.g. 2.887.500)
+ */
+export function formatNumber(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return '0';
+  }
+  return new Intl.NumberFormat('vi-VN', {
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/**
+ * Formats ISO date string to DD/MM/YYYY
+ */
+export function formatDate(dateString: string | Date | null | undefined): string {
+  if (!dateString) return '';
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return '';
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Formats status to Vietnamese readable text and color badge variant
+ */
+export function getStatusInfo(status: string): { label: string; color: string; bg: string; text: string } {
+  switch (status) {
+    case 'DRAFT':
+      return { label: 'Bản nháp', color: 'gray', bg: 'bg-slate-100', text: 'text-slate-700' };
+    case 'SENT':
+      return { label: 'Đã gửi', color: 'blue', bg: 'bg-blue-100', text: 'text-blue-700' };
+    case 'ACCEPTED':
+      return { label: 'Đã duyệt', color: 'green', bg: 'bg-emerald-100', text: 'text-emerald-700' };
+    case 'REJECTED':
+      return { label: 'Từ chối', color: 'red', bg: 'bg-rose-100', text: 'text-rose-700' };
+    case 'EXPIRED':
+      return { label: 'Hết hạn', color: 'amber', bg: 'bg-amber-100', text: 'text-amber-700' };
+    default:
+      return { label: status, color: 'gray', bg: 'bg-slate-100', text: 'text-slate-700' };
+  }
+}

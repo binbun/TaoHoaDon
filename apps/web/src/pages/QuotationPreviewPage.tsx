@@ -216,7 +216,6 @@ export const QuotationPreviewPage: React.FC = () => {
             <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-right text-[11px] text-slate-600 space-y-0.5">
               <div>Số báo giá: <strong className="text-slate-900">{quotation.quotationNumber}</strong></div>
               <div>Ngày lập: <strong className="text-slate-900">{formatDate(quotation.quotationDate)}</strong></div>
-              <div>Hiệu lực đến: <strong className="text-slate-900">{formatDate(quotation.validUntil)}</strong></div>
             </div>
           </div>
 
@@ -343,7 +342,7 @@ export const QuotationPreviewPage: React.FC = () => {
               <div className="font-bold text-blue-900 uppercase">ĐẠI DIỆN NPP BÍCH ĐIỀU - EUPLUS</div>
               <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký & xác nhận giao hàng)</div>
               <div className="h-16"></div>
-              <div className="font-bold text-slate-900">BÙI VĂN HOÀNG</div>
+              <div className="font-bold text-slate-900">Trần Thị Bích Điều</div>
             </div>
           </div>
         </div>

@@ -387,7 +387,6 @@ export function renderQuotationHtml(quotation: Quotation): string {
       <div class="doc-meta-badge">
         <div class="doc-meta-item">Số báo giá: <strong>${quotation.quotationNumber}</strong></div>
         <div class="doc-meta-item">Ngày lập: <strong>${formatDate(quotation.quotationDate)}</strong></div>
-        <div class="doc-meta-item">Hiệu lực đến: <strong>${formatDate(quotation.validUntil)}</strong></div>
       </div>
     </div>
 
@@ -450,7 +449,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <div class="bottom-section">
       <div class="notes-box">
         <div class="notes-title">Chính sách bảo hành & Cam kết</div>
-        <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ 02 năm đổi mới.\n- Báo giá có giá trị đến ngày ${formatDate(quotation.validUntil)}.\n- Cảm ơn Quý đối tác đã tin tưởng lựa chọn thiết bị phụ kiện tủ bếp EUPLUS!`}</div>
+        <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ 02 năm đổi mới.\n- Cảm ơn Quý đối tác đã tin tưởng lựa chọn thiết bị phụ kiện tủ bếp EUPLUS!`}</div>
       </div>
       <div class="summary-box">
         <div class="summary-row">

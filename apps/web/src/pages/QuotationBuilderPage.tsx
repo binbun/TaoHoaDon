@@ -48,11 +48,6 @@ export const QuotationBuilderPage: React.FC = () => {
   const [quotationNumber, setQuotationNumber] = useState('');
   const [title, setTitle] = useState('BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS');
   const [quotationDate, setQuotationDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [validUntil, setValidUntil] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 20);
-    return d.toISOString().split('T')[0];
-  });
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
   const [note, setNote] = useState(
@@ -95,7 +90,6 @@ export const QuotationBuilderPage: React.FC = () => {
       setQuotationNumber(existingQuote.quotationNumber);
       setTitle(existingQuote.title);
       setQuotationDate(existingQuote.quotationDate.split('T')[0]);
-      setValidUntil(existingQuote.validUntil.split('T')[0]);
       setStatus(existingQuote.status);
       setPreviousDebt(existingQuote.previousDebt ?? 0);
       setNote(existingQuote.note || '');
@@ -259,7 +253,6 @@ export const QuotationBuilderPage: React.FC = () => {
         quotationNumber: quotationNumber.trim() || undefined,
         title: title.trim(),
         quotationDate,
-        validUntil,
         status: status as any,
         previousDebt: Number(previousDebt) || 0,
         note: note.trim() || undefined,
@@ -445,7 +438,7 @@ export const QuotationBuilderPage: React.FC = () => {
             }
           >
             <div className="space-y-3 sm:space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Input
                   label="Số báo giá (Tự động)"
                   placeholder="BG-2026-XXXX"
@@ -458,13 +451,6 @@ export const QuotationBuilderPage: React.FC = () => {
                   type="date"
                   value={quotationDate}
                   onChange={(e) => setQuotationDate(e.target.value)}
-                  required
-                />
-                <Input
-                  label="Hạn hiệu lực"
-                  type="date"
-                  value={validUntil}
-                  onChange={(e) => setValidUntil(e.target.value)}
                   required
                 />
               </div>
@@ -537,7 +523,7 @@ export const QuotationBuilderPage: React.FC = () => {
                     leftIcon={<PackagePlus className="w-3.5 h-3.5" />}
                     onClick={() => setIsProductPickerOpen(true)}
                   >
-                    + Catalogue EUPLUS
+                    Catalogue EUPLUS
                   </Button>
                 </div>
               </div>

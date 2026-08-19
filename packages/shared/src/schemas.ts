@@ -61,18 +61,10 @@ export const QuotationSchema = z.object({
   quotationNumber: z.string().optional(),
   customerId: z.string().min(1, 'Vui lòng chọn hoặc tạo khách hàng'),
   quotationDate: z.string().min(1, 'Ngày báo giá không được để trống'),
-  validUntil: z.string().min(1, 'Ngày hết hạn không được để trống'),
+  validUntil: z.string().optional(),
   title: z.string().min(1, 'Tiêu đề báo giá không được để trống').default('BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS'),
   note: z.string().max(1000).optional().nullable(),
   status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
   items: z.array(QuotationItemSchema).min(1, 'Báo giá phải có ít nhất 1 sản phẩm/dịch vụ'),
-}).refine((data) => {
-  if (data.quotationDate && data.validUntil) {
-    return new Date(data.validUntil) >= new Date(data.quotationDate);
-  }
-  return true;
-}, {
-  message: 'Ngày hết hạn phải lớn hơn hoặc bằng ngày báo giá',
-  path: ['validUntil'],
 });

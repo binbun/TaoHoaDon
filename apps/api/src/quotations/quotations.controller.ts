@@ -131,7 +131,7 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
         quotationNumber,
         customerId: validatedData.customerId,
         quotationDate: new Date(validatedData.quotationDate),
-        validUntil: new Date(validatedData.validUntil),
+        validUntil: validatedData.validUntil ? new Date(validatedData.validUntil) : new Date(validatedData.quotationDate),
         title: validatedData.title.trim(),
         note: validatedData.note?.trim() || null,
         status: validatedData.status || 'DRAFT',
@@ -162,15 +162,12 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
       },
       include: {
         customer: true,
-        items: {
-          orderBy: { sortOrder: 'asc' },
-        },
+        items: true,
       },
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Tạo báo giá thành công',
       data: newQuotation,
     });
   } catch (error) {
@@ -210,7 +207,7 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
         data: {
           customerId: validatedData.customerId,
           quotationDate: new Date(validatedData.quotationDate),
-          validUntil: new Date(validatedData.validUntil),
+          validUntil: validatedData.validUntil ? new Date(validatedData.validUntil) : new Date(validatedData.quotationDate),
           title: validatedData.title.trim(),
           note: validatedData.note?.trim() || null,
           status: validatedData.status || existing.status,

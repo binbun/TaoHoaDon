@@ -197,13 +197,10 @@ export const QuotationsListPage: React.FC = () => {
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-3 sm:px-4 text-xs text-slate-500 space-y-0.5 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
+                    <td className="py-3.5 px-3 sm:px-4 text-xs text-slate-500 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 font-medium text-slate-700">
                         <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span>Lập: {formatDate(q.quotationDate)}</span>
-                      </div>
-                      <div className="text-[11px] text-slate-400">
-                        Hạn: {formatDate(q.validUntil)}
+                        <span>{formatDate(q.quotationDate)}</span>
                       </div>
                     </td>
 

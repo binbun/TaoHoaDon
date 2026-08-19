@@ -88,7 +88,7 @@ export interface Quotation {
   customerId: string;
   customer?: Customer;
   quotationDate: string;
-  validUntil: string;
+  validUntil?: string | null;
   title: string;
   note?: string | null;
   status: QuotationStatus;

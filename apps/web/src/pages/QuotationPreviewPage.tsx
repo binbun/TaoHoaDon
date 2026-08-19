@@ -282,7 +282,7 @@ export const QuotationPreviewPage: React.FC = () => {
                     <div className="text-slate-700">{formatCurrency(item.unitPrice)}</div>
                     {item.discount > 0 && (
                       <div className="text-[9.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
-                        CK -{item.discount}%
+                        -{formatCurrency(item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100)))}
                       </div>
                     )}
                   </td>

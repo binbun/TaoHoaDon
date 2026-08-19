@@ -439,7 +439,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
             <td class="col-qty">${item.quantity}</td>
             <td class="col-price">
               <div>${formatCurrency(item.unitPrice)}</div>
-              ${item.discount > 0 ? `<div class="discount-badge" style="margin-top: 2px;">CK -${item.discount}%</div>` : ''}
+              ${item.discount > 0 ? `<div class="discount-badge" style="margin-top: 2px;">-${formatCurrency(item.discountAmount || (item.quantity * item.unitPrice * (item.discount / 100)))}</div>` : ''}
             </td>
             <td class="col-total">${formatCurrency(item.total)}</td>
           </tr>

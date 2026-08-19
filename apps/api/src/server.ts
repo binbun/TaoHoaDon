@@ -4,6 +4,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import { exec } from 'child_process';
 import { prisma } from './prisma';
 import authRoutes from './auth/auth.routes';
 import productsRoutes from './products/products.routes';
@@ -13,7 +14,7 @@ import dashboardRoutes from './dashboard/dashboard.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 
 // Middleware
 app.use(cors({
@@ -26,11 +27,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health Check (Supports both /health and /api/health)
-app.get(['/health', '/api/health'], (req, res) => {
+app.get(['/', '/health', '/api/health'], (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: 'TaoHoaDon Quotation API',
+    service: 'TaoHoaDon EUPLUS Quotation API',
   });
 });
 
@@ -52,14 +53,15 @@ app.use('*', (req, res) => {
 // Global Error Handler
 app.use(errorHandler);
 
-// Auto Seed Database if brand new
-async function autoSeedDatabase() {
+// Background sync & seed
+async function syncAndSeedDatabase() {
   try {
+    // 1. Check & Seed Admin & Catalog
     const userCount = await prisma.user.count();
     if (userCount === 0) {
-      console.log('🌱 Phát hiện database mới. Đang tự động nạp Admin và dữ liệu EUPLUS...');
+      console.log('🌱 Đang tự động nạp tài khoản Admin và danh mục EUPLUS...');
       const passwordHash = await bcrypt.hash('123456', 10);
-      const admin = await prisma.user.create({
+      await prisma.user.create({
         data: {
           name: 'Nhà Phân Phối Bích Điều',
           email: 'admin@baogia.vn',
@@ -102,18 +104,21 @@ async function autoSeedDatabase() {
         },
       });
 
-      console.log('✅ Đã tự động nạp tài khoản admin@baogia.vn và dữ liệu mẫu EUPLUS thành công!');
+      console.log('✅ Đã nạp thành công tài khoản admin@baogia.vn và 10+ phụ kiện EUPLUS vào Database!');
     }
   } catch (e) {
-    console.error('Không thể auto-seed:', e);
+    console.error('Lỗi khi seed database:', e);
   }
 }
 
-// Only listen if not imported (e.g. in test suites)
+// Start server on 0.0.0.0 (required for Render / Docker host binding)
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, async () => {
-    console.log(`🚀 Quotation API Server đang chạy tại http://localhost:${PORT}`);
-    await autoSeedDatabase();
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Quotation API Server is live and listening on 0.0.0.0:${PORT}`);
+    // Run seed asynchronously after server is already open and responding
+    setTimeout(() => {
+      syncAndSeedDatabase();
+    }, 1000);
   });
 }
 

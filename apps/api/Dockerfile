@@ -38,10 +38,11 @@ RUN apt-get update -y && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    PORT=4000
 
 COPY --from=builder /app ./
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma db push --schema=./prisma/schema.prisma --accept-data-loss && node apps/api/dist/server.js"]
+CMD ["node", "apps/api/dist/server.js"]

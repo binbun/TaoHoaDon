@@ -37,4 +37,4 @@ COPY --from=builder /app ./
 
 EXPOSE 4000
 
-CMD ["npm", "run", "start", "--workspace=@taohoadon/api"]
+CMD ["node", "apps/api/dist/server.js"]

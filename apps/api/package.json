@@ -2,10 +2,10 @@
   "name": "@taohoadon/api",
   "version": "1.0.0",
   "private": true,
-  "main": "src/server.ts",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsup src/server.ts --format cjs --clean",
     "start": "node dist/server.js",
     "db:generate": "prisma generate --schema=../../prisma/schema.prisma",
     "db:push": "prisma db push --schema=../../prisma/schema.prisma",
@@ -33,6 +33,7 @@
     "@types/supertest": "^6.0.2",
     "prisma": "^5.14.0",
     "supertest": "^7.0.0",
+    "tsup": "^8.0.2",
     "tsx": "^4.11.0",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"

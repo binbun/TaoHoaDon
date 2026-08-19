@@ -77,6 +77,7 @@ export interface QuotationSummary {
   discountTotal: number;
   taxableTotal: number;
   vatTotal: number;
+  previousDebt?: number;
   grandTotal: number;
 }
 
@@ -94,6 +95,7 @@ export interface Quotation {
   discountTotal: number;
   taxableTotal: number;
   vatTotal: number;
+  previousDebt?: number;
   grandTotal: number;
   items: CalculatedQuotationItem[];
   createdBy?: string | null;

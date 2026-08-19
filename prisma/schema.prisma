@@ -39,7 +39,7 @@ model Product {
   shortDescription String?
   unit             String          @default("Bộ")
   price            Float           @default(0)
-  vatRate          Float           @default(8)
+  vatRate          Float           @default(0)
   active           Boolean         @default(true)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -60,6 +60,7 @@ model Quotation {
   discountTotal   Float           @default(0)
   taxableTotal    Float           @default(0)
   vatTotal        Float           @default(0)
+  previousDebt    Float           @default(0)
   grandTotal      Float           @default(0)
   createdBy       String?
   creator         User?           @relation(fields: [createdBy], references: [id], onDelete: SetNull)
@@ -80,7 +81,7 @@ model QuotationItem {
   quantity            Float      @default(1)
   unitPrice           Float      @default(0)
   discount            Float      @default(0)
-  vatRate             Float      @default(8)
+  vatRate             Float      @default(0)
   subtotal            Float      @default(0)
   taxableAmount       Float      @default(0)
   vatAmount           Float      @default(0)

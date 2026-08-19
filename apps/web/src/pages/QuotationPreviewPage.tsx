@@ -306,6 +306,12 @@ export const QuotationPreviewPage: React.FC = () => {
                   <td className="py-1 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.vatTotal)}</td>
                 </tr>
               )}
+              {quotation.previousDebt && quotation.previousDebt > 0 ? (
+                <tr className="text-amber-800 bg-amber-50/60 font-semibold text-[11px]">
+                  <td colSpan={5} className="py-1.5 px-2.5 text-right">Dư nợ cũ từ các đơn trước:</td>
+                  <td className="py-1.5 px-2.5 text-right font-bold text-amber-700">+{formatCurrency(quotation.previousDebt)}</td>
+                </tr>
+              ) : null}
               <tr className="border-t border-slate-300 text-blue-900 text-[13px] font-black bg-blue-50/50">
                 <td colSpan={5} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG THANH TOÁN:</td>
                 <td className="py-2.5 px-2.5 text-right text-blue-700 text-[14px]">{formatCurrency(quotation.grandTotal)}</td>

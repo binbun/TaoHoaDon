@@ -38,7 +38,7 @@ export const ProductsPage: React.FC = () => {
   const [shortDescription, setShortDescription] = useState('');
   const [unit, setUnit] = useState('Bộ');
   const [price, setPrice] = useState<number | string>(0);
-  const [vatRate, setVatRate] = useState<number | string>(8);
+  const [vatRate, setVatRate] = useState<number | string>(0);
   const [active, setActive] = useState(true);
 
   // Queries & Mutations from custom hooks
@@ -58,7 +58,7 @@ export const ProductsPage: React.FC = () => {
     setShortDescription('');
     setUnit('Bộ');
     setPrice(0);
-    setVatRate(8);
+    setVatRate(0);
     setActive(true);
     setIsModalOpen(true);
   };

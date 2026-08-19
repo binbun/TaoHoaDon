@@ -31,7 +31,7 @@ export const ProductSchema = z.object({
   shortDescription: z.string().max(250, 'Mô tả ngắn tối đa 250 ký tự').optional().nullable(),
   unit: z.string().min(1, 'Đơn vị tính không được để trống').default('Bộ'),
   price: z.coerce.number().min(0, 'Đơn giá không được âm'),
-  vatRate: z.coerce.number().min(0, 'VAT không được âm').max(100, 'VAT tối đa 100%').default(8),
+  vatRate: z.coerce.number().min(0, 'VAT không được âm').max(100, 'VAT tối đa 100%').default(0),
   active: z.boolean().default(true),
 });
 
@@ -53,7 +53,7 @@ export const QuotationItemSchema = z.object({
   quantity: z.coerce.number().min(0.01, 'Số lượng phải lớn hơn 0'),
   unitPrice: z.coerce.number().min(0, 'Đơn giá không được âm'),
   discount: z.coerce.number().min(0, 'Chiết khấu không được âm').default(0),
-  vatRate: z.coerce.number().min(0, 'VAT không được âm').max(100, 'VAT tối đa 100%').default(8),
+  vatRate: z.coerce.number().min(0, 'VAT không được âm').max(100, 'VAT tối đa 100%').default(0),
   sortOrder: z.number().int().default(0),
 });
 
@@ -65,6 +65,7 @@ export const QuotationSchema = z.object({
   title: z.string().min(1, 'Tiêu đề báo giá không được để trống').default('BÁO GIÁ PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS'),
   note: z.string().max(1000).optional().nullable(),
   status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
+  previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
   items: z.array(QuotationItemSchema).min(1, 'Báo giá phải có ít nhất 1 sản phẩm/dịch vụ'),
 }).refine((data) => {
   if (data.quotationDate && data.validUntil) {

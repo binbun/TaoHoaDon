@@ -41,9 +41,9 @@ export function calculateItemRow(item: QuotationItemInput, fallbackId = ''): Cal
 }
 
 /**
- * Calculates complete quotation summary from list of item inputs.
+ * Calculates complete quotation summary from list of item inputs and previous debt.
  */
-export function calculateQuotationTotals(items: QuotationItemInput[]): {
+export function calculateQuotationTotals(items: QuotationItemInput[], previousDebt = 0): {
   calculatedItems: CalculatedQuotationItem[];
   summary: QuotationSummary;
 } {
@@ -51,7 +51,8 @@ export function calculateQuotationTotals(items: QuotationItemInput[]): {
   let discountAcc = new Decimal(0);
   let taxableAcc = new Decimal(0);
   let vatAcc = new Decimal(0);
-  let grandTotalAcc = new Decimal(0);
+  let orderTotalAcc = new Decimal(0);
+  const debt = new Decimal(previousDebt || 0);
 
   const calculatedItems = (items || []).map((item, index) => {
     const calculated = calculateItemRow(item, `item_${index}`);
@@ -59,9 +60,11 @@ export function calculateQuotationTotals(items: QuotationItemInput[]): {
     discountAcc = discountAcc.plus(calculated.discount);
     taxableAcc = taxableAcc.plus(calculated.taxableAmount);
     vatAcc = vatAcc.plus(calculated.vatAmount);
-    grandTotalAcc = grandTotalAcc.plus(calculated.total);
+    orderTotalAcc = orderTotalAcc.plus(calculated.total);
     return calculated;
   });
+
+  const grandTotalAcc = orderTotalAcc.plus(debt);
 
   return {
     calculatedItems,
@@ -70,6 +73,7 @@ export function calculateQuotationTotals(items: QuotationItemInput[]): {
       discountTotal: discountAcc.round().toNumber(),
       taxableTotal: taxableAcc.round().toNumber(),
       vatTotal: vatAcc.round().toNumber(),
+      previousDebt: debt.round().toNumber(),
       grandTotal: grandTotalAcc.round().toNumber(),
     },
   };

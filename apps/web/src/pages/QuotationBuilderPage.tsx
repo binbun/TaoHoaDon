@@ -9,7 +9,6 @@ import {
   useCreateCustomer,
 } from '../hooks';
 import {
-  Customer,
   Product,
   QuotationItemInput,
   calculateQuotationTotals,
@@ -53,8 +52,9 @@ export const QuotationBuilderPage: React.FC = () => {
     return d.toISOString().split('T')[0];
   });
   const [status, setStatus] = useState<string>('DRAFT');
+  const [previousDebt, setPreviousDebt] = useState<number | string>(0);
   const [note, setNote] = useState(
-    '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Đơn giá trên là giá phân phối đại lý/công trình, đã tính theo thuế suất VAT 8% hiện hành.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.'
+    '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.'
   );
 
   // Customer State
@@ -95,6 +95,7 @@ export const QuotationBuilderPage: React.FC = () => {
       setQuotationDate(existingQuote.quotationDate.split('T')[0]);
       setValidUntil(existingQuote.validUntil.split('T')[0]);
       setStatus(existingQuote.status);
+      setPreviousDebt(existingQuote.previousDebt ?? 0);
       setNote(existingQuote.note || '');
       setSelectedCustomerId(existingQuote.customerId);
 
@@ -117,7 +118,7 @@ export const QuotationBuilderPage: React.FC = () => {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           discount: item.discount,
-          vatRate: item.vatRate,
+          vatRate: item.vatRate ?? 0,
           sortOrder: item.sortOrder ?? index,
         }))
       );
@@ -138,7 +139,7 @@ export const QuotationBuilderPage: React.FC = () => {
     }
   };
 
-  // Add product from catalog
+  // Add product from catalog (Default VAT is 0%)
   const handleAddProductFromCatalog = (prod: Product) => {
     const newItem: QuotationItemInput = {
       id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
@@ -149,14 +150,14 @@ export const QuotationBuilderPage: React.FC = () => {
       quantity: 1,
       unitPrice: prod.price,
       discount: 0,
-      vatRate: prod.vatRate || 8,
+      vatRate: prod.vatRate ?? 0,
       sortOrder: items.length,
     };
     setItems((prev) => [...prev, newItem]);
     success(`Đã thêm: ${prod.name}`);
   };
 
-  // Add blank custom item
+  // Add blank custom item (Default VAT is 0%)
   const handleAddBlankItem = () => {
     const newItem: QuotationItemInput = {
       id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
@@ -166,7 +167,7 @@ export const QuotationBuilderPage: React.FC = () => {
       quantity: 1,
       unitPrice: 0,
       discount: 0,
-      vatRate: 8,
+      vatRate: 0,
       sortOrder: items.length,
     };
     setItems((prev) => [...prev, newItem]);
@@ -207,12 +208,13 @@ export const QuotationBuilderPage: React.FC = () => {
     setItems(next);
   };
 
-  // Calculate live totals
+  // Calculate live totals including previous debt
   const { summary, calculatedItems } = calculateQuotationTotals(
     items.map((it, idx) => ({
       ...it,
       sortOrder: idx,
-    }))
+    })),
+    Number(previousDebt) || 0
   );
 
   // Save Quotation
@@ -257,6 +259,7 @@ export const QuotationBuilderPage: React.FC = () => {
         quotationDate,
         validUntil,
         status: status as any,
+        previousDebt: Number(previousDebt) || 0,
         note: note.trim() || undefined,
         customerId,
         items: items.map((it, idx) => ({
@@ -430,12 +433,12 @@ export const QuotationBuilderPage: React.FC = () => {
             </div>
           </Card>
 
-          {/* Section 2: Quotation Metadata */}
+          {/* Section 2: Quotation Metadata & Previous Debt */}
           <Card
             title={
               <div className="flex items-center gap-2 text-slate-900">
                 <Calendar className="w-5 h-5 text-indigo-600" />
-                <span className="font-bold text-base">2. Thông Tin Báo Giá</span>
+                <span className="font-bold text-base">2. Thông Tin Báo Giá & Dư Nợ Cũ</span>
               </div>
             }
           >
@@ -489,6 +492,20 @@ export const QuotationBuilderPage: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              {/* Previous Debt Field */}
+              <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-1">
+                <Input
+                  label="Dư nợ cũ từ các đơn trước (đ)"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  placeholder="0"
+                  value={previousDebt}
+                  onChange={(e) => setPreviousDebt(e.target.value)}
+                  helperText="Số tiền khách hàng/đại lý còn nợ từ các đơn trước (nếu có, sẽ tự động cộng vào Tổng cộng thanh toán)"
+                />
+              </div>
             </div>
           </Card>
 
@@ -509,7 +526,7 @@ export const QuotationBuilderPage: React.FC = () => {
                     leftIcon={<Plus className="w-3.5 h-3.5" />}
                     onClick={handleAddBlankItem}
                   >
-                    + Dòng trống
+                    Dòng trống
                   </Button>
                   <Button
                     type="button"
@@ -678,13 +695,13 @@ export const QuotationBuilderPage: React.FC = () => {
                             Thuế VAT (%)
                           </label>
                           <select
-                            value={item.vatRate}
+                            value={item.vatRate ?? 0}
                             onChange={(e) => handleItemChange(index, 'vatRate', Number(e.target.value))}
                             className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2 text-slate-800 text-center font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
+                            <option value="0">0%</option>
                             <option value="8">8%</option>
                             <option value="10">10%</option>
-                            <option value="0">0%</option>
                             <option value="5">5%</option>
                           </select>
                         </div>
@@ -727,14 +744,16 @@ export const QuotationBuilderPage: React.FC = () => {
 
             <div className="space-y-3 py-4 text-sm divide-y divide-slate-100">
               <div className="flex items-center justify-between text-slate-600">
-                <span>Tạm tính:</span>
+                <span>Tiền hàng (Tạm tính):</span>
                 <span className="font-bold text-slate-900">{formatCurrency(summary.subtotal)}</span>
               </div>
 
-              <div className="flex items-center justify-between text-rose-600 pt-3">
-                <span>Chiết khấu:</span>
-                <span className="font-bold">-{formatCurrency(summary.discountTotal)}</span>
-              </div>
+              {summary.discountTotal > 0 && (
+                <div className="flex items-center justify-between text-rose-600 pt-3">
+                  <span>Chiết khấu (Discount):</span>
+                  <span className="font-bold">-{formatCurrency(summary.discountTotal)}</span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between text-slate-700 pt-3 font-medium">
                 <span>Tiền trước VAT:</span>
@@ -745,6 +764,13 @@ export const QuotationBuilderPage: React.FC = () => {
                 <span>Tiền thuế VAT:</span>
                 <span className="font-bold text-slate-900">{formatCurrency(summary.vatTotal)}</span>
               </div>
+
+              {Number(previousDebt) > 0 && (
+                <div className="flex items-center justify-between text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200/80 pt-2.5 font-medium">
+                  <span>Dư nợ cũ:</span>
+                  <span className="font-bold text-amber-700">+{formatCurrency(Number(previousDebt))}</span>
+                </div>
+              )}
 
               <div className="pt-4">
                 <div className="bg-blue-50/80 p-4 rounded-xl border border-blue-100 flex flex-col gap-1">
@@ -838,7 +864,7 @@ export const QuotationBuilderPage: React.FC = () => {
                       {formatCurrency(p.price)}
                     </div>
                     <div className="text-[11px] text-slate-400">
-                      VAT {p.vatRate}% • {p.unit}
+                      VAT {p.vatRate || 0}% • {p.unit}
                     </div>
                   </div>
                 </div>

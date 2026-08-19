@@ -118,12 +118,18 @@ async function initPostgresDatabase() {
         "discountTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "taxableTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "vatTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "previousDebt" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "grandTotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "createdBy" TEXT REFERENCES "User"("id") ON DELETE SET NULL,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure previousDebt column exists if table was created previously
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "previousDebt" DOUBLE PRECISION NOT NULL DEFAULT 0;`);
+    } catch (_) {}
 
     // 5. Create QuotationItem table
     await prisma.$executeRawUnsafe(`

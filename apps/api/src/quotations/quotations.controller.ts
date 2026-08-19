@@ -122,7 +122,8 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
     const quotationNumber = validatedData.quotationNumber?.trim() || (await generateQuotationNumber());
 
     const { calculatedItems, summary } = calculateQuotationTotals(
-      validatedData.items as QuotationItemInput[]
+      validatedData.items as QuotationItemInput[],
+      validatedData.previousDebt || 0
     );
 
     const newQuotation = await prisma.quotation.create({
@@ -138,6 +139,7 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
         discountTotal: summary.discountTotal,
         taxableTotal: summary.taxableTotal,
         vatTotal: summary.vatTotal,
+        previousDebt: summary.previousDebt || 0,
         grandTotal: summary.grandTotal,
         createdBy: req.user?.id || null,
         items: {
@@ -193,7 +195,8 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
     }
 
     const { calculatedItems, summary } = calculateQuotationTotals(
-      validatedData.items as QuotationItemInput[]
+      validatedData.items as QuotationItemInput[],
+      validatedData.previousDebt || 0
     );
 
     // Run in transaction: delete old items, create new items, update quotation
@@ -215,6 +218,7 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
           discountTotal: summary.discountTotal,
           taxableTotal: summary.taxableTotal,
           vatTotal: summary.vatTotal,
+          previousDebt: summary.previousDebt || 0,
           grandTotal: summary.grandTotal,
           items: {
             create: calculatedItems.map((item) => ({

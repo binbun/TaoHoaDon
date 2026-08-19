@@ -471,6 +471,12 @@ export function renderQuotationHtml(quotation: Quotation): string {
           <span>Tiền thuế VAT:</span>
           <span>${formatCurrency(quotation.vatTotal)}</span>
         </div>
+        ${(quotation.previousDebt && quotation.previousDebt > 0) ? `
+          <div class="summary-row" style="color: #b91c1c; font-weight: 600;">
+            <span>Dư nợ cũ:</span>
+            <span>+${formatCurrency(quotation.previousDebt)}</span>
+          </div>
+        ` : ''}
         <div class="summary-row grand-total">
           <span>TỔNG CỘNG:</span>
           <span class="amount">${formatCurrency(quotation.grandTotal)}</span>

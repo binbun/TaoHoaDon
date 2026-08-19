@@ -434,11 +434,13 @@ export function renderQuotationHtml(quotation: Quotation): string {
             <td class="col-product">
               <div class="product-title">${item.productNameSnapshot}</div>
               ${item.descriptionSnapshot ? `<div class="product-desc">${item.descriptionSnapshot}</div>` : ''}
-              ${item.discount > 0 ? `<div class="discount-badge">Chiết khấu ${item.discount}% (-${formatCurrency(item.discountAmount || (item.quantity * item.unitPrice * (item.discount / 100)))})</div>` : ''}
             </td>
             <td class="col-unit">${item.unit || 'Bộ'}</td>
             <td class="col-qty">${item.quantity}</td>
-            <td class="col-price">${formatCurrency(item.unitPrice)}</td>
+            <td class="col-price">
+              <div>${formatCurrency(item.unitPrice)}</div>
+              ${item.discount > 0 ? `<div class="discount-badge" style="margin-top: 2px;">CK -${item.discount}%</div>` : ''}
+            </td>
             <td class="col-total">${formatCurrency(item.total)}</td>
           </tr>
         `).join('')}

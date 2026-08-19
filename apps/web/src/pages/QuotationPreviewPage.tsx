@@ -275,15 +275,17 @@ export const QuotationPreviewPage: React.FC = () => {
                         {item.descriptionSnapshot}
                       </div>
                     )}
-                    {item.discount > 0 && (
-                      <div className="text-[9.5px] text-rose-600 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 inline-block mt-1">
-                        Chiết khấu {item.discount}% (-{formatCurrency((item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100))) )})
-                      </div>
-                    )}
                   </td>
                   <td className="py-2.5 px-2.5 text-center text-slate-600">{item.unit || 'Bộ'}</td>
                   <td className="py-2.5 px-2.5 text-center font-medium">{item.quantity}</td>
-                  <td className="py-2.5 px-2.5 text-right text-slate-700">{formatCurrency(item.unitPrice)}</td>
+                  <td className="py-2.5 px-2.5 text-right">
+                    <div className="text-slate-700">{formatCurrency(item.unitPrice)}</div>
+                    {item.discount > 0 && (
+                      <div className="text-[9.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
+                        CK -{item.discount}%
+                      </div>
+                    )}
+                  </td>
                   <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatCurrency(item.total)}</td>
                 </tr>
               ))}

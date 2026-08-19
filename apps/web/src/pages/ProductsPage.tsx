@@ -5,7 +5,7 @@ import {
   useUpdateProduct,
   useDeleteProduct,
 } from '../hooks';
-import { Product, formatCurrency } from '@taohoadon/shared';
+import { Product, formatCurrency, formatThousands, parseThousands } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -294,12 +294,11 @@ export const ProductsPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
               label="Đơn giá phân phối (đ)"
-              type="number"
-              min="0"
-              step="1000"
-              placeholder="2596320"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              type="text"
+              inputMode="numeric"
+              placeholder="VD: 2.596.320"
+              value={formatThousands(price)}
+              onChange={(e) => setPrice(parseThousands(e.target.value))}
               required
             />
             <Input

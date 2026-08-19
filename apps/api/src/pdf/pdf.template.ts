@@ -393,7 +393,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
 
     <!-- Customer Card -->
     <div class="info-card">
-      <div class="info-card-title">Thông tin khách hàng / Đối tác / Công trình</div>
+      <div class="info-card-title">Thông tin khách hàng</div>
       <div class="customer-grid">
         <div class="info-row">
           <span>Khách hàng:</span> <strong>${customer?.companyName || 'Khách hàng đại lý'}</strong>
@@ -435,7 +435,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
             <td class="col-product">
               <div class="product-title">${item.productNameSnapshot}</div>
               ${item.descriptionSnapshot ? `<div class="product-desc">${item.descriptionSnapshot}</div>` : ''}
-              ${item.discount > 0 ? `<div class="discount-badge">Chiết khấu: -${formatCurrency(item.discount)}</div>` : ''}
+              ${item.discount > 0 ? `<div class="discount-badge">Chiết khấu ${item.discount}% (-${formatCurrency(item.discountAmount || (item.quantity * item.unitPrice * (item.discount / 100)))})</div>` : ''}
             </td>
             <td class="col-unit">${item.unit || 'Bộ'}</td>
             <td class="col-qty">${item.quantity}</td>

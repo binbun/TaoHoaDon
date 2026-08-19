@@ -58,8 +58,8 @@ export interface QuotationItemInput {
   unit: string;
   quantity: number;
   unitPrice: number;
-  discount: number; // discount amount in VND
-  vatRate: number; // percentage, e.g. 8
+  discount: number; // percentage, e.g. 10 for 10%
+  vatRate: number; // percentage, e.g. 0 or 8 or 10
   sortOrder: number;
 }
 
@@ -67,7 +67,8 @@ export interface CalculatedQuotationItem extends QuotationItemInput {
   id: string;
   quotationId?: string;
   subtotal: number; // quantity * unitPrice
-  taxableAmount: number; // subtotal - discount
+  discountAmount?: number; // subtotal * (discount / 100)
+  taxableAmount: number; // subtotal - discountAmount
   vatAmount: number; // taxableAmount * (vatRate / 100)
   total: number; // taxableAmount + vatAmount
 }

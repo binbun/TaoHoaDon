@@ -223,7 +223,7 @@ export const QuotationPreviewPage: React.FC = () => {
           {/* Customer Details Box */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4">
             <div className="text-[10.5px] font-bold uppercase tracking-wider text-blue-700 border-b border-slate-200 pb-1 mb-2">
-              Thông tin khách hàng / Đối tác / Công trình
+              Thông tin khách hàng
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
               <div>
@@ -278,7 +278,7 @@ export const QuotationPreviewPage: React.FC = () => {
                     )}
                     {item.discount > 0 && (
                       <div className="text-[9.5px] text-rose-600 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 inline-block mt-1">
-                        Chiết khấu: -{formatCurrency(item.discount)}
+                        Chiết khấu {item.discount}% (-{formatCurrency((item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100))) )})
                       </div>
                     )}
                   </td>

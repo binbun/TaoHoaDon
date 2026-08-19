@@ -26,13 +26,13 @@ describe('Calculation Engine - Quotation & VAT & Discount', () => {
     expect(res.total).toBe(3118500);
   });
 
-  it('should calculate accurately with quantity = 10 and discount > 0', () => {
+  it('should calculate accurately with quantity = 10 and discount = 10%', () => {
     const item: QuotationItemInput = {
       productNameSnapshot: 'TOP PRO TRIAL',
       unit: 'Gói',
       quantity: 10,
       unitPrice: 2448000,
-      discount: 1000000, // 1 triệu discount
+      discount: 10, // 10% discount
       vatRate: 8,
       sortOrder: 0,
     };
@@ -40,12 +40,14 @@ describe('Calculation Engine - Quotation & VAT & Discount', () => {
     const res = calculateItemRow(item);
     // Subtotal: 10 * 2,448,000 = 24,480,000
     expect(res.subtotal).toBe(24480000);
-    // Taxable: 24,480,000 - 1,000,000 = 23,480,000
-    expect(res.taxableAmount).toBe(23480000);
-    // VAT 8%: 23,480,000 * 0.08 = 1,878,400
-    expect(res.vatAmount).toBe(1878400);
-    // Total: 23,480,000 + 1,878,400 = 25,358,400
-    expect(res.total).toBe(25358400);
+    // Discount amount: 24,480,000 * 10% = 2,448,000
+    expect(res.discountAmount).toBe(2448000);
+    // Taxable: 24,480,000 - 2,448,000 = 22,032,000
+    expect(res.taxableAmount).toBe(22032000);
+    // VAT 8%: 22,032,000 * 0.08 = 1,762,560
+    expect(res.vatAmount).toBe(1762560);
+    // Total: 22,032,000 + 1,762,560 = 23,794,560
+    expect(res.total).toBe(23794560);
   });
 
   it('should calculate accurately with VAT = 0% and VAT = 10%', () => {
@@ -69,54 +71,53 @@ describe('Calculation Engine - Quotation & VAT & Discount', () => {
       unit: 'Gói',
       quantity: 1,
       unitPrice: 5000000,
-      discount: 500000,
+      discount: 10, // 10%
       vatRate: 10,
       sortOrder: 0,
     };
 
     const res10 = calculateItemRow(itemVat10);
     expect(res10.subtotal).toBe(5000000);
+    expect(res10.discountAmount).toBe(500000);
     expect(res10.taxableAmount).toBe(4500000);
     expect(res10.vatAmount).toBe(450000);
     expect(res10.total).toBe(4950000);
   });
 
-  it('should match the exact prompt calculation example in section 8', () => {
-    // 2 TOP JOB @ 2,887,500 = 5,775,000 with 500,000 discount
-    // 1 TOP PRO @ 2,448,000 = 2,448,000
-    // Total Subtotal = 8,223,000
-    // Discount = 500,000
-    // Taxable = 7,723,000
-    // VAT 8% = 617,840
-    // Grand Total = 8,340,840
+  it('should calculate accurately with multiple items and previous debt', () => {
+    // Item 1: 2 * 2,000,000 = 4,000,000, discount 10% = 400,000 -> Taxable = 3,600,000, VAT 0% = 0 -> Total = 3,600,000
+    // Item 2: 1 * 1,000,000 = 1,000,000, discount 0% -> Taxable = 1,000,000, VAT 8% = 80,000 -> Total = 1,080,000
+    // Previous Debt = 500,000
+    // Grand Total = 3,600,000 + 1,080,000 + 500,000 = 5,180,000
     const items: QuotationItemInput[] = [
       {
-        productNameSnapshot: 'TOP JOB',
-        unit: 'Gói',
+        productNameSnapshot: 'Giá bát nâng hạ SUS304',
+        unit: 'Bộ',
         quantity: 2,
-        unitPrice: 2887500,
-        discount: 500000,
-        vatRate: 8,
+        unitPrice: 2000000,
+        discount: 10,
+        vatRate: 0,
         sortOrder: 0,
       },
       {
-        productNameSnapshot: 'TOP PRO',
-        unit: 'Gói',
+        productNameSnapshot: 'Thùng rác đôi thông minh',
+        unit: 'Bộ',
         quantity: 1,
-        unitPrice: 2448000,
+        unitPrice: 1000000,
         discount: 0,
         vatRate: 8,
         sortOrder: 1,
       },
     ];
 
-    const { summary } = calculateQuotationTotals(items);
+    const { summary } = calculateQuotationTotals(items, 500000);
 
-    expect(summary.subtotal).toBe(8223000);
-    expect(summary.discountTotal).toBe(500000);
-    expect(summary.taxableTotal).toBe(7723000);
-    expect(summary.vatTotal).toBe(617840);
-    expect(summary.grandTotal).toBe(8340840);
+    expect(summary.subtotal).toBe(5000000);
+    expect(summary.discountTotal).toBe(400000);
+    expect(summary.taxableTotal).toBe(4600000);
+    expect(summary.vatTotal).toBe(80000);
+    expect(summary.previousDebt).toBe(500000);
+    expect(summary.grandTotal).toBe(5180000);
   });
 
   it('should handle decimal quantities and fractional amounts without rounding artifacts', () => {

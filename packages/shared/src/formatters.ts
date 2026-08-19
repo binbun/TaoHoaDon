@@ -13,6 +13,26 @@ export function formatCurrency(amount: number | null | undefined): string {
 }
 
 /**
+ * Formats a numeric input with dot thousands separator (e.g. 1000000 -> "1.000.000")
+ */
+export function formatThousands(val: number | string | null | undefined): string {
+  if (val === null || val === undefined || val === '') return '';
+  const numStr = val.toString().replace(/\D/g, '');
+  if (!numStr) return '';
+  return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+/**
+ * Parses a thousands-formatted string back to number (e.g. "1.000.000" -> 1000000)
+ */
+export function parseThousands(str: string | number | null | undefined): number {
+  if (str === null || str === undefined || str === '') return 0;
+  if (typeof str === 'number') return str;
+  const cleaned = str.toString().replace(/\./g, '').replace(/,/g, '').replace(/\D/g, '');
+  return cleaned ? parseInt(cleaned, 10) : 0;
+}
+
+/**
  * Formats standard number without currency symbol (e.g. 2.887.500)
  */
 export function formatNumber(amount: number | null | undefined): string {

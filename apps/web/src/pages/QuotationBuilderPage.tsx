@@ -13,6 +13,8 @@ import {
   QuotationItemInput,
   calculateQuotationTotals,
   formatCurrency,
+  formatThousands,
+  parseThousands,
 } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
@@ -497,12 +499,11 @@ export const QuotationBuilderPage: React.FC = () => {
               <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-1">
                 <Input
                   label="Dư nợ cũ từ các đơn trước (đ)"
-                  type="number"
-                  min="0"
-                  step="1000"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="0"
-                  value={previousDebt}
-                  onChange={(e) => setPreviousDebt(e.target.value)}
+                  value={formatThousands(previousDebt)}
+                  onChange={(e) => setPreviousDebt(parseThousands(e.target.value))}
                   helperText="Số tiền khách hàng/đại lý còn nợ từ các đơn trước (nếu có, sẽ tự động cộng vào Tổng cộng thanh toán)"
                 />
               </div>
@@ -667,25 +668,27 @@ export const QuotationBuilderPage: React.FC = () => {
                             Đơn giá (đ)
                           </label>
                           <Input
-                            type="number"
-                            min="0"
-                            step="1000"
-                            value={item.unitPrice}
-                            onChange={(e) => handleItemChange(index, 'unitPrice', Number(e.target.value))}
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="0"
+                            value={formatThousands(item.unitPrice)}
+                            onChange={(e) => handleItemChange(index, 'unitPrice', parseThousands(e.target.value))}
                             className="text-right font-medium"
                           />
                         </div>
 
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                            Chiết khấu (đ)
+                            Chiết khấu (%)
                           </label>
                           <Input
                             type="number"
                             min="0"
-                            step="1000"
+                            max="100"
+                            step="1"
+                            placeholder="0"
                             value={item.discount}
-                            onChange={(e) => handleItemChange(index, 'discount', Number(e.target.value))}
+                            onChange={(e) => handleItemChange(index, 'discount', Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
                             className="text-right text-rose-600 font-medium"
                           />
                         </div>

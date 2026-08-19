@@ -565,7 +565,7 @@ export const QuotationBuilderPage: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {items.map((item, index) => {
-                  const calculatedRow = calculatedItems[index] || item;
+                  const calculatedRow = calculatedItems[index];
                   return (
                     <div
                       key={item.id || index}
@@ -713,7 +713,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         <div className="col-span-2 sm:col-span-1 bg-white p-2 rounded-lg border border-slate-200 text-right">
                           <div className="text-[10px] font-bold text-slate-400 uppercase">Thành tiền</div>
                           <div className="font-extrabold text-slate-900 text-sm truncate">
-                            {formatCurrency(calculatedRow.total)}
+                            {formatCurrency(calculatedRow ? calculatedRow.total : 0)}
                           </div>
                         </div>
                       </div>

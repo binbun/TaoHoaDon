@@ -40,11 +40,18 @@ export interface Customer {
 export interface Product {
   id: string;
   code: string;
+  oldCode?: string | null;
   name: string;
+  brand: string;
+  category: string;
   shortDescription?: string | null;
+  cabinetWidth?: string | null;
+  dimensions?: string | null;
   unit: string;
   price: number;
-  vatRate: number; // e.g. 8 for 8%, 10 for 10%
+  retailPrice?: number | null;
+  discountRate?: number | null;
+  vatRate: number; // e.g. 0 for 0%, 8 for 8%, 10 for 10%
   active: boolean;
   createdAt: string;
   updatedAt: string;

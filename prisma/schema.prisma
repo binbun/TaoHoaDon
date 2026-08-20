@@ -35,10 +35,17 @@ model Customer {
 model Product {
   id               String          @id @default(uuid())
   code             String          @unique
+  oldCode          String?
   name             String
+  brand            String          @default("GROB")
+  category         String          @default("Khác")
   shortDescription String?
+  cabinetWidth     String?
+  dimensions       String?
   unit             String          @default("Bộ")
   price            Float           @default(0)
+  retailPrice      Float?          @default(0)
+  discountRate     Float?          @default(0)
   vatRate          Float           @default(0)
   active           Boolean         @default(true)
   createdAt        DateTime        @default(now())

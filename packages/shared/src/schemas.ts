@@ -27,10 +27,17 @@ export const ResetPasswordSchema = z.object({
 
 export const ProductSchema = z.object({
   code: z.string().min(1, 'Mã sản phẩm không được để trống').max(50, 'Mã sản phẩm tối đa 50 ký tự'),
+  oldCode: z.string().max(50).optional().nullable(),
   name: z.string().min(1, 'Tên sản phẩm không được để trống').max(255, 'Tên sản phẩm tối đa 255 ký tự'),
-  shortDescription: z.string().max(250, 'Mô tả ngắn tối đa 250 ký tự').optional().nullable(),
+  brand: z.string().default('GROB'),
+  category: z.string().default('Khác'),
+  shortDescription: z.string().max(500, 'Mô tả ngắn tối đa 500 ký tự').optional().nullable(),
+  cabinetWidth: z.string().max(50).optional().nullable(),
+  dimensions: z.string().max(100).optional().nullable(),
   unit: z.string().min(1, 'Đơn vị tính không được để trống').default('Bộ'),
   price: z.coerce.number().min(0, 'Đơn giá không được âm'),
+  retailPrice: z.coerce.number().min(0).optional().nullable().default(0),
+  discountRate: z.coerce.number().min(0).max(100).optional().nullable().default(0),
   vatRate: z.coerce.number().min(0, 'VAT không được âm').max(100, 'VAT tối đa 100%').default(0),
   active: z.boolean().default(true),
 });

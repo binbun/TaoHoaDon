@@ -5,17 +5,20 @@ import { useToast } from '../context/ToastContext';
 
 export const productKeys = {
   all: ['products'] as const,
-  list: (params?: { search?: string; active?: string | boolean }) =>
+  list: (params?: { search?: string; active?: string | boolean; brand?: string; category?: string; cabinetWidth?: string }) =>
     ['products', 'list', params] as const,
   detail: (id: string) => ['products', 'detail', id] as const,
 };
 
-export function useProducts(params?: { search?: string; active?: string | boolean }) {
+export function useProducts(params?: { search?: string; active?: string | boolean; brand?: string; category?: string; cabinetWidth?: string }) {
   return useQuery<Product[]>({
     queryKey: productKeys.list(params),
     queryFn: () => {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.append('search', params.search);
+      if (params?.brand) searchParams.append('brand', params.brand);
+      if (params?.category) searchParams.append('category', params.category);
+      if (params?.cabinetWidth) searchParams.append('cabinetWidth', params.cabinetWidth);
       if (params?.active !== undefined && params?.active !== '') {
         searchParams.append('active', String(params.active));
       }

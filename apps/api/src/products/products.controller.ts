@@ -4,11 +4,20 @@ import { ProductSchema } from '@taohoadon/shared';
 
 export async function getProducts(req: Request, res: Response, next: NextFunction) {
   try {
-    const { search, active } = req.query;
+    const { search, active, brand, category, cabinetWidth } = req.query;
 
     const where: any = {};
     if (active !== undefined && active !== '') {
       where.active = active === 'true';
+    }
+    if (brand && typeof brand === 'string' && brand.trim() !== '') {
+      where.brand = brand.trim();
+    }
+    if (category && typeof category === 'string' && category.trim() !== '') {
+      where.category = category.trim();
+    }
+    if (cabinetWidth && typeof cabinetWidth === 'string' && cabinetWidth.trim() !== '') {
+      where.cabinetWidth = cabinetWidth.trim();
     }
 
     if (search && typeof search === 'string') {
@@ -16,13 +25,15 @@ export async function getProducts(req: Request, res: Response, next: NextFunctio
       where.OR = [
         { name: { contains: trimmed } },
         { code: { contains: trimmed } },
+        { oldCode: { contains: trimmed } },
         { shortDescription: { contains: trimmed } },
+        { dimensions: { contains: trimmed } },
       ];
     }
 
     const products = await prisma.product.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ brand: 'asc' }, { category: 'asc' }, { code: 'asc' }],
     });
 
     return res.json({
@@ -75,10 +86,17 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
     const product = await prisma.product.create({
       data: {
         code: validatedData.code.trim().toUpperCase(),
+        oldCode: validatedData.oldCode?.trim() || null,
         name: validatedData.name.trim(),
+        brand: validatedData.brand?.trim() || 'GROB',
+        category: validatedData.category?.trim() || 'Khác',
         shortDescription: validatedData.shortDescription?.trim() || null,
+        cabinetWidth: validatedData.cabinetWidth?.trim() || null,
+        dimensions: validatedData.dimensions?.trim() || null,
         unit: validatedData.unit.trim(),
         price: validatedData.price,
+        retailPrice: validatedData.retailPrice || 0,
+        discountRate: validatedData.discountRate || 0,
         vatRate: validatedData.vatRate,
         active: validatedData.active,
       },
@@ -126,10 +144,17 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
       where: { id },
       data: {
         ...(validatedData.code ? { code: validatedData.code.trim().toUpperCase() } : {}),
+        ...(validatedData.oldCode !== undefined ? { oldCode: validatedData.oldCode?.trim() || null } : {}),
         ...(validatedData.name ? { name: validatedData.name.trim() } : {}),
+        ...(validatedData.brand ? { brand: validatedData.brand.trim() } : {}),
+        ...(validatedData.category ? { category: validatedData.category.trim() } : {}),
         ...(validatedData.shortDescription !== undefined ? { shortDescription: validatedData.shortDescription?.trim() || null } : {}),
+        ...(validatedData.cabinetWidth !== undefined ? { cabinetWidth: validatedData.cabinetWidth?.trim() || null } : {}),
+        ...(validatedData.dimensions !== undefined ? { dimensions: validatedData.dimensions?.trim() || null } : {}),
         ...(validatedData.unit ? { unit: validatedData.unit.trim() } : {}),
         ...(validatedData.price !== undefined ? { price: validatedData.price } : {}),
+        ...(validatedData.retailPrice !== undefined ? { retailPrice: validatedData.retailPrice } : {}),
+        ...(validatedData.discountRate !== undefined ? { discountRate: validatedData.discountRate } : {}),
         ...(validatedData.vatRate !== undefined ? { vatRate: validatedData.vatRate } : {}),
         ...(validatedData.active !== undefined ? { active: validatedData.active } : {}),
       },

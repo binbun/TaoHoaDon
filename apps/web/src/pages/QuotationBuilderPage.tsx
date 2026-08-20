@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useCustomers,
@@ -63,12 +63,14 @@ export const QuotationBuilderPage: React.FC = () => {
   const [address, setAddress] = useState('');
   const [taxCode, setTaxCode] = useState('');
 
-  // Items State
-  const [items, setItems] = useState<QuotationItemInput[]>([]);
-
-  // Modals
+  // Modals & Picker Filters
   const [isProductPickerOpen, setIsProductPickerOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
+  const [pickerBrand, setPickerBrand] = useState('Tất cả');
+  const [pickerCategory, setPickerCategory] = useState('');
+
+  // Items State
+  const [items, setItems] = useState<QuotationItemInput[]>([]);
 
   // Custom Hooks
   const { data: customers = [] } = useCustomers();
@@ -83,6 +85,35 @@ export const QuotationBuilderPage: React.FC = () => {
     createQuotationMutation.isPending ||
     updateQuotationMutation.isPending ||
     createCustomerMutation.isPending;
+
+  // Categories available for picker
+  const availablePickerCategories = useMemo(() => {
+    const cats = new Set<string>();
+    products.forEach((p) => {
+      if (p.category && (pickerBrand === 'Tất cả' || p.brand === pickerBrand)) {
+        cats.add(p.category);
+      }
+    });
+    return Array.from(cats).sort();
+  }, [products, pickerBrand]);
+
+  const filteredProducts = useMemo(() => {
+    const q = productSearch.toLowerCase().trim();
+    return products.filter((p) => {
+      const matchBrand = pickerBrand === 'Tất cả' || p.brand === pickerBrand;
+      const matchCat = !pickerCategory || p.category === pickerCategory;
+      const matchSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.code.toLowerCase().includes(q) ||
+        (p.oldCode && p.oldCode.toLowerCase().includes(q)) ||
+        (p.dimensions && p.dimensions.toLowerCase().includes(q)) ||
+        (p.cabinetWidth && p.cabinetWidth.toLowerCase().includes(q)) ||
+        (p.shortDescription && p.shortDescription.toLowerCase().includes(q));
+
+      return matchBrand && matchCat && matchSearch;
+    });
+  }, [products, pickerBrand, pickerCategory, productSearch]);
 
   // Populate data when editing
   useEffect(() => {
@@ -291,12 +322,6 @@ export const QuotationBuilderPage: React.FC = () => {
       error(err.message || 'Không thể lưu đơn hàng, vui lòng thử lại');
     }
   };
-
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      p.code.toLowerCase().includes(productSearch.toLowerCase())
-  );
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -814,16 +839,48 @@ export const QuotationBuilderPage: React.FC = () => {
       <Modal
         isOpen={isProductPickerOpen}
         onClose={() => setIsProductPickerOpen(false)}
-        title="Chọn Phụ Kiện Từ Catalogue EUPLUS"
+        title="Chọn Sản Phẩm Từ Catalogue (GRÖB / EUPLUS)"
         maxWidth="2xl"
       >
         <div className="space-y-3 sm:space-y-4">
-          <Input
-            placeholder="Tìm theo tên hoặc mã phụ kiện (EV.I80, EV.80B, EV.35, B30.1...)"
-            value={productSearch}
-            onChange={(e) => setProductSearch(e.target.value)}
-            leftElement={<Search className="w-4 h-4" />}
-          />
+          {/* Brand Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            {['Tất cả', 'GROB', 'EUPLUS'].map((b) => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => setPickerBrand(b)}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                  pickerBrand === b
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <Input
+              placeholder="Tìm mã mới, mã cũ, tên, kích thước..."
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
+              leftElement={<Search className="w-4 h-4" />}
+            />
+            <select
+              value={pickerCategory}
+              onChange={(e) => setPickerCategory(e.target.value)}
+              className="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Tất cả danh mục</option>
+              {availablePickerCategories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto space-y-2 pr-1">
             {filteredProducts.length > 0 ? (
@@ -834,33 +891,43 @@ export const QuotationBuilderPage: React.FC = () => {
                   className="p-3 sm:p-3.5 border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group active:scale-[0.99]"
                 >
                   <div className="space-y-1 min-w-0 pr-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded flex-shrink-0">
                         {p.code}
+                      </span>
+                      {p.oldCode && (
+                        <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
+                          Cũ: {p.oldCode}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                        {p.brand || 'GROB'}
                       </span>
                       <span className="font-bold text-slate-900 group-hover:text-blue-600 text-sm truncate">
                         {p.name}
                       </span>
                     </div>
-                    {p.shortDescription && (
-                      <p className="text-xs text-slate-500 line-clamp-1">
-                        {p.shortDescription}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      {p.cabinetWidth && <span className="font-medium text-slate-700">Tủ {p.cabinetWidth}mm</span>}
+                      {p.dimensions && <span>• KT: {p.dimensions}</span>}
+                      {p.shortDescription && (
+                        <span className="line-clamp-1 truncate max-w-xs">• {p.shortDescription}</span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right flex-shrink-0 pl-2">
                     <div className="font-extrabold text-slate-900 text-sm whitespace-nowrap">
                       {formatCurrency(p.price)}
                     </div>
                     <div className="text-[11px] text-slate-400">
-                      VAT {p.vatRate || 0}% • {p.unit}
+                      {p.unit}
                     </div>
                   </div>
                 </div>
               ))
             ) : (
               <div className="py-8 text-center text-sm text-slate-500">
-                Không tìm thấy phụ kiện nào khớp với từ khóa tìm kiếm.
+                Không tìm thấy sản phẩm nào khớp với bộ lọc.
               </div>
             )}
           </div>

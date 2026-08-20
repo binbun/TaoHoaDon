@@ -184,6 +184,8 @@ async function main() {
       code: 'TB-INOX-CANH-KINH',
       name: 'Tủ bếp khung Inox 304 module cánh kính cường lực tràn viền',
       shortDescription: 'Thùng tủ Inox 304 chấn dập CNC chống mối mọt vĩnh viễn, cánh kính khung nhôm Anode.',
+      brand: 'EUPLUS',
+      category: 'Tủ bếp hoàn thiện',
       unit: 'Mét dài',
       price: 8500000,
       vatRate: 0,
@@ -195,12 +197,23 @@ async function main() {
   for (const prod of productsData) {
     const p = await prisma.product.upsert({
       where: { code: prod.code },
+      update: { ...prod, brand: 'EUPLUS', category: (prod as any).category || 'Phụ kiện tủ bếp' },
+      create: { ...prod, brand: 'EUPLUS', category: (prod as any).category || 'Phụ kiện tủ bếp' },
+    });
+    createdProducts.push(p);
+  }
+
+  // Nạp toàn bộ danh mục sản phẩm GROB
+  const { ALL_CATALOG_PRODUCTS } = await import('../packages/shared/src/data/grobProducts');
+  for (const prod of ALL_CATALOG_PRODUCTS) {
+    const p = await prisma.product.upsert({
+      where: { code: prod.code },
       update: prod,
       create: prod,
     });
     createdProducts.push(p);
   }
-  console.log(`✅ Đã nạp ${createdProducts.length} sản phẩm phụ kiện tủ bếp & tủ bếp EUPLUS.`);
+  console.log(`✅ Đã nạp thành công tổng cộng ${createdProducts.length} sản phẩm (EUPLUS + GROB).`);
 
   // 3. Tạo Khách hàng / Đại lý / Dự án mẫu
   const customer1 = await prisma.customer.create({

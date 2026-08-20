@@ -96,7 +96,7 @@ async function initPostgresDatabase() {
         "shortDescription" TEXT,
         "unit" TEXT NOT NULL DEFAULT 'Bộ',
         "price" DOUBLE PRECISION NOT NULL DEFAULT 0,
-        "vatRate" DOUBLE PRECISION NOT NULL DEFAULT 8,
+        "vatRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "active" BOOLEAN NOT NULL DEFAULT true,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -143,7 +143,7 @@ async function initPostgresDatabase() {
         "quantity" DOUBLE PRECISION NOT NULL DEFAULT 1,
         "unitPrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "discount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-        "vatRate" DOUBLE PRECISION NOT NULL DEFAULT 8,
+        "vatRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "subtotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "taxableAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "vatAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -183,16 +183,16 @@ async function initPostgresDatabase() {
     const productCount = await prisma.product.count();
     if (productCount === 0) {
       const initialProducts = [
-        { code: 'EV.I80', name: 'Giá bát nâng hạ thông minh SUS304 - KT 800', shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp, giảm chấn êm ái, khay hứng nước PVC.', unit: 'Bộ', price: 2596320, vatRate: 8, active: true },
-        { code: 'EV.I90', name: 'Giá bát nâng hạ thông minh SUS304 - KT 900', shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp cho khoang tủ 900mm.', unit: 'Bộ', price: 2682720, vatRate: 8, active: true },
-        { code: 'EV.80B', name: 'Giá để xoong nồi nan dẹt SUS304 - KT 800', shortDescription: 'Nan dẹt dày dặn Inox 304 kèm ray trượt âm giảm chấn chịu tải trọng 35kg.', unit: 'Bộ', price: 913680, vatRate: 8, active: true },
-        { code: 'EV.80', name: 'Giá bát đĩa đa năng nan dẹt SUS304 - KT 800', shortDescription: 'Khay cài bát đĩa nan dẹt Inox 304 tủ dưới, kèm khay hứng nước và ray giảm chấn.', unit: 'Bộ', price: 951480, vatRate: 8, active: true },
-        { code: 'EV.35', name: 'Giá dao thớt đa năng nan dẹt SUS304 - KT 350', shortDescription: 'Tích hợp cài dao, thớt, đũa thìa, móc muôi thìa và ray trượt giảm chấn.', unit: 'Bộ', price: 1004400, vatRate: 8, active: true },
-        { code: 'B30.1', name: 'Thùng gạo gương đen thông minh nút xoay', shortDescription: 'Mặt gương đen sang trọng, tự động đong gạo 150g-250g chống ẩm mốc.', unit: 'Chiếc', price: 813240, vatRate: 8, active: true },
-        { code: 'E.30G', name: 'Thùng rác đôi gắn cánh âm tủ ray giảm chấn', shortDescription: '2 hố phân loại rác thải tự động mở nắp khi kéo cánh tủ, ray trượt giảm chấn.', unit: 'Bộ', price: 1030320, vatRate: 8, active: true },
-        { code: 'EV.270.8', name: 'Mâm xoay 3/4 nan dẹt SUS304 - KT 800', shortDescription: 'Tối ưu góc chữ L tủ bếp, mở xoay 270 độ Inox 304 sáng bóng.', unit: 'Bộ', price: 1202040, vatRate: 8, active: true },
-        { code: 'EV.645', name: 'Tủ kho 6 tầng cánh 450 nan dẹt SUS304', shortDescription: 'Hệ giá kho 12 rổ Inox 304 chứa đồ khô tiện nghi, khung sơn tĩnh điện cao cấp.', unit: 'Hệ', price: 4407480, vatRate: 8, active: true },
-        { code: 'TB-ACRYLIC', name: 'Tủ bếp Acrylic bóng gương An Cường (Thùng MDF xanh chống ẩm)', shortDescription: 'Cánh phủ Acrylic no line bóng gương An Cường, thùng MDF lõi xanh chống ẩm tiêu chuẩn.', unit: 'Mét dài', price: 4800000, vatRate: 8, active: true },
+        { code: 'EV.I80', name: 'Giá bát nâng hạ thông minh SUS304 - KT 800', shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp, giảm chấn êm ái, khay hứng nước PVC.', unit: 'Bộ', price: 2596320, vatRate: 0, active: true },
+        { code: 'EV.I90', name: 'Giá bát nâng hạ thông minh SUS304 - KT 900', shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp cho khoang tủ 900mm.', unit: 'Bộ', price: 2682720, vatRate: 0, active: true },
+        { code: 'EV.80B', name: 'Giá để xoong nồi nan dẹt SUS304 - KT 800', shortDescription: 'Nan dẹt dày dặn Inox 304 kèm ray trượt âm giảm chấn chịu tải trọng 35kg.', unit: 'Bộ', price: 913680, vatRate: 0, active: true },
+        { code: 'EV.80', name: 'Giá bát đĩa đa năng nan dẹt SUS304 - KT 800', shortDescription: 'Khay cài bát đĩa nan dẹt Inox 304 tủ dưới, kèm khay hứng nước và ray giảm chấn.', unit: 'Bộ', price: 951480, vatRate: 0, active: true },
+        { code: 'EV.35', name: 'Giá dao thớt đa năng nan dẹt SUS304 - KT 350', shortDescription: 'Tích hợp cài dao, thớt, đũa thìa, móc muôi thìa và ray trượt giảm chấn.', unit: 'Bộ', price: 1004400, vatRate: 0, active: true },
+        { code: 'B30.1', name: 'Thùng gạo gương đen thông minh nút xoay', shortDescription: 'Mặt gương đen sang trọng, tự động đong gạo 150g-250g chống ẩm mốc.', unit: 'Chiếc', price: 813240, vatRate: 0, active: true },
+        { code: 'E.30G', name: 'Thùng rác đôi gắn cánh âm tủ ray giảm chấn', shortDescription: '2 hố phân loại rác thải tự động mở nắp khi kéo cánh tủ, ray trượt giảm chấn.', unit: 'Bộ', price: 1030320, vatRate: 0, active: true },
+        { code: 'EV.270.8', name: 'Mâm xoay 3/4 nan dẹt SUS304 - KT 800', shortDescription: 'Tối ưu góc chữ L tủ bếp, mở xoay 270 độ Inox 304 sáng bóng.', unit: 'Bộ', price: 1202040, vatRate: 0, active: true },
+        { code: 'EV.645', name: 'Tủ kho 6 tầng cánh 450 nan dẹt SUS304', shortDescription: 'Hệ giá kho 12 rổ Inox 304 chứa đồ khô tiện nghi, khung sơn tĩnh điện cao cấp.', unit: 'Hệ', price: 4407480, vatRate: 0, active: true },
+        { code: 'TB-ACRYLIC', name: 'Tủ bếp Acrylic bóng gương An Cường (Thùng MDF xanh chống ẩm)', shortDescription: 'Cánh phủ Acrylic no line bóng gương An Cường, thùng MDF lõi xanh chống ẩm tiêu chuẩn.', unit: 'Mét dài', price: 4800000, vatRate: 0, active: true },
       ];
 
       for (const p of initialProducts) {
@@ -217,6 +217,17 @@ async function initPostgresDatabase() {
 
       console.log('🎉 Đã nạp thành công tài khoản SUPER_ADMIN và dữ liệu mẫu EUPLUS vào Supabase!');
     }
+
+    // 8. Đảm bảo tất cả sản phẩm hiện có trong CSDL đều có VAT = 0%
+    await prisma.product.updateMany({
+      where: {
+        vatRate: { not: 0 },
+      },
+      data: {
+        vatRate: 0,
+      },
+    });
+    console.log('✅ Đã cập nhật tất cả sản phẩm về VAT 0%');
   } catch (err) {
     console.error('Lỗi khi khởi tạo PostgreSQL database:', err);
   }

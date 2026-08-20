@@ -35,7 +35,7 @@ async function main() {
       shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp, giảm chấn êm ái, khay hứng nước PVC.',
       unit: 'Bộ',
       price: 2596320,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -44,7 +44,7 @@ async function main() {
       shortDescription: 'Cơ cấu trợ lực nâng hạ 2 tầng Inox 304 cao cấp cho khoang tủ 900mm.',
       unit: 'Bộ',
       price: 2682720,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -53,7 +53,7 @@ async function main() {
       shortDescription: 'Giá bát nâng hạ trợ lực piston thủy lực, Inox 304 chuẩn bền bỉ.',
       unit: 'Bộ',
       price: 2430000,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     // Giá xoong nồi & bát đĩa nan dẹt
@@ -63,7 +63,7 @@ async function main() {
       shortDescription: 'Nan dẹt dày dặn Inox 304 kèm ray trượt âm giảm chấn chịu tải trọng 35kg.',
       unit: 'Bộ',
       price: 913680,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -72,7 +72,7 @@ async function main() {
       shortDescription: 'Giá xoong nồi gắn cánh/âm tủ nan dẹt Inox 304, ray trượt giảm chấn cao cấp.',
       unit: 'Bộ',
       price: 930960,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -81,7 +81,7 @@ async function main() {
       shortDescription: 'Khay cài bát đĩa nan dẹt Inox 304 tủ dưới, kèm khay hứng nước và ray giảm chấn.',
       unit: 'Bộ',
       price: 951480,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     // Giá xoong nồi & bát đĩa nan tròn
@@ -91,7 +91,7 @@ async function main() {
       shortDescription: 'Nan tròn thanh thoát Inox 304 chống han gỉ, kèm ray âm giảm chấn.',
       unit: 'Bộ',
       price: 812160,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -100,7 +100,7 @@ async function main() {
       shortDescription: 'Giá cài đĩa và úp bát nan tròn Inox 304 kèm khay nước.',
       unit: 'Bộ',
       price: 849960,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     // Giá dao thớt & gia vị đa năng
@@ -110,7 +110,7 @@ async function main() {
       shortDescription: 'Tích hợp cài dao, thớt, đũa thìa, móc muôi thìa và ray trượt giảm chấn.',
       unit: 'Bộ',
       price: 1004400,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -119,7 +119,7 @@ async function main() {
       shortDescription: 'Thiết kế 3 tầng nan dẹt Inox 304 để chai lọ gia vị dầu ăn gọn gàng.',
       unit: 'Bộ',
       price: 989280,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     // Thùng gạo gương & thùng rác âm tủ
@@ -129,7 +129,7 @@ async function main() {
       shortDescription: 'Mặt gương đen sang trọng, tự động đong gạo 150g-250g chống ẩm mốc côn trùng.',
       unit: 'Chiếc',
       price: 813240,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -138,7 +138,7 @@ async function main() {
       shortDescription: '2 hố phân loại rác thải tự động mở nắp khi kéo cánh tủ, ray trượt giảm chấn.',
       unit: 'Bộ',
       price: 1030320,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     // Mâm xoay & góc liên hoàn
@@ -148,7 +148,7 @@ async function main() {
       shortDescription: 'Tối ưu góc chữ L tủ bếp, mở xoay 270 độ Inox 304 sáng bóng.',
       unit: 'Bộ',
       price: 1202040,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -157,7 +157,7 @@ async function main() {
       shortDescription: 'Cơ cấu 4 rổ kéo liên hoàn thông minh tận dụng 100% góc chết tủ bếp.',
       unit: 'Bộ',
       price: 3835080,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     // Tủ kho inox cao cấp
@@ -167,7 +167,7 @@ async function main() {
       shortDescription: 'Hệ giá kho 12 rổ Inox 304 chứa đồ khô tiện nghi, khung sơn tĩnh điện cao cấp.',
       unit: 'Hệ',
       price: 4407480,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     // Module Tủ bếp hoàn thiện
@@ -177,7 +177,7 @@ async function main() {
       shortDescription: 'Cánh phủ Acrylic no line bóng gương An Cường, thùng MDF lõi xanh chống ẩm tiêu chuẩn.',
       unit: 'Mét dài',
       price: 4800000,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
     {
@@ -186,7 +186,7 @@ async function main() {
       shortDescription: 'Thùng tủ Inox 304 chấn dập CNC chống mối mọt vĩnh viễn, cánh kính khung nhôm Anode.',
       unit: 'Mét dài',
       price: 8500000,
-      vatRate: 8,
+      vatRate: 0,
       active: true,
     },
   ];
@@ -239,7 +239,7 @@ async function main() {
       quantity: 1,
       unitPrice: createdProducts[0].price, // 2,596,320
       discount: 100000,
-      vatRate: 8,
+      vatRate: 0,
       sortOrder: 0,
     },
     {
@@ -250,7 +250,7 @@ async function main() {
       quantity: 2,
       unitPrice: createdProducts[3].price, // 913,680 x 2 = 1,827,360
       discount: 0,
-      vatRate: 8,
+      vatRate: 0,
       sortOrder: 1,
     },
     {
@@ -261,7 +261,7 @@ async function main() {
       quantity: 1,
       unitPrice: createdProducts[8].price, // 1,004,400
       discount: 0,
-      vatRate: 8,
+      vatRate: 0,
       sortOrder: 2,
     },
     {
@@ -272,7 +272,7 @@ async function main() {
       quantity: 1,
       unitPrice: createdProducts[10].price, // 813,240
       discount: 0,
-      vatRate: 8,
+      vatRate: 0,
       sortOrder: 3,
     },
   ];

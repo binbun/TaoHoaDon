@@ -200,8 +200,22 @@ async function initPostgresDatabase() {
     // 7. Seed Catalog Products if GROB products are not present
     const { ALL_CATALOG_PRODUCTS } = await import('@taohoadon/shared');
     const grobCount = await prisma.product.count({ where: { brand: 'GROB' } });
-    if (grobCount < 10) {
-      console.log('🌱 Đang nạp danh mục sản phẩm phụ kiện GROB...');
+    if (grobCount < 200) {
+      console.log('🌱 Đang nạp toàn bộ danh mục sản phẩm phụ kiện GROB (255+ sản phẩm)...');
+      
+      // Update any previous initial products that got default GROB to EUPLUS
+      await prisma.product.updateMany({
+        where: {
+          code: { in: ['EV.I80', 'EV.I90', 'EV.80B', 'EV.80', 'EV.35', 'B30.1', 'E.30G', 'EV.270.8', 'EV.645', 'TB-ACRYLIC'] },
+          brand: 'GROB',
+          category: 'Khác',
+        },
+        data: {
+          brand: 'EUPLUS',
+          category: 'Phụ kiện tủ bếp',
+        },
+      });
+
       for (const p of ALL_CATALOG_PRODUCTS) {
         await prisma.product.upsert({
           where: { code: p.code },

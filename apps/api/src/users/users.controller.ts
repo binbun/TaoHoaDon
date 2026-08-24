@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { CreateUserSchema, UpdateUserSchema, ResetPasswordSchema } from '@taohoadon/shared';
+import { createAuditLog } from '../audit/audit.service';
 
 // GET /api/users - List users
 export async function getUsers(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -18,6 +19,7 @@ export async function getUsers(req: AuthenticatedRequest, res: Response, next: N
           name: true,
           email: true,
           role: true,
+          tokenVersion: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -31,6 +33,7 @@ export async function getUsers(req: AuthenticatedRequest, res: Response, next: N
           name: true,
           email: true,
           role: true,
+          tokenVersion: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -96,15 +99,28 @@ export async function createUser(req: AuthenticatedRequest, res: Response, next:
         email: validatedData.email.toLowerCase(),
         passwordHash,
         role: validatedData.role,
+        tokenVersion: 0,
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        tokenVersion: true,
         createdAt: true,
         updatedAt: true,
       },
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'CREATE_USER',
+      resource: 'USER',
+      resourceId: newUser.id,
+      details: { name: newUser.name, email: newUser.email, role: newUser.role },
     });
 
     res.status(201).json({
@@ -160,11 +176,21 @@ export async function updateUser(req: AuthenticatedRequest, res: Response, next:
     }
 
     const updatePayload: any = {};
+    let shouldInvalidateTokens = false;
+
     if (validatedData.name) updatePayload.name = validatedData.name;
     if (validatedData.email) updatePayload.email = validatedData.email.toLowerCase();
-    if (validatedData.role) updatePayload.role = validatedData.role;
+    if (validatedData.role && validatedData.role !== targetUser.role) {
+      updatePayload.role = validatedData.role;
+      shouldInvalidateTokens = true;
+    }
     if (validatedData.password) {
       updatePayload.passwordHash = await bcrypt.hash(validatedData.password, 10);
+      shouldInvalidateTokens = true;
+    }
+
+    if (shouldInvalidateTokens) {
+      updatePayload.tokenVersion = (targetUser.tokenVersion ?? 0) + 1;
     }
 
     const updatedUser = await prisma.user.update({
@@ -175,8 +201,24 @@ export async function updateUser(req: AuthenticatedRequest, res: Response, next:
         name: true,
         email: true,
         role: true,
+        tokenVersion: true,
         createdAt: true,
         updatedAt: true,
+      },
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'UPDATE_USER',
+      resource: 'USER',
+      resourceId: updatedUser.id,
+      details: {
+        updatedFields: Object.keys(updatePayload),
+        targetEmail: updatedUser.email,
+        targetRole: updatedUser.role,
       },
     });
 
@@ -233,6 +275,17 @@ export async function deleteUser(req: AuthenticatedRequest, res: Response, next:
       where: { id },
     });
 
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'DELETE_USER',
+      resource: 'USER',
+      resourceId: id,
+      details: { deletedEmail: targetUser.email, deletedName: targetUser.name, role: targetUser.role },
+    });
+
     res.json({
       success: true,
       message: 'Đã xóa tài khoản thành công',
@@ -265,10 +318,25 @@ export async function resetPassword(req: AuthenticatedRequest, res: Response, ne
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
+    const newTokenVersion = (targetUser.tokenVersion ?? 0) + 1;
 
     await prisma.user.update({
       where: { id },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        tokenVersion: newTokenVersion,
+      },
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'RESET_PASSWORD',
+      resource: 'USER',
+      resourceId: targetUser.id,
+      details: { targetEmail: targetUser.email, targetName: targetUser.name },
     });
 
     res.json({
@@ -279,3 +347,4 @@ export async function resetPassword(req: AuthenticatedRequest, res: Response, ne
     next(error);
   }
 }
+

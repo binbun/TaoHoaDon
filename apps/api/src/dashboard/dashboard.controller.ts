@@ -1,10 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
+import { AuthenticatedRequest } from '../middleware/auth';
 
-export async function getDashboardStats(req: Request, res: Response, next: NextFunction) {
+export async function getDashboardStats(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    const currentUser = req.user;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const baseWhere: any = {};
+    if (currentUser && currentUser.role === 'USER') {
+      baseWhere.createdBy = currentUser.id;
+    }
 
     const [
       totalQuotations,
@@ -12,21 +19,24 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
       allQuotations,
       recentQuotations,
     ] = await Promise.all([
-      prisma.quotation.count(),
+      prisma.quotation.count({ where: baseWhere }),
       prisma.quotation.count({
         where: {
+          ...baseWhere,
           createdAt: {
             gte: startOfMonth,
           },
         },
       }),
       prisma.quotation.findMany({
+        where: baseWhere,
         select: {
           status: true,
           grandTotal: true,
         },
       }),
       prisma.quotation.findMany({
+        where: baseWhere,
         take: 6,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -69,3 +79,4 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
     next(error);
   }
 }
+

@@ -3,7 +3,7 @@ import {
   calculateItemRow,
   calculateQuotationTotals,
   QuotationItemInput,
-} from '../../packages/shared/src/calculation';
+} from '@taohoadon/shared';
 
 describe('Calculation Engine - Quotation & VAT & Discount', () => {
   it('should calculate accurately with quantity = 1, discount = 0, VAT = 8%', () => {

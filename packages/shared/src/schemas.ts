@@ -25,6 +25,15 @@ export const ResetPasswordSchema = z.object({
   newPassword: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
 });
 
+export const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại'),
+  newPassword: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
+  confirmPassword: z.string().min(6, 'Xác nhận mật khẩu phải có ít nhất 6 ký tự'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Xác nhận mật khẩu mới không trùng khớp',
+  path: ['confirmPassword'],
+});
+
 export const ProductSchema = z.object({
   code: z.string().min(1, 'Mã sản phẩm không được để trống').max(50, 'Mã sản phẩm tối đa 50 ký tự'),
   oldCode: z.string().max(50).optional().nullable(),

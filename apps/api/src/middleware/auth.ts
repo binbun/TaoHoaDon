@@ -8,6 +8,7 @@ export interface AuthenticatedRequest extends Request {
     email: string;
     role: string;
     name: string;
+    tokenVersion?: number;
   };
 }
 
@@ -21,15 +22,23 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; tokenVersion?: number };
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tokenVersion: true },
     });
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'Người dùng không tồn tại' });
+    }
+
+    // Invalidate old tokens if tokenVersion has changed
+    if (decoded.tokenVersion !== undefined && user.tokenVersion !== undefined && decoded.tokenVersion !== user.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        message: 'Phiên đăng nhập đã hết hiệu lực do tài khoản đã được cập nhật. Vui lòng đăng nhập lại.',
+      });
     }
 
     req.user = user;

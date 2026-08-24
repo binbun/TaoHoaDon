@@ -21,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileSidebar }) => {
     if (path === '/products') return 'Phụ Kiện & Tủ Bếp';
     if (path === '/customers') return 'Khách Hàng & Đại Lý';
     if (path === '/users') return 'Quản Lý Tài Khoản';
+    if (path === '/audit-logs') return 'Nhật Ký Hoạt Động & Bảo Mật';
     return 'Hệ Thống Báo Giá';
   };
 

@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  tokenVersion?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +24,25 @@ export interface UpdateUserInput {
   email?: string;
   password?: string;
   role?: UserRole;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId?: string | null;
+  userName?: string | null;
+  userEmail?: string | null;
+  action: string;
+  resource: string;
+  resourceId?: string | null;
+  details?: string | null;
+  ipAddress?: string | null;
+  createdAt: string;
 }
 
 export interface Customer {

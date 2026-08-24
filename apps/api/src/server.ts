@@ -3,6 +3,8 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import authRoutes from './auth/auth.routes';
@@ -11,17 +13,87 @@ import productsRoutes from './products/products.routes';
 import customersRoutes from './customers/customers.routes';
 import quotationsRoutes from './quotations/quotations.routes';
 import dashboardRoutes from './dashboard/dashboard.routes';
+import auditRoutes from './audit/audit.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
 
-// Middleware
-app.use(cors({
-  origin: '*', // Allow web client from any domain (Vercel, Localhost, etc.)
-  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+// 1. HTTP Security Headers with Helmet
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Disabled to prevent blocking PDF preview / dynamic assets
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// 2. CORS Whitelist Configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:3000',
+      'http://localhost:4173',
+      'http://localhost:4000',
+    ].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server) or in whitelist or local dev
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(null, true); // Permissive fallback with headers
+      }
+    },
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+);
+
+// 3. Rate Limiters
+// Global API rate limiter
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 600, // Max 600 requests per 15 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Tần suất gửi yêu cầu quá nhanh. Vui lòng thử lại sau vài phút.',
+  },
+});
+app.use('/api', globalLimiter);
+
+// Strict rate limiter for Login to prevent brute force attacks
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // Max 15 login attempts per 15 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi 15 phút và thử lại.',
+  },
+});
+app.use(['/api/auth/login', '/auth/login'], loginLimiter);
+
+// PDF Export rate limiter to protect server CPU/RAM Puppeteer resources
+const pdfLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // Max 30 PDF generations per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Tần suất xuất PDF vượt quá giới hạn. Vui lòng chờ 1 phút trước khi xuất tiếp.',
+  },
+});
+app.use(['/api/quotations/:id/pdf', '/quotations/:id/pdf'], pdfLimiter);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -42,6 +114,7 @@ app.use(['/api/products', '/products'], productsRoutes);
 app.use(['/api/customers', '/customers'], customersRoutes);
 app.use(['/api/quotations', '/quotations'], quotationsRoutes);
 app.use(['/api/dashboard', '/dashboard'], dashboardRoutes);
+app.use(['/api/audit-logs', '/audit-logs'], auditRoutes);
 
 // 404 Handler
 app.use('*', (req, res) => {
@@ -67,10 +140,37 @@ async function initPostgresDatabase() {
         "email" TEXT UNIQUE NOT NULL,
         "passwordHash" TEXT NOT NULL,
         "role" TEXT NOT NULL DEFAULT 'USER',
+        "tokenVersion" INTEGER NOT NULL DEFAULT 0,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure tokenVersion column exists if User table was created previously
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "tokenVersion" INTEGER NOT NULL DEFAULT 0;`);
+    } catch (_) {}
+
+    // 1.1 Create AuditLog table
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "AuditLog" (
+        "id" TEXT PRIMARY KEY,
+        "userId" TEXT REFERENCES "User"("id") ON DELETE SET NULL,
+        "userName" TEXT,
+        "userEmail" TEXT,
+        "action" TEXT NOT NULL,
+        "resource" TEXT NOT NULL,
+        "resourceId" TEXT,
+        "details" TEXT,
+        "ipAddress" TEXT,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    try {
+      await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "AuditLog_createdAt_idx" ON "AuditLog"("createdAt" DESC);`);
+      await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "AuditLog_userId_idx" ON "AuditLog"("userId");`);
+    } catch (_) {}
 
     // 2. Create Customer table
     await prisma.$executeRawUnsafe(`

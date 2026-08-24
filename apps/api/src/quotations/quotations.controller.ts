@@ -1,19 +1,28 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
 import { QuotationSchema, QuotationItemInput } from '@taohoadon/shared';
 import { generateQuotationNumber, calculateQuotationTotals } from './quotations.service';
 import { generateQuotationPdf } from '../pdf/pdf.service';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { createAuditLog } from '../audit/audit.service';
 
-export async function getQuotations(req: Request, res: Response, next: NextFunction) {
+export async function getQuotations(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    const { search, status, customerId, page = '1', limit = '50' } = req.query;
+    const currentUser = req.user;
+    const { search, status, customerId, creatorId, page = '1', limit = '50' } = req.query;
 
     const pageNum = parseInt(page as string, 10) || 1;
     const limitNum = parseInt(limit as string, 10) || 50;
     const skip = (pageNum - 1) * limitNum;
 
     const where: any = {};
+
+    // Row-level data isolation: USER role only views their own quotations
+    if (currentUser && currentUser.role === 'USER') {
+      where.createdBy = currentUser.id;
+    } else if (creatorId && typeof creatorId === 'string') {
+      where.createdBy = creatorId;
+    }
 
     if (status && typeof status === 'string' && status !== 'ALL') {
       if (status === 'PAID') {
@@ -30,10 +39,10 @@ export async function getQuotations(req: Request, res: Response, next: NextFunct
     if (search && typeof search === 'string') {
       const trimmed = search.trim();
       where.OR = [
-        { quotationNumber: { contains: trimmed } },
-        { title: { contains: trimmed } },
-        { customer: { companyName: { contains: trimmed } } },
-        { customer: { contactName: { contains: trimmed } } },
+        { quotationNumber: { contains: trimmed, mode: 'insensitive' } },
+        { title: { contains: trimmed, mode: 'insensitive' } },
+        { customer: { companyName: { contains: trimmed, mode: 'insensitive' } } },
+        { customer: { contactName: { contains: trimmed, mode: 'insensitive' } } },
       ];
     }
 
@@ -71,8 +80,9 @@ export async function getQuotations(req: Request, res: Response, next: NextFunct
   }
 }
 
-export async function getQuotationById(req: Request, res: Response, next: NextFunction) {
+export async function getQuotationById(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    const currentUser = req.user;
     const { id } = req.params;
 
     const quotation = await prisma.quotation.findUnique({
@@ -95,6 +105,14 @@ export async function getQuotationById(req: Request, res: Response, next: NextFu
       });
     }
 
+    // Row-level permission check: USER can only access their own quotation
+    if (currentUser && currentUser.role === 'USER' && quotation.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền truy cập đơn hàng này',
+      });
+    }
+
     return res.json({
       success: true,
       data: quotation,
@@ -106,6 +124,7 @@ export async function getQuotationById(req: Request, res: Response, next: NextFu
 
 export async function createQuotation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    const currentUser = req.user!;
     const validatedData = QuotationSchema.parse(req.body);
 
     const customer = await prisma.customer.findUnique({
@@ -141,7 +160,7 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
         vatTotal: summary.vatTotal,
         previousDebt: summary.previousDebt || 0,
         grandTotal: summary.grandTotal,
-        createdBy: req.user?.id || null,
+        createdBy: currentUser.id,
         items: {
           create: calculatedItems.map((item) => ({
             productId: item.productId || null,
@@ -166,6 +185,22 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
       },
     });
 
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'CREATE_QUOTATION',
+      resource: 'QUOTATION',
+      resourceId: newQuotation.id,
+      details: {
+        quotationNumber: newQuotation.quotationNumber,
+        grandTotal: newQuotation.grandTotal,
+        customerName: customer.companyName,
+        itemCount: newQuotation.items.length,
+      },
+    });
+
     return res.status(201).json({
       success: true,
       data: newQuotation,
@@ -177,6 +212,7 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
 
 export async function updateQuotation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    const currentUser = req.user!;
     const { id } = req.params;
     const validatedData = QuotationSchema.parse(req.body);
 
@@ -188,6 +224,14 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
       return res.status(404).json({
         success: false,
         message: 'Không tìm thấy đơn hàng cần cập nhật',
+      });
+    }
+
+    // Row-level permission check: USER can only edit their own quotation
+    if (currentUser.role === 'USER' && existing.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền chỉnh sửa đơn hàng này',
       });
     }
 
@@ -244,6 +288,22 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
       });
     });
 
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'UPDATE_QUOTATION',
+      resource: 'QUOTATION',
+      resourceId: updatedQuotation.id,
+      details: {
+        quotationNumber: updatedQuotation.quotationNumber,
+        grandTotal: updatedQuotation.grandTotal,
+        status: updatedQuotation.status,
+        itemCount: updatedQuotation.items.length,
+      },
+    });
+
     return res.json({
       success: true,
       message: 'Cập nhật đơn hàng thành công',
@@ -254,8 +314,9 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
   }
 }
 
-export async function deleteQuotation(req: Request, res: Response, next: NextFunction) {
+export async function deleteQuotation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    const currentUser = req.user!;
     const { id } = req.params;
 
     const existing = await prisma.quotation.findUnique({
@@ -269,8 +330,30 @@ export async function deleteQuotation(req: Request, res: Response, next: NextFun
       });
     }
 
+    // Row-level permission check: USER can only delete their own quotation
+    if (currentUser.role === 'USER' && existing.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền xóa đơn hàng này',
+      });
+    }
+
     await prisma.quotation.delete({
       where: { id },
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'DELETE_QUOTATION',
+      resource: 'QUOTATION',
+      resourceId: id,
+      details: {
+        quotationNumber: existing.quotationNumber,
+        grandTotal: existing.grandTotal,
+      },
     });
 
     return res.json({
@@ -284,6 +367,7 @@ export async function deleteQuotation(req: Request, res: Response, next: NextFun
 
 export async function duplicateQuotation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    const currentUser = req.user!;
     const { id } = req.params;
 
     const source = await prisma.quotation.findUnique({
@@ -297,6 +381,14 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
       return res.status(404).json({
         success: false,
         message: 'Không tìm thấy đơn hàng gốc để nhân bản',
+      });
+    }
+
+    // Row-level permission check: USER can only duplicate their own quotation
+    if (currentUser.role === 'USER' && source.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền nhân bản đơn hàng này',
       });
     }
 
@@ -318,7 +410,7 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
         taxableTotal: source.taxableTotal,
         vatTotal: source.vatTotal,
         grandTotal: source.grandTotal,
-        createdBy: req.user?.id || null,
+        createdBy: currentUser.id,
         items: {
           create: source.items.map((item) => ({
             productId: item.productId,
@@ -345,6 +437,21 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
       },
     });
 
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'DUPLICATE_QUOTATION',
+      resource: 'QUOTATION',
+      resourceId: duplicated.id,
+      details: {
+        sourceQuotationNumber: source.quotationNumber,
+        newQuotationNumber: duplicated.quotationNumber,
+        grandTotal: duplicated.grandTotal,
+      },
+    });
+
     return res.status(201).json({
       success: true,
       message: `Đã nhân bản thành công sang đơn hàng ${newQuotationNumber}`,
@@ -355,8 +462,9 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
   }
 }
 
-export async function downloadQuotationPdf(req: Request, res: Response, next: NextFunction) {
+export async function downloadQuotationPdf(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    const currentUser = req.user;
     const { id } = req.params;
 
     const quotation = await prisma.quotation.findUnique({
@@ -376,9 +484,30 @@ export async function downloadQuotationPdf(req: Request, res: Response, next: Ne
       });
     }
 
+    // Row-level permission check: USER can only download their own quotation PDF
+    if (currentUser && currentUser.role === 'USER' && quotation.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền tải PDF đơn hàng này',
+      });
+    }
+
     const pdfBuffer = await generateQuotationPdf(quotation as any);
 
     const safeFilename = `Don_Hang_${quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+
+    if (currentUser) {
+      await createAuditLog({
+        req,
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userEmail: currentUser.email,
+        action: 'EXPORT_PDF',
+        resource: 'QUOTATION',
+        resourceId: quotation.id,
+        details: { quotationNumber: quotation.quotationNumber },
+      });
+    }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
@@ -389,3 +518,4 @@ export async function downloadQuotationPdf(req: Request, res: Response, next: Ne
     next(error);
   }
 }
+

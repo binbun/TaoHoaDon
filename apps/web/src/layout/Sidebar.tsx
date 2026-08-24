@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -7,10 +7,13 @@ import {
   Package,
   Users,
   ShieldCheck,
+  Activity,
+  KeyRound,
   LogOut,
   X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { clsx } from 'clsx';
 
 interface SidebarProps {
@@ -20,6 +23,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const { user, logout } = useAuth();
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const isManager = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
@@ -55,6 +59,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       label: 'Quản lý tài khoản',
       path: '/users',
       icon: ShieldCheck,
+      subItems: undefined as any,
+    });
+    navItems.push({
+      label: 'Nhật ký hoạt động',
+      path: '/audit-logs',
+      icon: Activity,
       subItems: undefined as any,
     });
   }
@@ -172,16 +182,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
               </div>
             </div>
           </div>
-          <button
-            onClick={() => {
-              if (onClose) onClose();
-              logout();
-            }}
-            title="Đăng xuất"
-            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors flex-shrink-0"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => setIsChangePasswordOpen(true)}
+              title="Đổi mật khẩu"
+              className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+            >
+              <KeyRound className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+                logout();
+              }}
+              title="Đăng xuất"
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -209,6 +229,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           </aside>
         </div>
       )}
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </>
   );
 };

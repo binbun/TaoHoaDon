@@ -151,9 +151,9 @@ export const AuditLogsPage: React.FC = () => {
 
       {/* Filter Section */}
       <Card className="p-4 sm:p-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
           {/* Search */}
-          <div className="lg:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-4">
             <Input
               placeholder="Tìm theo tên, email, đối tượng..."
               value={search}
@@ -166,7 +166,7 @@ export const AuditLogsPage: React.FC = () => {
           </div>
 
           {/* Action Filter */}
-          <div>
+          <div className="lg:col-span-2">
             <select
               value={action}
               onChange={(e) => {
@@ -192,7 +192,7 @@ export const AuditLogsPage: React.FC = () => {
           </div>
 
           {/* Resource Filter */}
-          <div>
+          <div className="lg:col-span-2">
             <select
               value={resource}
               onChange={(e) => {
@@ -210,29 +210,33 @@ export const AuditLogsPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Date Range Start */}
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setPage(1);
-              }}
-              title="Từ ngày"
-              className="w-full h-10 px-2.5 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700"
-            />
-            <span className="text-slate-400 text-xs">-</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value);
-                setPage(1);
-              }}
-              title="Đến ngày"
-              className="w-full h-10 px-2.5 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700"
-            />
+          {/* Date Range */}
+          <div className="sm:col-span-2 lg:col-span-4 flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPage(1);
+                }}
+                title="Từ ngày"
+                className="w-full h-10 px-2.5 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700"
+              />
+            </div>
+            <span className="text-slate-400 text-xs font-semibold shrink-0">-</span>
+            <div className="flex-1 min-w-0">
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPage(1);
+                }}
+                title="Đến ngày"
+                className="w-full h-10 px-2.5 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700"
+              />
+            </div>
           </div>
         </div>
       </Card>

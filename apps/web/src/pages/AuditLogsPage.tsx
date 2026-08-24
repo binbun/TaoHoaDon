@@ -6,20 +6,40 @@ import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
-import { Modal } from '../components/Modal';
 import { Skeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import {
   ShieldAlert,
   Search,
   RefreshCw,
   Eye,
-  Calendar,
-  Filter,
   User,
   Activity,
   Globe,
   Clock,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 
 interface AuditLogsResponse {
@@ -149,7 +169,7 @@ export const AuditLogsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Section */}
+      {/* Filter Section with Radix Selects */}
       <Card className="p-4 sm:p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
           {/* Search */}
@@ -165,49 +185,63 @@ export const AuditLogsPage: React.FC = () => {
             />
           </div>
 
-          {/* Action Filter */}
+          {/* Radix Action Filter */}
           <div className="lg:col-span-2">
-            <select
+            <Select
               value={action}
-              onChange={(e) => {
-                setAction(e.target.value);
+              onValueChange={(val) => {
+                setAction(val);
                 setPage(1);
               }}
-              className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 font-medium"
             >
-              <option value="ALL">Tất cả hành động</option>
-              <option value="AUTH_LOGIN_SUCCESS">Đăng nhập thành công</option>
-              <option value="AUTH_LOGIN_FAILED">Đăng nhập thất bại</option>
-              <option value="CHANGE_PASSWORD_SUCCESS">Đổi mật khẩu</option>
-              <option value="CREATE_QUOTATION">Tạo đơn hàng</option>
-              <option value="UPDATE_QUOTATION">Cập nhật đơn hàng</option>
-              <option value="DELETE_QUOTATION">Xóa đơn hàng</option>
-              <option value="DUPLICATE_QUOTATION">Nhân bản đơn hàng</option>
-              <option value="EXPORT_PDF">Xuất file PDF</option>
-              <option value="CREATE_USER">Tạo tài khoản</option>
-              <option value="UPDATE_USER">Sửa tài khoản</option>
-              <option value="DELETE_USER">Xóa tài khoản</option>
-              <option value="RESET_PASSWORD">Reset mật khẩu</option>
-            </select>
+              <SelectTrigger>
+                <div className="flex items-center gap-2 truncate">
+                  <Sparkles className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <SelectValue placeholder="Hành động" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tất cả hành động</SelectItem>
+                <SelectItem value="AUTH_LOGIN_SUCCESS">Đăng nhập thành công</SelectItem>
+                <SelectItem value="AUTH_LOGIN_FAILED">Đăng nhập thất bại</SelectItem>
+                <SelectItem value="CHANGE_PASSWORD_SUCCESS">Đổi mật khẩu</SelectItem>
+                <SelectItem value="CREATE_QUOTATION">Tạo đơn hàng</SelectItem>
+                <SelectItem value="UPDATE_QUOTATION">Cập nhật đơn hàng</SelectItem>
+                <SelectItem value="DELETE_QUOTATION">Xóa đơn hàng</SelectItem>
+                <SelectItem value="DUPLICATE_QUOTATION">Nhân bản đơn hàng</SelectItem>
+                <SelectItem value="EXPORT_PDF">Xuất file PDF</SelectItem>
+                <SelectItem value="CREATE_USER">Tạo tài khoản</SelectItem>
+                <SelectItem value="UPDATE_USER">Sửa tài khoản</SelectItem>
+                <SelectItem value="DELETE_USER">Xóa tài khoản</SelectItem>
+                <SelectItem value="RESET_PASSWORD">Reset mật khẩu</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Resource Filter */}
+          {/* Radix Resource Filter */}
           <div className="lg:col-span-2">
-            <select
+            <Select
               value={resource}
-              onChange={(e) => {
-                setResource(e.target.value);
+              onValueChange={(val) => {
+                setResource(val);
                 setPage(1);
               }}
-              className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 font-medium"
             >
-              <option value="ALL">Tất cả phân hệ</option>
-              <option value="QUOTATION">Đơn hàng (QUOTATION)</option>
-              <option value="AUTH">Xác thực (AUTH)</option>
-              <option value="USER">Tài khoản (USER)</option>
-              <option value="CUSTOMER">Khách hàng (CUSTOMER)</option>
-              <option value="PRODUCT">Sản phẩm (PRODUCT)</option>
-            </select>
+              <SelectTrigger>
+                <div className="flex items-center gap-2 truncate">
+                  <Layers className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <SelectValue placeholder="Phân hệ" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tất cả phân hệ</SelectItem>
+                <SelectItem value="QUOTATION">Đơn hàng (QUOTATION)</SelectItem>
+                <SelectItem value="AUTH">Xác thực (AUTH)</SelectItem>
+                <SelectItem value="USER">Tài khoản (USER)</SelectItem>
+                <SelectItem value="CUSTOMER">Khách hàng (CUSTOMER)</SelectItem>
+                <SelectItem value="PRODUCT">Sản phẩm (PRODUCT)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Date Range */}
@@ -241,7 +275,7 @@ export const AuditLogsPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Table Section */}
+      {/* Table Section with Radix Table */}
       <Card className="overflow-hidden">
         {isLoading ? (
           <div className="p-6 space-y-4">
@@ -260,68 +294,66 @@ export const AuditLogsPage: React.FC = () => {
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-bold uppercase tracking-wider text-[10px] sm:text-xs">
-                  <th className="py-3.5 px-4">Thời gian</th>
-                  <th className="py-3.5 px-4">Người thực hiện</th>
-                  <th className="py-3.5 px-4">Hành động</th>
-                  <th className="py-3.5 px-4">Phân hệ</th>
-                  <th className="py-3.5 px-4">IP Address</th>
-                  <th className="py-3.5 px-4 text-right">Chi tiết</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium">
-                {data.data.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                        <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        {formatDateTime(log.createdAt)}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Thời gian</TableHead>
+                <TableHead>Người thực hiện</TableHead>
+                <TableHead>Hành động</TableHead>
+                <TableHead>Phân hệ</TableHead>
+                <TableHead>IP Address</TableHead>
+                <TableHead className="text-right">Chi tiết</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.data.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell className="whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                      <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                      {formatDateTime(log.createdAt)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-[10px] flex-shrink-0">
+                        {log.userName ? log.userName.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-[10px] flex-shrink-0">
-                          {log.userName ? log.userName.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
-                        </div>
-                        <div className="truncate max-w-[180px]">
-                          <div className="font-semibold text-slate-900 truncate">{log.userName || 'Hệ thống / Ẩn danh'}</div>
-                          {log.userEmail && <div className="text-[11px] text-slate-400 truncate">{log.userEmail}</div>}
-                        </div>
+                      <div className="truncate max-w-[180px]">
+                        <div className="font-semibold text-slate-900 truncate">{log.userName || 'Hệ thống / Ẩn danh'}</div>
+                        {log.userEmail && <div className="text-[11px] text-slate-400 truncate">{log.userEmail}</div>}
                       </div>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      {getActionBadge(log.action)}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-xs">
-                        {log.resource}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-500 whitespace-nowrap font-mono text-xs">
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-3 h-3 text-slate-400" />
-                        {log.ipAddress || '—'}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedLog(log)}
-                        className="text-xs px-2.5 py-1"
-                        leftIcon={<Eye className="w-3.5 h-3.5" />}
-                      >
-                        Xem
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {getActionBadge(log.action)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-xs">
+                      {log.resource}
+                    </span>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-xs text-slate-500">
+                    <div className="flex items-center gap-1">
+                      <Globe className="w-3 h-3 text-slate-400" />
+                      {log.ipAddress || '—'}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedLog(log)}
+                      className="text-xs px-2.5 py-1"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                    >
+                      Xem
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
 
         {/* Pagination */}
@@ -352,55 +384,57 @@ export const AuditLogsPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Detail Modal */}
-      {selectedLog && (
-        <Modal
-          isOpen={!!selectedLog}
-          onClose={() => setSelectedLog(null)}
-          title="Chi Tiết Nhật Ký Hoạt Động"
-          maxWidth="lg"
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm">
-              <div>
-                <span className="text-slate-500 font-medium">Hành động:</span>
-                <div className="mt-1">{getActionBadge(selectedLog.action)}</div>
-              </div>
-              <div>
-                <span className="text-slate-500 font-medium">Thời gian:</span>
-                <p className="font-semibold text-slate-800 mt-1">{formatDateTime(selectedLog.createdAt)}</p>
-              </div>
-              <div>
-                <span className="text-slate-500 font-medium">Người thực hiện:</span>
-                <p className="font-semibold text-slate-800 mt-1">{selectedLog.userName || 'Hệ thống'} ({selectedLog.userEmail || 'N/A'})</p>
-              </div>
-              <div>
-                <span className="text-slate-500 font-medium">IP Address:</span>
-                <p className="font-mono text-slate-800 mt-1">{selectedLog.ipAddress || '—'}</p>
-              </div>
-              {selectedLog.resourceId && (
-                <div className="col-span-2">
-                  <span className="text-slate-500 font-medium">Resource ID:</span>
-                  <p className="font-mono text-slate-800 mt-1">{selectedLog.resourceId}</p>
+      {/* Detail Dialog with Radix Dialog */}
+      <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+        {selectedLog && (
+          <DialogContent maxWidth="lg">
+            <DialogHeader>
+              <DialogTitle>Chi Tiết Nhật Ký Hoạt Động</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm">
+                <div>
+                  <span className="text-slate-500 font-medium">Hành động:</span>
+                  <div className="mt-1">{getActionBadge(selectedLog.action)}</div>
                 </div>
-              )}
-            </div>
+                <div>
+                  <span className="text-slate-500 font-medium">Thời gian:</span>
+                  <p className="font-semibold text-slate-800 mt-1">{formatDateTime(selectedLog.createdAt)}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-medium">Người thực hiện:</span>
+                  <p className="font-semibold text-slate-800 mt-1">{selectedLog.userName || 'Hệ thống'} ({selectedLog.userEmail || 'N/A'})</p>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-medium">IP Address:</span>
+                  <p className="font-mono text-slate-800 mt-1">{selectedLog.ipAddress || '—'}</p>
+                </div>
+                {selectedLog.resourceId && (
+                  <div className="col-span-2">
+                    <span className="text-slate-500 font-medium">Resource ID:</span>
+                    <p className="font-mono text-slate-800 mt-1">{selectedLog.resourceId}</p>
+                  </div>
+                )}
+              </div>
 
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                Dữ liệu chi tiết (Payload / Context)
-              </h4>
-              {renderDetails(selectedLog.details)}
-            </div>
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  Dữ liệu chi tiết (Payload / Context)
+                </h4>
+                {renderDetails(selectedLog.details)}
+              </div>
 
-            <div className="flex justify-end pt-3 border-t border-slate-100">
-              <Button variant="outline" onClick={() => setSelectedLog(null)}>
-                Đóng
-              </Button>
+              <div className="flex justify-end pt-3 border-t border-slate-100">
+                <Button variant="outline" onClick={() => setSelectedLog(null)}>
+                  Đóng
+                </Button>
+              </div>
             </div>
-          </div>
-        </Modal>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 };
+

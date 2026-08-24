@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
+import { TooltipProvider } from '../components/ui/tooltip';
+
 export const AppLayout: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -41,20 +43,21 @@ export const AppLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Sidebar (Desktop fixed + Mobile drawer) */}
-      <Sidebar
-        isOpen={isMobileSidebarOpen}
-        onClose={() => setIsMobileSidebarOpen(false)}
-      />
+    <TooltipProvider delayDuration={300}>
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        {/* Sidebar (Desktop fixed + Mobile drawer) */}
+        <Sidebar
+          isOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
+        />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:pl-64 min-w-0">
-        <Navbar onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)} />
-        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 pb-24 lg:pb-8 overflow-y-auto max-w-7xl w-full mx-auto">
-          <Outlet />
-        </main>
-      </div>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col lg:pl-64 min-w-0">
+          <Navbar onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)} />
+          <main className="flex-1 p-3.5 sm:p-6 lg:p-8 pb-24 lg:pb-8 overflow-y-auto max-w-7xl w-full mx-auto">
+            <Outlet />
+          </main>
+        </div>
 
       {/* Mobile Bottom Navigation Bar (iPhone / Android) */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-2 py-1.5 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
@@ -104,5 +107,6 @@ export const AppLayout: React.FC = () => {
         </div>
       </nav>
     </div>
+    </TooltipProvider>
   );
 };

@@ -12,9 +12,42 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { TableSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
 import {
   FileText,
   Plus,
@@ -25,10 +58,10 @@ import {
   Download,
   Trash2,
   Calendar,
-  Building,
   Loader2,
+  MoreVertical,
+  Layers,
 } from 'lucide-react';
-import { clsx } from 'clsx';
 
 export const QuotationsListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -85,8 +118,8 @@ export const QuotationsListPage: React.FC = () => {
     }
   };
 
-  const statusTabs: { key: string; label: string }[] = [
-    { key: 'ALL', label: 'Tất cả' },
+  const statusTabs = [
+    { key: 'ALL', label: 'Tất cả đơn' },
     { key: 'DRAFT', label: 'Bản nháp' },
     { key: 'SENT', label: 'Đã gửi' },
     { key: 'PAID', label: 'Đã thanh toán' },
@@ -97,8 +130,11 @@ export const QuotationsListPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-900">Quản Lý Đơn Hàng Phụ Kiện & Tủ Bếp</h1>
-          <p className="text-xs sm:text-sm text-slate-500">
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <Layers className="w-6 h-6 text-blue-600" />
+            Quản Lý Đơn Hàng Phụ Kiện & Tủ Bếp
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Tạo, xem trước, nhân bản và xuất bản in PDF theo quy chuẩn EUPLUS Kitchen
           </p>
         </div>
@@ -112,7 +148,7 @@ export const QuotationsListPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Filter Toolbar & Status Pills */}
+      {/* Filter Toolbar & Radix Tabs */}
       <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
           <div className="w-full md:w-96">
@@ -120,141 +156,151 @@ export const QuotationsListPage: React.FC = () => {
               placeholder="Tìm theo số đơn hàng, tên khách hàng..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              leftElement={<Search className="w-4 h-4" />}
+              leftElement={<Search className="w-4 h-4 text-slate-400" />}
             />
           </div>
 
-          {/* Status Tabs with Horizontal Scroll */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1.5 md:pb-0 scrollbar-none">
-            {statusTabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setStatusFilter(tab.key)}
-                className={clsx(
-                  'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0',
-                  statusFilter === tab.key
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {/* Radix Tabs */}
+          <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full md:w-auto">
+            <TabsList className="w-full md:w-auto justify-start overflow-x-auto">
+              {statusTabs.map((tab) => (
+                <TabsTrigger key={tab.key} value={tab.key}>
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
       </Card>
 
-      {/* Quotations Table */}
+      {/* Quotations Table with Radix Table */}
       <Card className="overflow-hidden">
         {isLoading ? (
-          <TableSkeleton rows={5} cols={6} />
-        ) : quotations.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-[680px] sm:min-w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3 sm:px-4">Số đơn hàng & Tiêu đề</th>
-                  <th className="py-3 px-3 sm:px-4">Khách hàng / Đại lý</th>
-                  <th className="py-3 px-3 sm:px-4 text-right">Tổng tiền</th>
-                  <th className="py-3 px-3 sm:px-4">Ngày tạo</th>
-                  <th className="py-3 px-3 sm:px-4 text-center">Trạng thái</th>
-                  <th className="py-3 px-3 sm:px-4 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {quotations.map((q) => (
-                  <tr key={q.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-3 sm:px-4">
-                      <span
-                        onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                        className="font-bold text-blue-600 hover:underline cursor-pointer block text-sm"
-                      >
-                        {q.quotationNumber}
-                      </span>
-                      <div className="text-xs text-slate-500 line-clamp-1 max-w-[200px] sm:max-w-xs mt-0.5">
-                        {q.title}
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-3 sm:px-4">
-                      <div className="font-medium text-slate-900 text-sm">{q.customer?.companyName || '---'}</div>
-                      {q.customer?.contactName && (
-                        <div className="text-xs text-slate-500">{q.customer.contactName}</div>
-                      )}
-                    </td>
-
-                    <td className="py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                      <div className="font-extrabold text-slate-900 text-sm">
-                        {formatCurrency(q.grandTotal)}
-                      </div>
-                      <div className="text-[11px] text-slate-400">
-                        {q.items?.length || 0} sản phẩm
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-3 sm:px-4 text-xs text-slate-500 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span>{formatDate(q.quotationDate)}</span>
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-3 sm:px-4 text-center whitespace-nowrap">
-                      <Badge status={q.status} />
-                    </td>
-
-                    <td className="py-3.5 px-3 sm:px-4 text-right space-x-1 whitespace-nowrap">
-                      <button
-                        onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
-                        title="Xem chi tiết đơn hàng"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => navigate(`/quotations/${q.id}/edit`)}
-                        className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors active:scale-95"
-                        title="Chỉnh sửa đơn hàng"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => duplicateMutation.mutate(q.id)}
-                        disabled={duplicateMutation.isPending}
-                        className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-40 active:scale-95"
-                        title="Nhân bản đơn hàng"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => handleDownloadPdf(q)}
-                        disabled={downloadingId === q.id}
-                        className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-40 active:scale-95"
-                        title="Tải file PDF"
-                      >
-                        {downloadingId === q.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                        ) : (
-                          <Download className="w-4 h-4" />
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => setDeletingId(q.id)}
-                        className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-95"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="p-6 space-y-4">
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
           </div>
+        ) : quotations.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Số đơn hàng & Tiêu đề</TableHead>
+                <TableHead>Khách hàng / Đại lý</TableHead>
+                <TableHead className="text-right">Tổng tiền</TableHead>
+                <TableHead>Ngày tạo</TableHead>
+                <TableHead className="text-center">Trạng thái</TableHead>
+                <TableHead className="text-right">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {quotations.map((q) => (
+                <TableRow key={q.id}>
+                  <TableCell>
+                    <span
+                      onClick={() => navigate(`/quotations/${q.id}/preview`)}
+                      className="font-bold text-blue-600 hover:underline cursor-pointer block text-sm"
+                    >
+                      {q.quotationNumber}
+                    </span>
+                    <div className="text-xs text-slate-500 line-clamp-1 max-w-[200px] sm:max-w-xs mt-0.5">
+                      {q.title}
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="font-semibold text-slate-900 text-sm">{q.customer?.companyName || '---'}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {q.customer?.contactName ? `LH: ${q.customer.contactName}` : ''}
+                      {q.customer?.phone ? ` - ${q.customer.phone}` : ''}
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="text-right font-bold text-slate-900 whitespace-nowrap text-sm">
+                    {formatCurrency(q.grandTotal)}
+                    <div className="text-[11px] text-slate-400 font-normal">
+                      {q.items?.length || 0} sản phẩm
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="text-xs text-slate-500 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                      <span>{formatDate(q.quotationDate)}</span>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="text-center whitespace-nowrap">
+                    <Badge status={q.status} />
+                  </TableCell>
+
+                  <TableCell className="text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => navigate(`/quotations/${q.id}/preview`)}
+                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Xem chi tiết</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleDownloadPdf(q)}
+                            disabled={downloadingId === q.id}
+                            className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-40 active:scale-95"
+                          >
+                            {downloadingId === q.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                            ) : (
+                              <Download className="w-4 h-4" />
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Tải file PDF</TooltipContent>
+                      </Tooltip>
+
+                      {/* Radix DropdownMenu for Row Actions */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/quotations/${q.id}/edit`)}>
+                            <Edit className="w-4 h-4 text-indigo-500 mr-2" />
+                            <span>Chỉnh sửa</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => duplicateMutation.mutate(q.id)}
+                            disabled={duplicateMutation.isPending}
+                          >
+                            <Copy className="w-4 h-4 text-emerald-500 mr-2" />
+                            <span>Nhân bản</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeletingId(q.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            <span>Xóa đơn hàng</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
           <EmptyState
             title="Không tìm thấy đơn hàng nào"
@@ -266,15 +312,27 @@ export const QuotationsListPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={!!deletingId}
-        onClose={() => setDeletingId(null)}
-        onConfirm={() => deletingId && deleteMutation.mutate(deletingId, { onSuccess: () => setDeletingId(null) })}
-        title="Xác nhận xóa đơn hàng"
-        message="Bạn có chắc chắn muốn xóa đơn hàng này? Toàn bộ danh sách chi tiết phụ kiện bên trong sẽ bị xóa và không thể khôi phục."
-        isLoading={deleteMutation.isPending}
-      />
+      {/* Delete Confirmation with Radix AlertDialog */}
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa đơn hàng</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa đơn hàng này? Toàn bộ danh sách chi tiết phụ kiện bên trong sẽ bị xóa và không thể khôi phục.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => deletingId && deleteMutation.mutate(deletingId, { onSuccess: () => setDeletingId(null) })}
+            >
+              {deleteMutation.isPending ? 'Đang xóa...' : 'Xác nhận xóa'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

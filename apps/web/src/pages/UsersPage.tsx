@@ -14,8 +14,34 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { TableSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
 import {
   ShieldCheck,
   UserPlus,
@@ -26,6 +52,7 @@ import {
   User as UserIcon,
   Crown,
   Search,
+  MoreVertical,
 } from 'lucide-react';
 
 export const UsersPage: React.FC = () => {
@@ -187,136 +214,164 @@ export const UsersPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-            <span>Quản Lý Tài Khoản & Phân Quyền</span>
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <ShieldCheck className="w-6 h-6 text-blue-600" />
+            Quản Lý Tài Khoản & Phân Quyền ({users.length})
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            {isSuperAdmin
-              ? 'Tài khoản Super Admin có quyền tạo thêm Quản trị viên (ADMIN) và Nhân viên (USER).'
-              : 'Tài khoản Quản trị viên (ADMIN) có quyền tạo và quản lý tài khoản Nhân viên (USER).'}
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Quản trị viên khởi tạo tài khoản nhân viên kinh doanh, phân bổ quyền hạn và bảo mật
           </p>
         </div>
-
         <Button
           variant="primary"
           className="self-stretch sm:self-auto justify-center"
           leftIcon={<UserPlus className="w-4 h-4" />}
           onClick={handleOpenCreateModal}
         >
-          + Thêm tài khoản mới
+          Thêm tài khoản
         </Button>
       </div>
 
       {/* Filter Toolbar */}
       <Card className="p-3 sm:p-4">
-        <div className="max-w-md">
+        <div className="w-full sm:w-96">
           <Input
-            placeholder="Tìm theo họ tên hoặc email..."
+            placeholder="Tìm theo tên hoặc email tài khoản..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            leftElement={<Search className="w-4 h-4" />}
+            leftElement={<Search className="w-4 h-4 text-slate-400" />}
           />
         </div>
       </Card>
 
-      {/* Users Table */}
+      {/* Users Table with Radix Table */}
       <Card className="overflow-hidden">
         {isLoading ? (
-          <TableSkeleton rows={4} cols={5} />
+          <div className="p-6 space-y-4">
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+          </div>
         ) : filteredUsers.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-[650px] sm:min-w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3 sm:px-4">Người dùng</th>
-                  <th className="py-3 px-3 sm:px-4">Email đăng nhập</th>
-                  <th className="py-3 px-3 sm:px-4 text-center">Vai trò phân quyền</th>
-                  <th className="py-3 px-3 sm:px-4">Ngày tạo</th>
-                  <th className="py-3 px-3 sm:px-4 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredUsers.map((u) => {
-                  const isSelf = u.id === currentUser?.id;
-                  const canEdit =
-                    isSuperAdmin || (currentUser?.role === 'ADMIN' && u.role === 'USER') || isSelf;
-                  const canDelete =
-                    !isSelf &&
-                    u.role !== 'SUPER_ADMIN' &&
-                    (isSuperAdmin || (currentUser?.role === 'ADMIN' && u.role === 'USER'));
-                  const canResetPassword =
-                    isSuperAdmin || (currentUser?.role === 'ADMIN' && u.role === 'USER') || isSelf;
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Họ và tên</TableHead>
+                <TableHead>Email đăng nhập</TableHead>
+                <TableHead className="text-center">Vai trò phân quyền</TableHead>
+                <TableHead>Ngày tạo</TableHead>
+                <TableHead className="text-right">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((u: User) => {
+                const isSelf = currentUser?.id === u.id;
+                const canEdit = isSuperAdmin || (currentUser?.role === 'ADMIN' && u.role === 'USER') || isSelf;
+                const canResetPassword = isSuperAdmin || (currentUser?.role === 'ADMIN' && u.role === 'USER');
+                const canDelete = !isSelf && (isSuperAdmin ? u.role !== 'SUPER_ADMIN' : currentUser?.role === 'ADMIN' && u.role === 'USER');
 
-                  return (
-                    <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-3 sm:px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-300 flex-shrink-0">
-                            {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
-                          </div>
-                          <div>
-                            <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                              <span>{u.name}</span>
-                              {isSelf && (
-                                <span className="text-[10px] bg-blue-100 text-blue-800 font-semibold px-1.5 py-0.2 rounded">
-                                  Bạn
-                                </span>
-                              )}
-                            </div>
+                return (
+                  <TableRow key={u.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center border border-blue-200 flex-shrink-0">
+                          {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                            <span>{u.name}</span>
+                            {isSelf && (
+                              <span className="text-[10px] bg-blue-100 text-blue-800 font-semibold px-1.5 py-0.5 rounded">
+                                Bạn
+                              </span>
+                            )}
                           </div>
                         </div>
-                      </td>
+                      </div>
+                    </TableCell>
 
-                      <td className="py-3.5 px-3 sm:px-4 font-mono text-xs text-slate-700">
-                        {u.email}
-                      </td>
+                    <TableCell className="font-mono text-xs text-slate-700">
+                      {u.email}
+                    </TableCell>
 
-                      <td className="py-3.5 px-3 sm:px-4 text-center">
-                        {renderRoleBadge(u.role)}
-                      </td>
+                    <TableCell className="text-center whitespace-nowrap">
+                      {renderRoleBadge(u.role)}
+                    </TableCell>
 
-                      <td className="py-3.5 px-3 sm:px-4 text-xs text-slate-500 whitespace-nowrap">
-                        {formatDate(u.createdAt)}
-                      </td>
+                    <TableCell className="text-xs text-slate-500 whitespace-nowrap">
+                      {formatDate(u.createdAt)}
+                    </TableCell>
 
-                      <td className="py-3.5 px-3 sm:px-4 text-right space-x-1 whitespace-nowrap">
+                    <TableCell className="text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1">
                         {canResetPassword && (
-                          <button
-                            onClick={() => handleOpenResetPasswordModal(u)}
-                            className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors active:scale-95"
-                            title="Đặt lại mật khẩu"
-                          >
-                            <Key className="w-4 h-4" />
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleOpenResetPasswordModal(u)}
+                                className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors active:scale-95"
+                              >
+                                <Key className="w-4 h-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Đặt lại mật khẩu</TooltipContent>
+                          </Tooltip>
                         )}
 
                         {canEdit && (
-                          <button
-                            onClick={() => handleOpenEditModal(u)}
-                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
-                            title="Chỉnh sửa thông tin"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleOpenEditModal(u)}
+                                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Chỉnh sửa</TooltipContent>
+                          </Tooltip>
                         )}
 
-                        {canDelete && (
-                          <button
-                            onClick={() => setDeletingUser(u)}
-                            className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-95"
-                            title="Xóa tài khoản"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canEdit && (
+                              <DropdownMenuItem onClick={() => handleOpenEditModal(u)}>
+                                <Edit2 className="w-4 h-4 text-blue-500 mr-2" />
+                                <span>Sửa thông tin</span>
+                              </DropdownMenuItem>
+                            )}
+                            {canResetPassword && (
+                              <DropdownMenuItem onClick={() => handleOpenResetPasswordModal(u)}>
+                                <Key className="w-4 h-4 text-amber-500 mr-2" />
+                                <span>Reset mật khẩu</span>
+                              </DropdownMenuItem>
+                            )}
+                            {canDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => setDeletingUser(u)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  <span>Xóa tài khoản</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         ) : (
           <EmptyState
             title="Không tìm thấy tài khoản nào"
@@ -367,16 +422,17 @@ export const UsersPage: React.FC = () => {
               Phân quyền tài khoản
             </label>
             {isSuperAdmin ? (
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as UserRole)}
-                className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-              >
-                <option value="USER">Nhân viên (USER) - Tạo & quản lý báo giá, sản phẩm</option>
-                <option value="ADMIN">Quản trị viên (ADMIN) - Quản lý nhân viên & toàn bộ báo giá</option>
-              </select>
+              <Select value={role} onValueChange={(val) => setRole(val as UserRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USER">Nhân viên (USER) - Tạo & quản lý báo giá, sản phẩm</SelectItem>
+                  <SelectItem value="ADMIN">Quản trị viên (ADMIN) - Quản lý nhân viên & toàn bộ báo giá</SelectItem>
+                </SelectContent>
+              </Select>
             ) : (
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
                 <div className="font-semibold text-slate-800 flex items-center gap-1.5 mb-1">
                   <UserIcon className="w-4 h-4 text-emerald-600" />
                   <span>Quyền hạn: Nhân viên (USER)</span>
@@ -433,14 +489,15 @@ export const UsersPage: React.FC = () => {
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                 Vai trò phân quyền
               </label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as UserRole)}
-                className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-              >
-                <option value="USER">Nhân viên (USER)</option>
-                <option value="ADMIN">Quản trị viên (ADMIN)</option>
-              </select>
+              <Select value={role} onValueChange={(val) => setRole(val as UserRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USER">Nhân viên (USER)</SelectItem>
+                  <SelectItem value="ADMIN">Quản trị viên (ADMIN)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
 

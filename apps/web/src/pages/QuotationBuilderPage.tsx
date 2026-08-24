@@ -22,6 +22,23 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
+import {
   Plus,
   Trash2,
   Copy,
@@ -385,23 +402,27 @@ export const QuotationBuilderPage: React.FC = () => {
             }
           >
             <div className="space-y-3 sm:space-y-4">
-              {/* Quick Pick Existing Customer */}
+              {/* Quick Pick Existing Customer with Radix Select */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                   Chọn nhanh khách hàng đã lưu
                 </label>
-                <select
-                  value={selectedCustomerId}
-                  onChange={(e) => handleSelectCustomer(e.target.value)}
-                  className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <Select
+                  value={selectedCustomerId || 'NEW'}
+                  onValueChange={(val) => handleSelectCustomer(val === 'NEW' ? '' : val)}
                 >
-                  <option value="">-- Nhập thông tin khách hàng mới --</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.companyName} {c.contactName ? `(${c.contactName})` : ''} - {c.phone || ''}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="-- Nhập thông tin khách hàng mới --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NEW">-- Nhập thông tin khách hàng mới --</SelectItem>
+                    {customers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.companyName} {c.contactName ? `(${c.contactName})` : ''} {c.phone ? `- ${c.phone}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -494,15 +515,19 @@ export const QuotationBuilderPage: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                     Trạng thái
                   </label>
-                  <select
+                  <Select
                     value={status === 'ACCEPTED' ? 'PAID' : status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onValueChange={setStatus}
                   >
-                    <option value="DRAFT">Bản nháp (Draft)</option>
-                    <option value="SENT">Đã gửi (Sent)</option>
-                    <option value="PAID">Đã thanh toán (Paid)</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DRAFT">Bản nháp (Draft)</SelectItem>
+                      <SelectItem value="SENT">Đã gửi (Sent)</SelectItem>
+                      <SelectItem value="PAID">Đã thanh toán (Paid)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -600,42 +625,61 @@ export const QuotationBuilderPage: React.FC = () => {
                           </span>
                         </div>
 
-                        {/* Row Actions */}
+                        {/* Row Actions with Radix Tooltip */}
                         <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleMoveItem(index, 'up')}
-                            disabled={index === 0}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95"
-                            title="Di chuyển lên"
-                          >
-                            <ArrowUp className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveItem(index, 'down')}
-                            disabled={index === items.length - 1}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95"
-                            title="Di chuyển xuống"
-                          >
-                            <ArrowDown className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDuplicateItem(index)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 active:scale-95"
-                            title="Nhân bản dòng này"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteItem(index)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 active:scale-95"
-                            title="Xóa dòng này"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveItem(index, 'up')}
+                                disabled={index === 0}
+                                className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95 rounded-md hover:bg-slate-200/60 transition-colors"
+                              >
+                                <ArrowUp className="w-4 h-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Di chuyển lên</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveItem(index, 'down')}
+                                disabled={index === items.length - 1}
+                                className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95 rounded-md hover:bg-slate-200/60 transition-colors"
+                              >
+                                <ArrowDown className="w-4 h-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Di chuyển xuống</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => handleDuplicateItem(index)}
+                                className="p-1.5 text-slate-400 hover:text-blue-600 active:scale-95 rounded-md hover:bg-blue-50 transition-colors"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Nhân bản dòng này</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteItem(index)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 active:scale-95 rounded-md hover:bg-rose-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Xóa dòng này</TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
 
@@ -705,19 +749,23 @@ export const QuotationBuilderPage: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                            Thuế VAT (%)
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            Thuế VAT
                           </label>
-                          <select
-                            value={item.vatRate ?? 0}
-                            onChange={(e) => handleItemChange(index, 'vatRate', Number(e.target.value))}
-                            className="w-full text-sm rounded-lg border border-slate-300 bg-white p-2 text-slate-800 text-center font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          <Select
+                            value={String(item.vatRate ?? 0)}
+                            onValueChange={(val) => handleItemChange(index, 'vatRate', Number(val))}
                           >
-                            <option value="0">0%</option>
-                            <option value="8">8%</option>
-                            <option value="10">10%</option>
-                            <option value="5">5%</option>
-                          </select>
+                            <SelectTrigger className="h-10 text-center font-medium">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">0%</SelectItem>
+                              <SelectItem value="8">8%</SelectItem>
+                              <SelectItem value="10">10%</SelectItem>
+                              <SelectItem value="5">5%</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div className="col-span-2 sm:col-span-1 bg-white p-2 rounded-lg border border-slate-200 text-right">
@@ -843,43 +891,37 @@ export const QuotationBuilderPage: React.FC = () => {
         maxWidth="2xl"
       >
         <div className="space-y-3 sm:space-y-4">
-          {/* Brand Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-            {['Tất cả', 'GROB', 'EUPLUS'].map((b) => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => setPickerBrand(b)}
-                className={`px-3 py-1 rounded-lg font-semibold transition-all whitespace-nowrap ${
-                  pickerBrand === b
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {b}
-              </button>
-            ))}
-          </div>
+          {/* Brand Tabs with Radix Tabs */}
+          <Tabs value={pickerBrand} onValueChange={setPickerBrand} className="w-full">
+            <TabsList className="w-full sm:w-auto justify-start">
+              {['Tất cả', 'GROB', 'EUPLUS'].map((b) => (
+                <TabsTrigger key={b} value={b}>
+                  {b}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <Input
               placeholder="Tìm mã mới, mã cũ, tên, kích thước..."
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
-              leftElement={<Search className="w-4 h-4" />}
+              leftElement={<Search className="w-4 h-4 text-slate-400" />}
             />
-            <select
-              value={pickerCategory}
-              onChange={(e) => setPickerCategory(e.target.value)}
-              className="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Tất cả danh mục</option>
-              {availablePickerCategories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <Select value={pickerCategory || 'ALL'} onValueChange={(val) => setPickerCategory(val === 'ALL' ? '' : val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Tất cả danh mục" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tất cả danh mục</SelectItem>
+                {availablePickerCategories.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto space-y-2 pr-1">

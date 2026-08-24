@@ -7,6 +7,14 @@ import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { Skeleton } from '../components/Skeleton';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import {
   FileText,
   Calendar,
   PlusCircle,
@@ -144,59 +152,55 @@ export const DashboardPage: React.FC = () => {
             <Skeleton className="h-10 w-full" />
           </div>
         ) : stats?.recentQuotations && stats.recentQuotations.length > 0 ? (
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="inline-block min-w-full align-middle px-4 sm:px-0">
-              <table className="min-w-[600px] sm:min-w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="py-3 px-3 sm:px-4">Số đơn hàng</th>
-                    <th className="py-3 px-3 sm:px-4">Khách hàng / Đại lý</th>
-                    <th className="py-3 px-3 sm:px-4 text-right">Tổng tiền</th>
-                    <th className="py-3 px-3 sm:px-4">Ngày lập</th>
-                    <th className="py-3 px-3 sm:px-4 text-center">Trạng thái</th>
-                    <th className="py-3 px-3 sm:px-4 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {stats.recentQuotations.map((q) => (
-                    <tr key={q.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-3 sm:px-4 font-bold text-blue-600">
-                        <span
-                          onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                          className="cursor-pointer hover:underline"
-                        >
-                          {q.quotationNumber}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-3 sm:px-4 font-medium text-slate-900">
-                        {q.customer?.companyName || '---'}
-                      </td>
-                      <td className="py-3.5 px-3 sm:px-4 text-right font-bold text-slate-900 whitespace-nowrap">
-                        {formatCurrency(q.grandTotal)}
-                      </td>
-                      <td className="py-3.5 px-3 sm:px-4 text-slate-500 whitespace-nowrap">
-                        {formatDate(q.quotationDate)}
-                      </td>
-                      <td className="py-3.5 px-3 sm:px-4 text-center whitespace-nowrap">
-                        <Badge status={q.status} />
-                      </td>
-                      <td className="py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-2.5 py-1"
-                          leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
-                          onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                        >
-                          Xem
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Số đơn hàng</TableHead>
+                <TableHead>Khách hàng / Đại lý</TableHead>
+                <TableHead className="text-right">Tổng tiền</TableHead>
+                <TableHead>Ngày lập</TableHead>
+                <TableHead className="text-center">Trạng thái</TableHead>
+                <TableHead className="text-right">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {stats.recentQuotations.map((q) => (
+                <TableRow key={q.id}>
+                  <TableCell className="font-bold text-blue-600">
+                    <span
+                      onClick={() => navigate(`/quotations/${q.id}/preview`)}
+                      className="cursor-pointer hover:underline"
+                    >
+                      {q.quotationNumber}
+                    </span>
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-900">
+                    {q.customer?.companyName || '---'}
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-slate-900 whitespace-nowrap">
+                    {formatCurrency(q.grandTotal)}
+                  </TableCell>
+                  <TableCell className="text-slate-500 whitespace-nowrap">
+                    {formatDate(q.quotationDate)}
+                  </TableCell>
+                  <TableCell className="text-center whitespace-nowrap">
+                    <Badge status={q.status} />
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-2.5 py-1"
+                      leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                      onClick={() => navigate(`/quotations/${q.id}/preview`)}
+                    >
+                      Xem
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
           <div className="py-8 text-center text-slate-500 text-sm">
             Chưa có đơn hàng nào được tạo. Hãy bấm <strong>+ Tạo đơn hàng mới</strong> để bắt đầu.

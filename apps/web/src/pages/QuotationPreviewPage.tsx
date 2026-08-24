@@ -8,6 +8,11 @@ import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { Skeleton } from '../components/Skeleton';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
+import {
   ArrowLeft,
   Edit,
   Download,
@@ -128,47 +133,67 @@ export const QuotationPreviewPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs px-2.5 py-1.5 flex-shrink-0"
-            leftIcon={<Edit className="w-3.5 h-3.5" />}
-            onClick={() => navigate(`/quotations/${quotation.id}/edit`)}
-          >
-            Sửa
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs px-2.5 py-1.5 flex-shrink-0"
+                leftIcon={<Edit className="w-3.5 h-3.5" />}
+                onClick={() => navigate(`/quotations/${quotation.id}/edit`)}
+              >
+                Sửa
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Chỉnh sửa đơn hàng</TooltipContent>
+          </Tooltip>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs px-2.5 py-1.5 flex-shrink-0"
-            leftIcon={<Copy className="w-3.5 h-3.5" />}
-            onClick={handleDuplicate}
-            isLoading={duplicateMutation.isPending}
-          >
-            Nhân bản
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs px-2.5 py-1.5 flex-shrink-0"
+                leftIcon={<Copy className="w-3.5 h-3.5" />}
+                onClick={handleDuplicate}
+                isLoading={duplicateMutation.isPending}
+              >
+                Nhân bản
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Tạo bản sao mới</TooltipContent>
+          </Tooltip>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs px-2.5 py-1.5 hidden sm:inline-flex flex-shrink-0"
-            leftIcon={<Printer className="w-3.5 h-3.5" />}
-            onClick={handlePrint}
-          >
-            In nhanh
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs px-2.5 py-1.5 hidden sm:inline-flex flex-shrink-0"
+                leftIcon={<Printer className="w-3.5 h-3.5" />}
+                onClick={handlePrint}
+              >
+                In nhanh
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>In trực tiếp từ trình duyệt</TooltipContent>
+          </Tooltip>
 
-          <Button
-            variant="primary"
-            size="sm"
-            className="text-xs px-3 py-1.5 shadow-xs shadow-blue-500/20 flex-shrink-0"
-            leftIcon={isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            onClick={handleDownloadPdf}
-            disabled={isDownloading}
-          >
-            Download PDF
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="primary"
+                size="sm"
+                className="text-xs px-3 py-1.5 shadow-xs shadow-blue-500/20 flex-shrink-0"
+                leftIcon={isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                onClick={handleDownloadPdf}
+                disabled={isDownloading}
+              >
+                Download PDF
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xuất file PDF chuẩn in ấn A4</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

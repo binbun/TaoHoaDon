@@ -14,6 +14,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
 import { clsx } from 'clsx';
 
 interface SidebarProps {
@@ -184,23 +189,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           </div>
 
           <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={() => setIsChangePasswordOpen(true)}
-              title="Đổi mật khẩu"
-              className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-            >
-              <KeyRound className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                if (onClose) onClose();
-                logout();
-              }}
-              title="Đăng xuất"
-              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setIsChangePasswordOpen(true)}
+                  className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                >
+                  <KeyRound className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Đổi mật khẩu</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    if (onClose) onClose();
+                    logout();
+                  }}
+                  className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Đăng xuất</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </div>

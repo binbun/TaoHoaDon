@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
+import { Switch } from './ui/switch';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -258,16 +259,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           />
         </div>
 
-        <div className="flex items-center gap-2 pt-2">
-          <input
-            type="checkbox"
-            id="activeCheckbox"
+        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <Switch
+            id="activeSwitch"
             checked={formData.active}
-            onChange={(e) => handleChange('active', e.target.checked)}
-            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+            onCheckedChange={(checked) => handleChange('active', checked)}
           />
-          <label htmlFor="activeCheckbox" className="text-sm font-medium text-slate-700 cursor-pointer">
-            Kích hoạt sử dụng sản phẩm này trong báo giá
+          <label htmlFor="activeSwitch" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
+            Kích hoạt sử dụng sản phẩm này trong tạo đơn & báo giá
           </label>
         </div>
 

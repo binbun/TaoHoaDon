@@ -12,8 +12,27 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { TableSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
 import {
   Users,
   Plus,
@@ -23,6 +42,8 @@ import {
   Building,
   Phone,
   Mail,
+  MoreVertical,
+  MapPin,
 } from 'lucide-react';
 
 export const CustomersPage: React.FC = () => {
@@ -110,8 +131,11 @@ export const CustomersPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-900">Danh Bạ Khách Hàng & Đại Lý</h1>
-          <p className="text-xs sm:text-sm text-slate-500">
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <Users className="w-6 h-6 text-blue-600" />
+            Danh Bạ Khách Hàng & Đại Lý ({customers.length})
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Quản lý thông tin công ty, liên hệ đại lý và công trình tủ bếp
           </p>
         </div>
@@ -132,82 +156,113 @@ export const CustomersPage: React.FC = () => {
             placeholder="Tìm theo tên công ty, số điện thoại, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            leftElement={<Search className="w-4 h-4" />}
+            leftElement={<Search className="w-4 h-4 text-slate-400" />}
           />
         </div>
       </Card>
 
-      {/* Customers Table */}
+      {/* Customers Table with Radix Table */}
       <Card className="overflow-hidden">
         {isLoading ? (
-          <TableSkeleton rows={5} cols={5} />
-        ) : customers.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-[650px] sm:min-w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3 sm:px-4">Khách hàng / Công ty</th>
-                  <th className="py-3 px-3 sm:px-4">Người đại diện</th>
-                  <th className="py-3 px-3 sm:px-4">Liên hệ</th>
-                  <th className="py-3 px-3 sm:px-4">Địa chỉ</th>
-                  <th className="py-3 px-3 sm:px-4 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {customers.map((c: Customer) => (
-                  <tr key={c.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-3 sm:px-4">
-                      <div className="font-semibold text-slate-900 flex items-center gap-2">
-                        <Building className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                        <span>{c.companyName}</span>
-                      </div>
-                      {c.taxCode && (
-                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                          MST: {c.taxCode}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-3 sm:px-4 font-medium text-slate-800">
-                      {c.contactName || '---'}
-                    </td>
-                    <td className="py-3.5 px-3 sm:px-4 text-xs space-y-0.5">
-                      {c.phone && (
-                        <div className="flex items-center gap-1.5 text-slate-700">
-                          <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                          <span>{c.phone}</span>
-                        </div>
-                      )}
-                      {c.email && (
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                          <span className="truncate max-w-[150px]">{c.email}</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-3 sm:px-4 text-xs text-slate-600 max-w-xs truncate">
-                      {c.address || '---'}
-                    </td>
-                    <td className="py-3.5 px-3 sm:px-4 text-right space-x-1 whitespace-nowrap">
-                      <button
-                        onClick={() => openEditModal(c)}
-                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingCustomerId(c.id)}
-                        className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-95"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="p-6 space-y-4">
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
           </div>
+        ) : customers.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Khách hàng / Công ty</TableHead>
+                <TableHead>Người đại diện</TableHead>
+                <TableHead>Liên hệ</TableHead>
+                <TableHead>Địa chỉ</TableHead>
+                <TableHead className="text-right">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {customers.map((c: Customer) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <div className="font-semibold text-slate-900 flex items-center gap-2">
+                      <Building className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <span>{c.companyName}</span>
+                    </div>
+                    {c.taxCode && (
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        MST: {c.taxCode}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-800">
+                    {c.contactName || '---'}
+                  </TableCell>
+                  <TableCell className="text-xs space-y-0.5">
+                    {c.phone && (
+                      <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+                        <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                        <span>{c.phone}</span>
+                      </div>
+                    )}
+                    {c.email && (
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                        <span className="truncate max-w-[150px]">{c.email}</span>
+                      </div>
+                    )}
+                    {!c.phone && !c.email && <span className="text-slate-400">---</span>}
+                  </TableCell>
+                  <TableCell className="text-xs text-slate-600 max-w-xs truncate">
+                    {c.address ? (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{c.address}</span>
+                      </div>
+                    ) : (
+                      '---'
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => openEditModal(c)}
+                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Chỉnh sửa</TooltipContent>
+                      </Tooltip>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditModal(c)}>
+                            <Edit2 className="w-4 h-4 text-blue-500 mr-2" />
+                            <span>Sửa thông tin</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeletingCustomerId(c.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            <span>Xóa khách hàng</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
           <EmptyState
             title="Không tìm thấy khách hàng nào"

@@ -50,7 +50,7 @@ export const DashboardPage: React.FC = () => {
           leftIcon={<PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-700" />}
           onClick={() => navigate('/quotations/new')}
         >
-          + Tạo đơn hàng mới
+          Tạo đơn hàng mới
         </Button>
       </div>
 
@@ -203,7 +203,7 @@ export const DashboardPage: React.FC = () => {
           </Table>
         ) : (
           <div className="py-8 text-center text-slate-500 text-sm">
-            Chưa có đơn hàng nào được tạo. Hãy bấm <strong>+ Tạo đơn hàng mới</strong> để bắt đầu.
+            Chưa có đơn hàng nào được tạo. Hãy bấm <strong>Tạo đơn hàng mới</strong> để bắt đầu.
           </div>
         )}
       </Card>

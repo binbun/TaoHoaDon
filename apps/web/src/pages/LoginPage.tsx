@@ -61,9 +61,9 @@ export const LoginPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Email"
-            type="email"
-            placeholder="admin@baogia.vn"
+            label="Tài khoản hoặc Email"
+            type="text"
+            placeholder="admin@baogia.vn hoặc hoang.bui"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             leftElement={<Mail className="w-4 h-4" />}

@@ -12,8 +12,15 @@ export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password } = LoginSchema.parse(req.body);
 
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+    const inputIdentifier = email.toLowerCase().trim();
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: inputIdentifier },
+          { email: inputIdentifier.split('@')[0] },
+        ],
+      },
     });
 
     if (!user) {
@@ -21,12 +28,12 @@ export async function login(req: Request, res: Response, next: NextFunction) {
         req,
         action: 'AUTH_LOGIN_FAILED',
         resource: 'AUTH',
-        details: { email, reason: 'Email không tồn tại' },
+        details: { email, reason: 'Tài khoản không tồn tại' },
       });
 
       return res.status(401).json({
         success: false,
-        message: 'Email hoặc mật khẩu không chính xác',
+        message: 'Tài khoản hoặc mật khẩu không chính xác',
       });
     }
 

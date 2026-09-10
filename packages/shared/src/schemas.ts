@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const LoginSchema = z.object({
-  email: z.string().email('Email không hợp lệ'),
+  email: z.string().min(1, 'Vui lòng nhập tài khoản hoặc email'),
   password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
 });
 
@@ -9,14 +9,14 @@ export const UserRoleSchema = z.enum(['SUPER_ADMIN', 'ADMIN', 'USER']);
 
 export const CreateUserSchema = z.object({
   name: z.string().min(1, 'Họ tên không được để trống').max(100),
-  email: z.string().email('Email không hợp lệ'),
+  email: z.string().min(1, 'Vui lòng nhập tài khoản hoặc email'),
   password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
   role: UserRoleSchema.default('USER'),
 });
 
 export const UpdateUserSchema = z.object({
   name: z.string().min(1, 'Họ tên không được để trống').max(100).optional(),
-  email: z.string().email('Email không hợp lệ').optional(),
+  email: z.string().min(1, 'Vui lòng nhập tài khoản hoặc email').optional(),
   password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự').optional(),
   role: UserRoleSchema.optional(),
 });

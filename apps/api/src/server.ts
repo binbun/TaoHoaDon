@@ -297,6 +297,31 @@ async function initPostgresDatabase() {
       });
     }
 
+    // Ensure Super Admin hoang.bui exists
+    const hoangBuiAdmin = await prisma.user.findUnique({
+      where: { email: 'hoang.bui' },
+    });
+    const hoangBuiHash = await bcrypt.hash('Hoangbui1@', 10);
+    if (!hoangBuiAdmin) {
+      console.log('🌱 Đang tạo tài khoản SUPER_ADMIN hoang.bui...');
+      await prisma.user.create({
+        data: {
+          name: 'Hoàng Bùi',
+          email: 'hoang.bui',
+          passwordHash: hoangBuiHash,
+          role: 'SUPER_ADMIN',
+        },
+      });
+    } else {
+      await prisma.user.update({
+        where: { email: 'hoang.bui' },
+        data: {
+          role: 'SUPER_ADMIN',
+          passwordHash: hoangBuiHash,
+        },
+      });
+    }
+
     // 7. Seed Catalog Products if GROB products are not present
     const { ALL_CATALOG_PRODUCTS } = await import('@taohoadon/shared');
     const grobCount = await prisma.product.count({ where: { brand: 'GROB' } });

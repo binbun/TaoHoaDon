@@ -26,6 +26,22 @@ async function main() {
   });
   console.log(`✅ Đã tạo User Admin: ${adminUser.email} (Mật khẩu: 123456)`);
 
+  const hoangBuiHash = await bcrypt.hash('Hoangbui1@', 10);
+  const hoangBuiUser = await prisma.user.upsert({
+    where: { email: 'hoang.bui' },
+    update: {
+      passwordHash: hoangBuiHash,
+      role: 'SUPER_ADMIN',
+    },
+    create: {
+      name: 'Hoàng Bùi',
+      email: 'hoang.bui',
+      passwordHash: hoangBuiHash,
+      role: 'SUPER_ADMIN',
+    },
+  });
+  console.log(`✅ Đã tạo User Super Admin: ${hoangBuiUser.email} (Mật khẩu: Hoangbui1@)`);
+
   // 2. Danh mục Sản phẩm phụ kiện tủ bếp & Tủ bếp chuẩn từ Catalogue EUPLUS
   const productsData = [
     // Giá bát nâng hạ thông minh

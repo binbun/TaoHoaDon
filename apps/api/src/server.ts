@@ -322,35 +322,48 @@ async function initPostgresDatabase() {
       });
     }
 
-    // 7. Seed Catalog Products from GROB official catalog
+    // 7. Seed & Sync Catalog Products from GROB official catalog
     const { ALL_CATALOG_PRODUCTS } = await import('@taohoadon/shared');
-    const grobCount = await prisma.product.count({ where: { brand: 'GROB' } });
-    if (grobCount < ALL_CATALOG_PRODUCTS.length) {
-      console.log(`🌱 Đang nạp toàn bộ danh mục sản phẩm phụ kiện GROB (${ALL_CATALOG_PRODUCTS.length} sản phẩm)...`);
+    const catalogCodes = ALL_CATALOG_PRODUCTS.map((p) => p.code);
 
-      for (const p of ALL_CATALOG_PRODUCTS) {
-        await prisma.product.upsert({
-          where: { code: p.code },
-          update: {
-            oldCode: p.oldCode,
-            name: p.name,
-            brand: p.brand,
-            category: p.category,
-            shortDescription: p.shortDescription,
-            cabinetWidth: p.cabinetWidth,
-            dimensions: p.dimensions,
-            unit: p.unit,
-            price: p.price,
-            retailPrice: p.retailPrice,
-            discountRate: p.discountRate,
-            vatRate: p.vatRate,
-            active: p.active,
-          },
-          create: p,
-        });
+    // Tự động xóa các sản phẩm cũ không thuộc catalogue báo giá mới
+    try {
+      const deleteResult = await prisma.product.deleteMany({
+        where: {
+          code: { notIn: catalogCodes },
+        },
+      });
+      if (deleteResult.count > 0) {
+        console.log(`🗑️ Đã xóa ${deleteResult.count} sản phẩm cũ không thuộc catalogue mới.`);
       }
-      console.log(`🎉 Đã nạp thành công ${ALL_CATALOG_PRODUCTS.length} sản phẩm GROB vào Database!`);
+    } catch (delErr) {
+      console.warn('Cảnh báo khi dọn dẹp sản phẩm cũ:', delErr);
     }
+
+    console.log(`🌱 Đang đồng bộ toàn bộ danh mục sản phẩm phụ kiện GROB (${ALL_CATALOG_PRODUCTS.length} sản phẩm)...`);
+
+    for (const p of ALL_CATALOG_PRODUCTS) {
+      await prisma.product.upsert({
+        where: { code: p.code },
+        update: {
+          oldCode: p.oldCode,
+          name: p.name,
+          brand: p.brand,
+          category: p.category,
+          shortDescription: p.shortDescription,
+          cabinetWidth: p.cabinetWidth,
+          dimensions: p.dimensions,
+          unit: p.unit,
+          price: p.price,
+          retailPrice: p.retailPrice,
+          discountRate: p.discountRate,
+          vatRate: p.vatRate,
+          active: p.active,
+        },
+        create: p,
+      });
+    }
+    console.log(`🎉 Đã đồng bộ thành công ${ALL_CATALOG_PRODUCTS.length} sản phẩm GROB vào Database!`);
 
     // 8. Đảm bảo tất cả sản phẩm hiện có trong CSDL đều có VAT = 0%
     await prisma.product.updateMany({

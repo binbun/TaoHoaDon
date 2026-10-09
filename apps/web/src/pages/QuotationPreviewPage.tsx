@@ -235,7 +235,7 @@ export const QuotationPreviewPage: React.FC = () => {
                 {quotation.title || 'HÓA ĐƠN BÁN HÀNG'}
               </h1>
               <p className="text-[11px] text-slate-500">
-                Đơn hàng phụ kiện tủ bếp thông minh Inox SUS304 chính hãng
+                Đơn hàng phụ kiện tủ bếp thông minh chính hãng
               </p>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-right text-[11px] text-slate-600 space-y-0.5">
@@ -355,7 +355,7 @@ export const QuotationPreviewPage: React.FC = () => {
               <div className="font-bold text-slate-800 uppercase">ĐẠI DIỆN KHÁCH HÀNG</div>
               <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên & đóng dấu)</div>
               <div className="h-16"></div>
-              <div className="font-semibold text-slate-700">{customer?.contactName || '---'}</div>
+              <div className="font-semibold text-slate-700">{customer?.companyName || '---'}</div>
             </div>
             <div>
               <div className="font-bold text-slate-900 uppercase">ĐẠI DIỆN NPP BÍCH ĐIỀU</div>

@@ -75,8 +75,6 @@ export const QuotationBuilderPage: React.FC = () => {
   // Customer State
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [companyName, setCompanyName] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [taxCode, setTaxCode] = useState('');
@@ -146,8 +144,6 @@ export const QuotationBuilderPage: React.FC = () => {
 
       if (existingQuote.customer) {
         setCompanyName(existingQuote.customer.companyName);
-        setContactName(existingQuote.customer.contactName || '');
-        setEmail(existingQuote.customer.email || '');
         setPhone(existingQuote.customer.phone || '');
         setAddress(existingQuote.customer.address || '');
         setTaxCode(existingQuote.customer.taxCode || '');
@@ -176,8 +172,6 @@ export const QuotationBuilderPage: React.FC = () => {
     const found = customers.find((c) => c.id === cId);
     if (found) {
       setCompanyName(found.companyName);
-      setContactName(found.contactName || '');
-      setEmail(found.email || '');
       setPhone(found.phone || '');
       setAddress(found.address || '');
       setTaxCode(found.taxCode || '');
@@ -288,8 +282,6 @@ export const QuotationBuilderPage: React.FC = () => {
       if (!customerId) {
         const newCust = await createCustomerMutation.mutateAsync({
           companyName: companyName.trim(),
-          contactName: contactName.trim() || undefined,
-          email: email.trim() || undefined,
           phone: phone.trim() || undefined,
           address: address.trim() || undefined,
           taxCode: taxCode.trim() || undefined,
@@ -419,28 +411,20 @@ export const QuotationBuilderPage: React.FC = () => {
                     <SelectItem value="NEW">-- Nhập thông tin khách hàng mới --</SelectItem>
                     {customers.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
-                        {c.companyName} {c.contactName ? `(${c.contactName})` : ''} {c.phone ? `- ${c.phone}` : ''}
+                        {c.companyName} {c.phone ? `- ${c.phone}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <Input
-                  label="Tên Công Ty / Tên Khách Hàng *"
-                  placeholder="VD: Cty TNHH Nội Thất Minh Quân"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                />
-                <Input
-                  label="Người liên hệ đại diện"
-                  placeholder="VD: Anh Tuấn Anh"
-                  value={contactName}
-                  onChange={(e) => setContactName(e.target.value)}
-                />
-              </div>
+              <Input
+                label="Tên Công Ty / Tên Khách Hàng *"
+                placeholder="VD: Cty TNHH Nội Thất Minh Quân"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                required
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Input
@@ -457,21 +441,12 @@ export const QuotationBuilderPage: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <Input
-                  label="Email nhận đơn hàng"
-                  type="email"
-                  placeholder="VD: tuananh@homedecor.vn"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <Input
-                  label="Địa chỉ công trình / giao hàng"
-                  placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </div>
+              <Input
+                label="Địa chỉ công trình / giao hàng"
+                placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
             </div>
           </Card>
 

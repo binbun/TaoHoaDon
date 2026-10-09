@@ -304,29 +304,58 @@ export const QuotationPreviewPage: React.FC = () => {
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-400 font-medium text-slate-700 text-[11px]">
-                <td colSpan={5} className="py-2 px-2.5 text-right">Tạm tính:</td>
+                <td
+                  colSpan={3}
+                  rowSpan={
+                    2 +
+                    (quotation.discountTotal > 0 ? 1 : 0) +
+                    (quotation.vatTotal > 0 ? 1 : 0) +
+                    (quotation.previousDebt && quotation.previousDebt > 0 ? 1 : 0)
+                  }
+                  className="py-2.5 px-2 align-top text-left"
+                >
+                  <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 max-w-[360px] shadow-xs">
+                    <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs">
+                      <img
+                        src="/payment-qr.png"
+                        alt="Mã QR thanh toán VietQR Techcombank"
+                        className="w-[78px] h-[89px] object-contain"
+                      />
+                    </div>
+                    <div className="text-[10px] text-slate-600 leading-tight space-y-1">
+                      <div className="font-bold text-slate-800 text-[10.5px] uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#1B9550] inline-block"></span>
+                        Thông tin chuyển khoản
+                      </div>
+                      <div>STK: <strong className="text-slate-900 font-bold tracking-wider text-[11px]">19026197143010</strong></div>
+                      <div>Ngân hàng: <strong className="text-slate-900 font-semibold">Techcombank</strong></div>
+                      <div>Chủ TK: <strong className="text-slate-900 font-semibold uppercase">Tran Thi Bich Dieu</strong></div>
+                    </div>
+                  </div>
+                </td>
+                <td colSpan={2} className="py-2 px-2.5 text-right">Tạm tính:</td>
                 <td className="py-2 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.subtotal)}</td>
               </tr>
               {quotation.discountTotal > 0 && (
                 <tr className="text-rose-600 text-[11px]">
-                  <td colSpan={5} className="py-1 px-2.5 text-right">Tổng chiết khấu:</td>
+                  <td colSpan={2} className="py-1 px-2.5 text-right">Tổng chiết khấu:</td>
                   <td className="py-1 px-2.5 text-right font-bold">-{formatCurrency(quotation.discountTotal)}</td>
                 </tr>
               )}
               {quotation.vatTotal > 0 && (
                 <tr className="text-slate-700 text-[11px]">
-                  <td colSpan={5} className="py-1 px-2.5 text-right">Thuế GTGT (VAT):</td>
+                  <td colSpan={2} className="py-1 px-2.5 text-right">Thuế GTGT (VAT):</td>
                   <td className="py-1 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.vatTotal)}</td>
                 </tr>
               )}
               {quotation.previousDebt && quotation.previousDebt > 0 ? (
                 <tr className="text-amber-800 bg-amber-50/60 font-semibold text-[11px]">
-                  <td colSpan={5} className="py-1.5 px-2.5 text-right">Dư nợ cũ từ các đơn trước:</td>
+                  <td colSpan={2} className="py-1.5 px-2.5 text-right">Dư nợ cũ từ các đơn trước:</td>
                   <td className="py-1.5 px-2.5 text-right font-bold text-amber-700">+{formatCurrency(quotation.previousDebt)}</td>
                 </tr>
               ) : null}
               <tr className="border-t border-slate-300 text-slate-900 text-[13px] font-black bg-emerald-50/40">
-                <td colSpan={5} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG THANH TOÁN:</td>
+                <td colSpan={2} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG THANH TOÁN:</td>
                 <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[14px]">{formatCurrency(quotation.grandTotal)}</td>
               </tr>
             </tfoot>

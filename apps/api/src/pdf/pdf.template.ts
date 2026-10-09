@@ -1,4 +1,5 @@
 import { Quotation, formatCurrency, formatDate } from '@taohoadon/shared';
+import { PAYMENT_QR_BASE64 } from './paymentQr';
 
 export function renderQuotationHtml(quotation: Quotation): string {
   const customer = quotation.customer;
@@ -246,17 +247,95 @@ export function renderQuotationHtml(quotation: Quotation): string {
     .bottom-section {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: stretch;
       margin-top: 8px;
       page-break-inside: avoid;
     }
 
+    .qr-payment-box {
+      width: 54%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .qr-img-wrap {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .qr-code-img {
+      width: 76px;
+      height: 87px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .qr-details {
+      font-size: 10px;
+      color: #475569;
+      line-height: 1.45;
+    }
+
+    .qr-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #0f172a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .qr-title::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #1B9550;
+    }
+
+    .qr-line {
+      margin-bottom: 2px;
+    }
+
+    .qr-line strong {
+      color: #0f172a;
+    }
+
+    .qr-line strong.stk-val {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .qr-hint {
+      font-size: 9px;
+      color: #64748b;
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+
     .notes-box {
-      width: 55%;
+      margin-top: 10px;
       background: #fafafa;
       border: 1px solid #f1f5f9;
       border-radius: 6px;
       padding: 8px 12px;
+      page-break-inside: avoid;
     }
 
     .notes-title {
@@ -276,10 +355,10 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .summary-box {
-      width: 41%;
+      width: 43%;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 10px 14px;
     }
 
@@ -452,11 +531,18 @@ export function renderQuotationHtml(quotation: Quotation): string {
       </tbody>
     </table>
 
-    <!-- Bottom: Notes & Summary -->
+    <!-- Bottom: QR Payment & Summary -->
     <div class="bottom-section">
-      <div class="notes-box">
-        <div class="notes-title">Chính sách bảo hành & Cam kết</div>
-        <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng GRÖB, EUPLUS, KINGENBLU.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ 02 năm đổi mới.\n- Cảm ơn Quý đối tác đã tin tưởng lựa chọn thiết bị phụ kiện tủ bếp của chúng tôi!`}</div>
+      <div class="qr-payment-box">
+        <div class="qr-img-wrap">
+          <img src="${PAYMENT_QR_BASE64}" alt="VietQR Techcombank" class="qr-code-img" />
+        </div>
+        <div class="qr-details">
+          <div class="qr-title">Thông tin chuyển khoản</div>
+          <div class="qr-line">STK: <strong class="stk-val">19026197143010</strong></div>
+          <div class="qr-line">Ngân hàng: <strong>Techcombank</strong></div>
+          <div class="qr-line">Chủ TK: <strong style="text-transform: uppercase;">Tran Thi Bich Dieu</strong></div>
+        </div>
       </div>
       <div class="summary-box">
         <div class="summary-row">
@@ -488,6 +574,12 @@ export function renderQuotationHtml(quotation: Quotation): string {
           <span class="amount">${formatCurrency(quotation.grandTotal)}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Notes & Terms -->
+    <div class="notes-box">
+      <div class="notes-title">Chính sách bảo hành & Cam kết</div>
+      <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng GRÖB, EUPLUS, KINGENBLU.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ 02 năm đổi mới.\n- Cảm ơn Quý đối tác đã tin tưởng lựa chọn thiết bị phụ kiện tủ bếp của chúng tôi!`}</div>
     </div>
 
     <!-- Signatures -->

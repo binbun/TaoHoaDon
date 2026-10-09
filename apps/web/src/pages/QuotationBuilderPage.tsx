@@ -64,7 +64,7 @@ export const QuotationBuilderPage: React.FC = () => {
 
   // Quotation Info State
   const [quotationNumber, setQuotationNumber] = useState('');
-  const [title, setTitle] = useState('ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP');
+  const [title, setTitle] = useState('HÓA ĐƠN BÁN HÀNG');
   const [quotationDate, setQuotationDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
@@ -506,7 +506,7 @@ export const QuotationBuilderPage: React.FC = () => {
                 <div className="sm:col-span-2">
                   <Input
                     label="Tiêu đề đơn hàng"
-                    placeholder="VD: ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP"
+                    placeholder="VD: HÓA ĐƠN BÁN HÀNG"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required

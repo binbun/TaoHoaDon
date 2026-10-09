@@ -385,7 +385,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <!-- Title & Meta -->
     <div class="title-section">
       <div>
-        <div class="doc-title">${quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP CAO CẤP'}</div>
+        <div class="doc-title">${quotation.title || 'HÓA ĐƠN BÁN HÀNG'}</div>
         <div class="doc-subtitle">Đơn hàng phụ kiện tủ bếp thông minh Inox SUS304 chính hãng</div>
       </div>
       <div class="doc-meta-badge">

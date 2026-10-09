@@ -232,7 +232,7 @@ export const QuotationPreviewPage: React.FC = () => {
           <div className="flex justify-between items-end mb-4">
             <div>
               <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">
-                {quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP CAO CẤP'}
+                {quotation.title || 'HÓA ĐƠN BÁN HÀNG'}
               </h1>
               <p className="text-[11px] text-slate-500">
                 Đơn hàng phụ kiện tủ bếp thông minh Inox SUS304 chính hãng
@@ -255,16 +255,8 @@ export const QuotationPreviewPage: React.FC = () => {
                 <strong className="text-slate-900">{customer?.companyName || 'Khách hàng đại lý'}</strong>
               </div>
               <div>
-                <span className="text-slate-500 inline-block w-28">Người đại diện:</span>
-                <strong className="text-slate-900">{customer?.contactName || '---'}</strong>
-              </div>
-              <div>
                 <span className="text-slate-500 inline-block w-28">Điện thoại:</span>
                 <span>{customer?.phone || '---'}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 inline-block w-28">Email:</span>
-                <span>{customer?.email || '---'}</span>
               </div>
               <div>
                 <span className="text-slate-500 inline-block w-28">Địa chỉ công trình:</span>

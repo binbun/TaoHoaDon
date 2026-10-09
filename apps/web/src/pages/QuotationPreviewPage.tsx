@@ -259,7 +259,7 @@ export const QuotationPreviewPage: React.FC = () => {
                 <span>{customer?.phone || '---'}</span>
               </div>
               <div>
-                <span className="text-slate-500 inline-block w-28">Địa chỉ công trình:</span>
+                <span className="text-slate-500 inline-block w-28">Địa chỉ giao hàng:</span>
                 <span>{customer?.address || '---'}</span>
               </div>
               <div>
@@ -274,7 +274,7 @@ export const QuotationPreviewPage: React.FC = () => {
             <thead>
               <tr className="bg-slate-100 text-slate-800 text-[10.5px] font-bold uppercase tracking-wider border-t border-slate-300 border-b-2 border-slate-400">
                 <th className="py-2 px-2.5 text-center w-8">STT</th>
-                <th className="py-2 px-2.5 text-left">Tên sản phẩm / Phụ kiện tủ bếp</th>
+                <th className="py-2 px-2.5 text-left">Tên sản phẩm</th>
                 <th className="py-2 px-2.5 text-center w-16">ĐVT</th>
                 <th className="py-2 px-2.5 text-center w-12">SL</th>
                 <th className="py-2 px-2.5 text-right w-24">Đơn giá</th>
@@ -287,11 +287,6 @@ export const QuotationPreviewPage: React.FC = () => {
                   <td className="py-2.5 px-2.5 text-center text-slate-500">{index + 1}</td>
                   <td className="py-2.5 px-2.5">
                     <div className="font-bold text-slate-900 text-[11.5px]">{item.productNameSnapshot}</div>
-                    {item.descriptionSnapshot && (
-                      <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-                        {item.descriptionSnapshot}
-                      </div>
-                    )}
                   </td>
                   <td className="py-2.5 px-2.5 text-center text-slate-600">{item.unit || 'Bộ'}</td>
                   <td className="py-2.5 px-2.5 text-center font-medium">{item.quantity}</td>
@@ -309,7 +304,7 @@ export const QuotationPreviewPage: React.FC = () => {
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-400 font-medium text-slate-700 text-[11px]">
-                <td colSpan={5} className="py-2 px-2.5 text-right">Tạm tính (Subtotal):</td>
+                <td colSpan={5} className="py-2 px-2.5 text-right">Tạm tính:</td>
                 <td className="py-2 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.subtotal)}</td>
               </tr>
               {quotation.discountTotal > 0 && (

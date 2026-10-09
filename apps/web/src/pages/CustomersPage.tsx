@@ -127,7 +127,7 @@ export const CustomersPage: React.FC = () => {
             Danh Bạ Khách Hàng & Đại Lý ({customers.length})
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Quản lý thông tin công ty, liên hệ đại lý và công trình tủ bếp
+            Quản lý thông tin công ty, liên hệ đại lý
           </p>
         </div>
         <Button
@@ -288,7 +288,7 @@ export const CustomersPage: React.FC = () => {
           </div>
 
           <Input
-            label="Địa chỉ công trình / văn phòng"
+            label="Địa chỉ giao hàng / văn phòng"
             placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội"
             value={address}
             onChange={(e) => setAddress(e.target.value)}

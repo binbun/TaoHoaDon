@@ -442,7 +442,7 @@ export const QuotationBuilderPage: React.FC = () => {
               </div>
 
               <Input
-                label="Địa chỉ công trình / giao hàng"
+                label="Địa chỉ giao hàng / giao hàng"
                 placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}

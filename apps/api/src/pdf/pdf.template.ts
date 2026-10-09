@@ -413,7 +413,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
           <span>Email:</span> ${customer.email}
         </div>` : ''}
         <div class="info-row">
-          <span>Địa chỉ công trình:</span> ${customer?.address || '---'}
+          <span>Địa chỉ giao hàng:</span> ${customer?.address || '---'}
         </div>
         <div class="info-row">
           <span>Mã số thuế:</span> ${customer?.taxCode || '---'}
@@ -426,7 +426,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
       <thead>
         <tr>
           <th class="col-stt">STT</th>
-          <th class="col-product">Tên sản phẩm / Phụ kiện tủ bếp</th>
+          <th class="col-product">Tên sản phẩm</th>
           <th class="col-unit">ĐVT</th>
           <th class="col-qty">SL</th>
           <th class="col-price">Đơn giá (đ)</th>
@@ -439,7 +439,6 @@ export function renderQuotationHtml(quotation: Quotation): string {
             <td class="col-stt">${index + 1}</td>
             <td class="col-product">
               <div class="product-title">${item.productNameSnapshot}</div>
-              ${item.descriptionSnapshot ? `<div class="product-desc">${item.descriptionSnapshot}</div>` : ''}
             </td>
             <td class="col-unit">${item.unit || 'Bộ'}</td>
             <td class="col-qty">${item.quantity}</td>
@@ -461,7 +460,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
       </div>
       <div class="summary-box">
         <div class="summary-row">
-          <span>Tạm tính (Subtotal):</span>
+          <span>Tạm tính:</span>
           <span>${formatCurrency(quotation.subtotal)}</span>
         </div>
         ${quotation.discountTotal > 0 ? `

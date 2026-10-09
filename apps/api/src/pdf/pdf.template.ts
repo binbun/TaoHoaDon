@@ -493,15 +493,14 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <!-- Signatures -->
     <div class="signature-section">
       <div class="signature-col">
-        <div class="sig-title">ĐẠI DIỆN KHÁCH HÀNG / ĐẠI LÝ</div>
+        <div class="sig-title">KHÁCH HÀNG</div>
         <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
         <div class="sig-space"></div>
       </div>
       <div class="signature-col">
-        <div class="sig-title">NHÀ PHÂN PHỐI BÍCH ĐIỀU</div>
-        <div class="sig-sub">(Ký, ghi rõ họ tên & đóng dấu)</div>
+        <div class="sig-title">NGƯỜI BÁN HÀNG</div>
+        <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
         <div class="sig-space"></div>
-        <div class="sig-name">Đại Diện NPP: Trần Thị Bích Điều</div>
       </div>
     </div>
 

@@ -347,14 +347,14 @@ export const QuotationPreviewPage: React.FC = () => {
           {/* Signatures */}
           <div className="grid grid-cols-2 gap-8 text-center pt-4 border-t border-slate-200 text-[11px]">
             <div>
-              <div className="font-bold text-slate-800 uppercase">ĐẠI DIỆN KHÁCH HÀNG</div>
-              <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên & đóng dấu)</div>
+              <div className="font-bold text-slate-800 uppercase">KHÁCH HÀNG</div>
+              <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
               <div className="h-16"></div>
               <div className="font-semibold text-slate-700">{customer?.companyName || '---'}</div>
             </div>
             <div>
-              <div className="font-bold text-slate-900 uppercase">ĐẠI DIỆN NPP BÍCH ĐIỀU</div>
-              <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký & xác nhận giao hàng)</div>
+              <div className="font-bold text-slate-900 uppercase">NGƯỜI BÁN HÀNG</div>
+              <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
               <div className="h-16"></div>
               <div className="font-bold text-slate-900">Trần Thị Bích Điều</div>
             </div>

@@ -32,25 +32,25 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Top Banner / Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 p-4 sm:p-8 rounded-xl sm:rounded-2xl text-white shadow-lg shadow-blue-800/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-[#14733E] via-[#1B9550] to-[#158045] p-4 sm:p-8 rounded-xl sm:rounded-2xl text-white shadow-lg shadow-[#1B9550]/20">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-500/30 text-blue-200 text-xs font-semibold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 text-emerald-50 text-xs font-semibold mb-2 backdrop-blur-sm border border-white/20">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Hệ thống đơn hàng EUPLUS Kitchen</span>
+            <span>Hệ thống Báo giá & Đơn hàng Phụ kiện Tủ bếp (GROB • EUPLUS • KINGENBLU)</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Xin chào, NPP Bích Điều! 👋</h1>
-          <p className="text-blue-100 text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
-            Quản lý đơn hàng phụ kiện tủ bếp thông minh Inox 304, module tủ bếp cao cấp và xuất file PDF chuẩn A4 gửi đối tác/đại lý nhanh chóng.
+          <p className="text-emerald-50 text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
+            Quản lý đơn hàng phụ kiện tủ bếp thông minh Inox 304 (GROB, EUPLUS, KINGENBLU), module tủ bếp và xuất file PDF chuẩn A4 gửi đối tác/đại lý nhanh chóng.
           </p>
         </div>
         <Button
-          variant="secondary"
           size="md"
-          className="bg-white text-blue-900 hover:bg-blue-50 font-bold shadow-md self-stretch sm:self-auto justify-center"
-          leftIcon={<PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-700" />}
+          className="bg-white hover:bg-emerald-50 shadow-md self-stretch sm:self-auto justify-center border-0"
+          style={{ color: '#1B9550' }}
+          leftIcon={<PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B9550]" />}
           onClick={() => navigate('/quotations/new')}
         >
-          Tạo đơn hàng mới
+          <span className="font-bold text-[#1B9550]">Tạo đơn hàng mới</span>
         </Button>
       </div>
 

@@ -64,12 +64,12 @@ export const QuotationBuilderPage: React.FC = () => {
 
   // Quotation Info State
   const [quotationNumber, setQuotationNumber] = useState('');
-  const [title, setTitle] = useState('ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS');
+  const [title, setTitle] = useState('ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP');
   const [quotationDate, setQuotationDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
   const [note, setNote] = useState(
-    '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.'
+    '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.'
   );
 
   // Customer State
@@ -359,7 +359,7 @@ export const QuotationBuilderPage: React.FC = () => {
               {isEditMode ? `Chỉnh Sửa Đơn Hàng #${quotationNumber || id}` : 'Tạo Đơn Hàng Mới'}
             </h1>
             <p className="text-[11px] sm:text-xs text-slate-500 hidden sm:block">
-              Tiêu chuẩn phụ kiện tủ bếp thông minh EUPLUS
+              Tiêu chuẩn phụ kiện tủ bếp thông minh cao cấp
             </p>
           </div>
         </div>
@@ -574,7 +574,7 @@ export const QuotationBuilderPage: React.FC = () => {
                     leftIcon={<PackagePlus className="w-3.5 h-3.5" />}
                     onClick={() => setIsProductPickerOpen(true)}
                   >
-                    Catalogue EUPLUS
+                    Catalogue Phụ Kiện
                   </Button>
                 </div>
               </div>
@@ -585,7 +585,7 @@ export const QuotationBuilderPage: React.FC = () => {
                 <PackagePlus className="w-10 h-10 text-slate-400 mx-auto mb-2" />
                 <h4 className="font-bold text-slate-800 text-sm">Chưa có phụ kiện nào trong đơn hàng</h4>
                 <p className="text-xs text-slate-500 mt-1 mb-4">
-                  Chọn phụ kiện từ catalogue EUPLUS (giá bát nâng hạ, giá xoong nồi, giá dao thớt, thùng gạo...)
+                  Chọn phụ kiện từ catalogue (GROB, EUPLUS, KINGENBLU...)
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-2.5">
                   <Button
@@ -594,7 +594,7 @@ export const QuotationBuilderPage: React.FC = () => {
                     size="sm"
                     onClick={() => setIsProductPickerOpen(true)}
                   >
-                    Chọn từ Catalogue EUPLUS
+                    Chọn từ Catalogue
                   </Button>
                   <Button
                     type="button"
@@ -799,8 +799,8 @@ export const QuotationBuilderPage: React.FC = () => {
         <div className="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
           <Card className="border-t-4 border-t-blue-600 shadow-md">
             <h3 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center justify-between">
-              <span>Tổng Kết Đơn Hàng EUPLUS</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
+              <span>Tổng Kết Đơn Hàng</span>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">
                 {items.length} hạng mục
               </span>
             </h3>
@@ -874,8 +874,8 @@ export const QuotationBuilderPage: React.FC = () => {
           {/* Quick Help Card */}
           <div className="p-4 bg-slate-100/80 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2">
             <div className="font-bold text-slate-800 flex items-center gap-1.5">
-              <Info className="w-4 h-4 text-blue-600" />
-              <span>Tiêu chuẩn phụ kiện EUPLUS</span>
+              <Info className="w-4 h-4 text-emerald-600" />
+              <span>Tiêu chuẩn phụ kiện chính hãng</span>
             </div>
             <p className="leading-relaxed">
               Các phụ kiện Inox 304 đều được bảo hành han gỉ vĩnh viễn và đi kèm đầy đủ bộ phụ kiện lắp đặt, ốc vít và ray âm giảm chấn chính hãng.

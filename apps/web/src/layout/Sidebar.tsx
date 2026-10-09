@@ -96,14 +96,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       {/* Brand Header */}
       <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl text-white shadow-md shadow-blue-500/20">
+          <div className="p-2 bg-gradient-to-br from-[#14733E] to-[#1B9550] rounded-xl text-white shadow-md shadow-[#1B9550]/20">
             <FileText className="w-5 h-5" />
           </div>
           <div>
             <h1 className="font-bold text-white text-sm tracking-tight leading-tight">
               QuotationPro
             </h1>
-            <p className="text-[10px] text-blue-400 font-medium">Phụ kiện & Tủ bếp thông minh</p>
+            <p className="text-[10px] text-emerald-400 font-medium">Phụ kiện & Tủ bếp thông minh</p>
           </div>
         </div>
 

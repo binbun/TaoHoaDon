@@ -104,13 +104,13 @@ export const QuotationsListPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Don_Hang_EUPLUS_${q.quotationNumber}.pdf`;
+      link.download = `Don_Hang_${q.quotationNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      success(`Đã tải xuống file Don_Hang_EUPLUS_${q.quotationNumber}.pdf`);
+      success(`Đã tải xuống file Don_Hang_${q.quotationNumber}.pdf`);
     } catch (err: any) {
       error(err.message || 'Không thể xuất file PDF');
     } finally {
@@ -131,11 +131,11 @@ export const QuotationsListPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-lg sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-            <Layers className="w-6 h-6 text-blue-600" />
+            <Layers className="w-6 h-6 text-emerald-600" />
             Quản Lý Đơn Hàng Phụ Kiện & Tủ Bếp
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Tạo, xem trước, nhân bản và xuất bản in PDF theo quy chuẩn EUPLUS Kitchen
+            Tạo, xem trước, nhân bản và xuất bản in PDF theo quy chuẩn phụ kiện tủ bếp thông minh (GROB, EUPLUS, KINGENBLU)
           </p>
         </div>
         <Button

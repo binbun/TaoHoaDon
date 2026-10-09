@@ -64,13 +64,13 @@ export const QuotationPreviewPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Don_Hang_EUPLUS_${quotation.quotationNumber}.pdf`;
+      link.download = `Don_Hang_${quotation.quotationNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      success(`Đã tải xuống file Don_Hang_EUPLUS_${quotation.quotationNumber}.pdf`);
+      success(`Đã tải xuống file Don_Hang_${quotation.quotationNumber}.pdf`);
     } catch (err: any) {
       error(err.message || 'Không thể xuất file PDF');
     } finally {
@@ -207,22 +207,22 @@ export const QuotationPreviewPage: React.FC = () => {
       <div className="a4-sheet-mobile-container">
         <div className="a4-sheet font-sans text-slate-800 text-[11px] leading-relaxed select-text shadow-xl">
           {/* Header */}
-          <div className="flex justify-between items-center border-b-2 border-blue-900 pb-3 mb-4">
+          <div className="flex justify-between items-center border-b-2 border-slate-800 pb-3 mb-4">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-800 text-white font-black text-xl px-3 py-1.5 rounded-lg tracking-wider">
-                EUPLUS
+              <div className="bg-[#1B9550] text-white font-black text-xl px-3 py-1.5 rounded-lg tracking-wider">
+                BÍCH ĐIỀU
               </div>
               <div>
                 <div className="text-xs font-bold text-slate-900 uppercase">
-                  CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
+                  NHÀ PHÂN PHỐI PHỤ KIỆN TỦ BẾP & TỦ BẾP THÔNG MINH
                 </div>
-                <div className="text-[9.5px] text-slate-500 mt-0.5">
-                  Số nhà 1, ngách 298/77/30/21 Đ.Ngọc Hồi, T. Yên Ngưu, X.Đại Thanh, TP Hà Nội
+                <div className="text-[9.5px] text-slate-500 mt-0.5 font-medium">
+                  Phân phối chính hãng: GRÖB • EUPLUS • KINGENBLU
                 </div>
               </div>
             </div>
             <div className="text-right text-[10px] text-slate-600 bg-slate-50 border border-slate-200 p-2 rounded-lg leading-tight">
-              <div className="font-bold text-rose-600">NHÀ PHÂN PHỐI: BÍCH ĐIỀU</div>
+              <div className="font-bold text-rose-600">NPP BÍCH ĐIỀU</div>
               <div>Hotline: 0917 418 989 - 0945 636 567</div>
               <div>ĐC: Số 147 phố Hát, Thôn Đông Thành, Hát Môn, Hà Nội</div>
             </div>
@@ -231,8 +231,8 @@ export const QuotationPreviewPage: React.FC = () => {
           {/* Title & Metadata */}
           <div className="flex justify-between items-end mb-4">
             <div>
-              <h1 className="text-lg font-black text-blue-900 uppercase tracking-tight">
-                {quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP EUPLUS'}
+              <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                {quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP CAO CẤP'}
               </h1>
               <p className="text-[11px] text-slate-500">
                 Đơn hàng phụ kiện tủ bếp thông minh Inox SUS304 chính hãng
@@ -348,8 +348,8 @@ export const QuotationPreviewPage: React.FC = () => {
           {/* Notes & Warranty Terms */}
           {quotation.note && (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-6 text-[10.5px]">
-              <div className="font-bold text-slate-800 uppercase tracking-wider mb-1.5 text-blue-800">
-                Ghi chú & Chính sách bảo hành EUPLUS:
+              <div className="font-bold text-slate-800 uppercase tracking-wider mb-1.5 text-slate-800">
+                Ghi chú & Chính sách bảo hành:
               </div>
               <div className="text-slate-600 whitespace-pre-line leading-relaxed">
                 {quotation.note}
@@ -366,7 +366,7 @@ export const QuotationPreviewPage: React.FC = () => {
               <div className="font-semibold text-slate-700">{customer?.contactName || '---'}</div>
             </div>
             <div>
-              <div className="font-bold text-blue-900 uppercase">ĐẠI DIỆN NPP BÍCH ĐIỀU - EUPLUS</div>
+              <div className="font-bold text-slate-900 uppercase">ĐẠI DIỆN NPP BÍCH ĐIỀU</div>
               <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký & xác nhận giao hàng)</div>
               <div className="h-16"></div>
               <div className="font-bold text-slate-900">Trần Thị Bích Điều</div>

@@ -350,13 +350,11 @@ export const QuotationPreviewPage: React.FC = () => {
               <div className="font-bold text-slate-800 uppercase">KHÁCH HÀNG</div>
               <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
               <div className="h-16"></div>
-              <div className="font-semibold text-slate-700">{customer?.companyName || '---'}</div>
             </div>
             <div>
               <div className="font-bold text-slate-900 uppercase">NGƯỜI BÁN HÀNG</div>
               <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
               <div className="h-16"></div>
-              <div className="font-bold text-slate-900">Trần Thị Bích Điều</div>
             </div>
           </div>
         </div>

@@ -275,8 +275,8 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .qr-code-img {
-      width: 76px;
-      height: 87px;
+      width: 82px;
+      height: 96px;
       object-fit: contain;
       display: block;
     }

@@ -319,7 +319,7 @@ export const QuotationPreviewPage: React.FC = () => {
                       <img
                         src="/payment-qr.png"
                         alt="Mã QR thanh toán VietQR Techcombank"
-                        className="w-[78px] h-[89px] object-contain"
+                        className="w-[82px] h-[96px] object-contain"
                       />
                     </div>
                     <div className="text-[10px] text-slate-600 leading-tight space-y-1">

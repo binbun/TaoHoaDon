@@ -22,6 +22,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { EmptyState } from '../components/EmptyState';
 import { ProductFormModal } from '../components/ProductFormModal';
+import { BrandBadge, getBrandStyle } from '../components/BrandBadge';
 import {
   Table,
   TableBody,
@@ -162,12 +163,22 @@ export const ProductsPage: React.FC = () => {
       {/* Brand Tabs with Radix Tabs */}
       <Tabs value={selectedBrand} onValueChange={setSelectedBrand} className="w-full">
         <TabsList className="w-full sm:w-auto justify-start overflow-x-auto">
-          {POPULAR_BRANDS.map((b) => (
-            <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-slate-400" />
-              <span>{b}</span>
-            </TabsTrigger>
-          ))}
+          {POPULAR_BRANDS.map((b) => {
+            const style = b === 'Tất cả' ? null : getBrandStyle(b);
+            return (
+              <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">
+                {style ? (
+                  <span
+                    className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
+                    style={{ backgroundColor: style.primary }}
+                  />
+                ) : (
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                )}
+                <span>{b}</span>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
 
@@ -257,9 +268,7 @@ export const ProductsPage: React.FC = () => {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex flex-col gap-1 items-start">
-                        <span className="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-200">
-                          {prod.brand || 'GROB'}
-                        </span>
+                        <BrandBadge brand={prod.brand} />
                         <span className="text-xs text-slate-600 truncate max-w-[150px]">
                           {prod.category || 'Khác'}
                         </span>

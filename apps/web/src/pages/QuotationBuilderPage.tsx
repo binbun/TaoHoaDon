@@ -21,6 +21,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
+import { BrandBadge, getBrandStyle } from '../components/BrandBadge';
 import {
   Select,
   SelectContent,
@@ -894,11 +895,20 @@ export const QuotationBuilderPage: React.FC = () => {
           {/* Brand Tabs with Radix Tabs */}
           <Tabs value={pickerBrand} onValueChange={setPickerBrand} className="w-full">
             <TabsList className="w-full sm:w-auto justify-start">
-              {['Tất cả', 'GROB', 'EUPLUS', 'KINGENBLU'].map((b) => (
-                <TabsTrigger key={b} value={b}>
-                  {b}
-                </TabsTrigger>
-              ))}
+              {['Tất cả', 'GROB', 'EUPLUS', 'KINGENBLU'].map((b) => {
+                const style = b === 'Tất cả' ? null : getBrandStyle(b);
+                return (
+                  <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">
+                    {style && (
+                      <span
+                        className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
+                        style={{ backgroundColor: style.primary }}
+                      />
+                    )}
+                    <span>{b}</span>
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
           </Tabs>
 
@@ -942,9 +952,7 @@ export const QuotationBuilderPage: React.FC = () => {
                           Cũ: {p.oldCode}
                         </span>
                       )}
-                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
-                        {p.brand || 'GROB'}
-                      </span>
+                      <BrandBadge brand={p.brand} />
                       <span className="font-bold text-slate-900 group-hover:text-blue-600 text-sm truncate">
                         {p.name}
                       </span>

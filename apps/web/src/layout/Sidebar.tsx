@@ -96,8 +96,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       {/* Brand Header */}
       <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="px-2.5 py-1.5 bg-blue-600 rounded-lg text-white font-black text-sm tracking-wider shadow-md shadow-blue-500/20">
-            EUPLUS
+          <div className="p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl text-white shadow-md shadow-blue-500/20">
+            <FileText className="w-5 h-5" />
           </div>
           <div>
             <h1 className="font-bold text-white text-sm tracking-tight leading-tight">

@@ -322,7 +322,7 @@ async function initPostgresDatabase() {
       });
     }
 
-    // 7. Seed & Sync Catalog Products from GROB official catalog
+    // 7. Seed & Sync Catalog Products from GROB, EUPLUS, KINGENBLU official catalogs
     const { ALL_CATALOG_PRODUCTS } = await import('@taohoadon/shared');
     const catalogCodes = ALL_CATALOG_PRODUCTS.map((p) => p.code);
 
@@ -340,7 +340,7 @@ async function initPostgresDatabase() {
       console.warn('Cảnh báo khi dọn dẹp sản phẩm cũ:', delErr);
     }
 
-    console.log(`🌱 Đang đồng bộ toàn bộ danh mục sản phẩm phụ kiện GROB (${ALL_CATALOG_PRODUCTS.length} sản phẩm)...`);
+    console.log(`🌱 Đang đồng bộ toàn bộ danh mục sản phẩm phụ kiện GROB, EUPLUS, KINGENBLU (${ALL_CATALOG_PRODUCTS.length} sản phẩm)...`);
 
     for (const p of ALL_CATALOG_PRODUCTS) {
       await prisma.product.upsert({
@@ -363,7 +363,7 @@ async function initPostgresDatabase() {
         create: p,
       });
     }
-    console.log(`🎉 Đã đồng bộ thành công ${ALL_CATALOG_PRODUCTS.length} sản phẩm GROB vào Database!`);
+    console.log(`🎉 Đã đồng bộ thành công ${ALL_CATALOG_PRODUCTS.length} sản phẩm (GROB, EUPLUS, KINGENBLU) vào Database!`);
 
     // 8. Đảm bảo tất cả sản phẩm hiện có trong CSDL đều có VAT = 0%
     await prisma.product.updateMany({

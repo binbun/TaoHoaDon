@@ -172,6 +172,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <datalist id="brandSuggestions">
               <option value="GROB" />
               <option value="EUPLUS" />
+              <option value="KINGENBLU" />
               <option value="HAFELE" />
               <option value="GARIS" />
               <option value="BLUM" />

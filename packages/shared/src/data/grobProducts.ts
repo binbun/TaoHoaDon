@@ -1,3 +1,6 @@
+import { EUPLUS_PRODUCTS } from './euplusProducts';
+import { KINGENBLU_PRODUCTS } from './kingenbluProducts';
+
 export interface ProductCatalogItem {
   code: string;
   oldCode?: string | null;
@@ -15,7 +18,7 @@ export interface ProductCatalogItem {
   active: boolean;
 }
 
-export const ALL_CATALOG_PRODUCTS: ProductCatalogItem[] = [
+export const GROB_PRODUCTS: ProductCatalogItem[] = [
   {
     "code": "C1E.70B",
     "oldCode": "GP2-70",
@@ -12561,3 +12564,13 @@ export const ALL_CATALOG_PRODUCTS: ProductCatalogItem[] = [
     "active": true
   }
 ];
+
+export { EUPLUS_PRODUCTS } from './euplusProducts';
+export { KINGENBLU_PRODUCTS } from './kingenbluProducts';
+
+export const ALL_CATALOG_PRODUCTS: ProductCatalogItem[] = [
+  ...GROB_PRODUCTS,
+  ...EUPLUS_PRODUCTS,
+  ...KINGENBLU_PRODUCTS,
+];
+

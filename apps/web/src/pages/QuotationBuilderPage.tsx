@@ -887,14 +887,14 @@ export const QuotationBuilderPage: React.FC = () => {
       <Modal
         isOpen={isProductPickerOpen}
         onClose={() => setIsProductPickerOpen(false)}
-        title="Chọn Sản Phẩm Từ Catalogue (GRÖB / EUPLUS)"
+        title="Chọn Sản Phẩm Từ Catalogue (GRÖB / EUPLUS / KINGENBLU)"
         maxWidth="2xl"
       >
         <div className="space-y-3 sm:space-y-4">
           {/* Brand Tabs with Radix Tabs */}
           <Tabs value={pickerBrand} onValueChange={setPickerBrand} className="w-full">
             <TabsList className="w-full sm:w-auto justify-start">
-              {['Tất cả', 'GROB', 'EUPLUS'].map((b) => (
+              {['Tất cả', 'GROB', 'EUPLUS', 'KINGENBLU'].map((b) => (
                 <TabsTrigger key={b} value={b}>
                   {b}
                 </TabsTrigger>

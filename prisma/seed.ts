@@ -42,7 +42,7 @@ async function main() {
   });
   console.log(`✅ Đã tạo User Super Admin: ${hoangBuiUser.email} (Mật khẩu: Hoangbui1@)`);
 
-  // 2. Xóa sạch toàn bộ sản phẩm cũ và nạp danh mục sản phẩm chuẩn từ Catalogue GROB
+  // 2. Xóa sạch toàn bộ sản phẩm cũ và nạp danh mục sản phẩm chuẩn từ Catalogue GROB, EUPLUS, KINGENBLU
   await prisma.product.deleteMany({});
   console.log('🗑️ Đã xóa sạch toàn bộ sản phẩm cũ trong cơ sở dữ liệu.');
 
@@ -54,7 +54,7 @@ async function main() {
     });
     createdProducts.push(p);
   }
-  console.log(`✅ Đã nạp thành công tổng cộng ${createdProducts.length} sản phẩm GROB chuẩn từ Catalogue.`);
+  console.log(`✅ Đã nạp thành công tổng cộng ${createdProducts.length} sản phẩm chuẩn từ Catalogue (GROB, EUPLUS, KINGENBLU).`);
 
   // 3. Tạo Khách hàng / Đại lý / Dự án mẫu
   const customer1 = await prisma.customer.create({

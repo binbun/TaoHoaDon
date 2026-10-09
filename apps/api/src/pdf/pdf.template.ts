@@ -56,12 +56,16 @@ export function renderQuotationHtml(quotation: Quotation): string {
     .brand-logo-text {
       background: #1B9550;
       color: #ffffff;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 900;
-      padding: 6px 14px;
+      padding: 6px 18px;
       border-radius: 6px;
       letter-spacing: 1px;
       display: inline-block;
+      white-space: nowrap;
+      min-width: 130px;
+      text-align: center;
+      border: 2px solid #14733E;
     }
 
     .company-title {

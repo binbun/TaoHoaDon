@@ -207,9 +207,9 @@ export const QuotationPreviewPage: React.FC = () => {
       <div className="a4-sheet-mobile-container">
         <div className="a4-sheet font-sans text-slate-800 text-[11px] leading-relaxed select-text shadow-xl">
           {/* Header */}
-          <div className="flex justify-between items-center border-b-2 border-slate-800 pb-3 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#1B9550] text-white font-black text-xl px-3 py-1.5 rounded-lg tracking-wider">
+          <div className="flex justify-between items-center border-b-2 border-slate-800 pb-3 mb-4 gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="bg-[#1B9550] text-white font-black text-xl px-5 py-2 rounded-lg tracking-wider whitespace-nowrap shrink-0 border-2 border-[#14733E] print:border-slate-800 shadow-sm flex items-center justify-center min-w-[140px]">
                 BÍCH ĐIỀU
               </div>
               <div>
@@ -221,7 +221,7 @@ export const QuotationPreviewPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="text-right text-[10px] text-slate-600 bg-slate-50 border border-slate-200 p-2 rounded-lg leading-tight">
+            <div className="text-right text-[10px] text-slate-600 bg-slate-50 border border-slate-200 p-2 rounded-lg leading-tight shrink-0">
               <div className="font-bold text-rose-600">NPP BÍCH ĐIỀU</div>
               <div>Hotline: 0917 418 989 - 0945 636 567</div>
               <div>ĐC: Số 147 phố Hát, Thôn Đông Thành, Hát Môn, Hà Nội</div>

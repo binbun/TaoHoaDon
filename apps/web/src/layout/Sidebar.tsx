@@ -92,9 +92,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-300">
+    <div className="flex flex-col h-full bg-[#0B1511] text-slate-300">
       {/* Brand Header */}
-      <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between">
+      <div className="p-4 sm:p-5 border-b border-[#182C24] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-br from-[#14733E] to-[#1B9550] rounded-xl text-white shadow-md shadow-[#1B9550]/20">
             <FileText className="w-5 h-5" />
@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13221C] transition-colors"
             aria-label="Đóng menu"
           >
             <X className="w-5 h-5" />
@@ -121,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
-        <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-emerald-500/80">
           Danh mục quản lý
         </div>
 
@@ -137,8 +137,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                   clsx(
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                     isActive
-                      ? 'bg-[#1B9550] text-white shadow-sm shadow-[#1B9550]/20 font-semibold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      ? 'bg-[#1B9550] text-white shadow-md shadow-[#1B9550]/25 font-semibold'
+                      : 'text-slate-400 hover:text-emerald-100 hover:bg-[#13221C]/80'
                   )
                 }
               >
@@ -157,8 +157,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                         clsx(
                           'flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
                           isActive
-                            ? 'text-emerald-400 font-semibold bg-slate-800/80'
-                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                            ? 'text-emerald-300 font-semibold bg-[#13221C] border border-[#182C24]/80'
+                            : 'text-slate-400 hover:text-emerald-100 hover:bg-[#13221C]/50'
                         )
                       }
                     >
@@ -174,8 +174,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       </nav>
 
       {/* User Footer */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/40 pb-safe">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/40">
+      <div className="p-3 border-t border-[#182C24] bg-[#070E0B] pb-safe">
+        <div className="flex items-center justify-between p-2 rounded-lg bg-[#0F1B16] border border-[#182C24]/70">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className="w-8 h-8 rounded-full bg-[#1B9550]/20 text-emerald-400 flex items-center justify-center font-bold text-xs border border-[#1B9550]/30 flex-shrink-0">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'E'}
@@ -193,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setIsChangePasswordOpen(true)}
-                  className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-colors"
                 >
                   <KeyRound className="w-4 h-4" />
                 </button>
@@ -224,7 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
   return (
     <>
       {/* Desktop Fixed Left Sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col h-screen fixed left-0 top-0 z-30 shadow-xl border-r border-slate-800">
+      <aside className="hidden lg:flex w-64 flex-col h-screen fixed left-0 top-0 z-30 shadow-xl border-r border-[#182C24]">
         {sidebarContent}
       </aside>
 
@@ -233,12 +233,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity"
             onClick={onClose}
           />
 
           {/* Drawer Sliding Panel */}
-          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 shadow-2xl border-r border-slate-800">
+          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 shadow-2xl border-r border-[#182C24]">
             {sidebarContent}
           </aside>
         </div>

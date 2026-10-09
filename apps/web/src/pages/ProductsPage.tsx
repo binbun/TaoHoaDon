@@ -143,7 +143,7 @@ export const ProductsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-lg sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-            <Layers className="w-6 h-6 text-blue-600" />
+            <Layers className="w-6 h-6 text-emerald-600" />
             Danh Mục Phụ Kiện & Thiết Bị ({totalItems} sản phẩm)
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -261,7 +261,7 @@ export const ProductsPage: React.FC = () => {
                 {paginatedProducts.map((prod) => (
                   <TableRow key={prod.id}>
                     <TableCell className="font-mono whitespace-nowrap">
-                      <div className="font-bold text-blue-700 text-xs">{prod.code}</div>
+                      <div className="font-bold text-slate-900 text-xs">{prod.code}</div>
                       {prod.oldCode && (
                         <div className="text-[11px] text-slate-400 font-normal">Cũ: {prod.oldCode}</div>
                       )}
@@ -303,7 +303,7 @@ export const ProductsPage: React.FC = () => {
                           <TooltipTrigger asChild>
                             <button
                               onClick={() => openEditModal(prod)}
-                              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
+                              className="p-2 text-slate-500 hover:text-[#1B9550] hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
@@ -319,7 +319,7 @@ export const ProductsPage: React.FC = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => openEditModal(prod)}>
-                              <Edit2 className="w-4 h-4 text-blue-500 mr-2" />
+                              <Edit2 className="w-4 h-4 text-[#1B9550] mr-2" />
                               <span>Sửa thông tin</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

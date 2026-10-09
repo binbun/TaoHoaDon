@@ -194,8 +194,8 @@ export const UsersPage: React.FC = () => {
         );
       case 'ADMIN':
         return (
-          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
-            <Shield className="w-3.5 h-3.5 text-blue-600" />
+          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
+            <Shield className="w-3.5 h-3.5 text-emerald-600" />
             <span>Quản trị viên</span>
           </span>
         );
@@ -215,7 +215,7 @@ export const UsersPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-lg sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-            <ShieldCheck className="w-6 h-6 text-blue-600" />
+            <ShieldCheck className="w-6 h-6 text-emerald-600" />
             Quản Lý Tài Khoản & Phân Quyền ({users.length})
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -274,14 +274,14 @@ export const UsersPage: React.FC = () => {
                   <TableRow key={u.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center border border-blue-200 flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-800 font-bold text-xs flex items-center justify-center border border-emerald-200 flex-shrink-0">
                           {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
                         </div>
                         <div>
                           <div className="font-bold text-slate-900 flex items-center gap-1.5">
                             <span>{u.name}</span>
                             {isSelf && (
-                              <span className="text-[10px] bg-blue-100 text-blue-800 font-semibold px-1.5 py-0.5 rounded">
+                              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.5 rounded">
                                 Bạn
                               </span>
                             )}
@@ -323,7 +323,7 @@ export const UsersPage: React.FC = () => {
                             <TooltipTrigger asChild>
                               <button
                                 onClick={() => handleOpenEditModal(u)}
-                                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
+                                className="p-2 text-slate-500 hover:text-[#1B9550] hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
@@ -341,7 +341,7 @@ export const UsersPage: React.FC = () => {
                           <DropdownMenuContent align="end">
                             {canEdit && (
                               <DropdownMenuItem onClick={() => handleOpenEditModal(u)}>
-                                <Edit2 className="w-4 h-4 text-blue-500 mr-2" />
+                                <Edit2 className="w-4 h-4 text-[#1B9550] mr-2" />
                                 <span>Sửa thông tin</span>
                               </DropdownMenuItem>
                             )}
@@ -427,8 +427,8 @@ export const UsersPage: React.FC = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">Nhân viên (USER) - Tạo & quản lý báo giá, sản phẩm</SelectItem>
-                  <SelectItem value="ADMIN">Quản trị viên (ADMIN) - Quản lý nhân viên & toàn bộ báo giá</SelectItem>
+                  <SelectItem value="USER">Nhân viên (USER) - Tạo & quản lý đơn hàng, sản phẩm</SelectItem>
+                  <SelectItem value="ADMIN">Quản trị viên (ADMIN) - Quản lý nhân viên & toàn bộ đơn hàng</SelectItem>
                 </SelectContent>
               </Select>
             ) : (

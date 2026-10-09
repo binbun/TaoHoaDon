@@ -184,7 +184,7 @@ export const QuotationPreviewPage: React.FC = () => {
               <Button
                 variant="primary"
                 size="sm"
-                className="text-xs px-3 py-1.5 shadow-xs shadow-blue-500/20 flex-shrink-0"
+                className="text-xs px-3 py-1.5 shadow-xs shadow-[#1B9550]/20 flex-shrink-0"
                 leftIcon={isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                 onClick={handleDownloadPdf}
                 disabled={isDownloading}
@@ -198,8 +198,8 @@ export const QuotationPreviewPage: React.FC = () => {
       </div>
 
       {/* Mobile Tip for A4 Sheet Viewing */}
-      <div className="sm:hidden flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 text-xs px-3 py-2 rounded-xl no-print">
-        <Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
+      <div className="sm:hidden flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-2 rounded-xl no-print">
+        <Info className="w-4 h-4 text-[#1B9550] flex-shrink-0" />
         <span>Vuốt ngang để xem chi tiết toàn bộ bản in A4 hoặc tải file PDF về iPhone.</span>
       </div>
 
@@ -246,7 +246,7 @@ export const QuotationPreviewPage: React.FC = () => {
 
           {/* Customer Details Box */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4">
-            <div className="text-[10.5px] font-bold uppercase tracking-wider text-blue-700 border-b border-slate-200 pb-1 mb-2">
+            <div className="text-[10.5px] font-bold uppercase tracking-wider text-slate-800 border-b border-slate-200 pb-1 mb-2">
               Thông tin khách hàng
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
@@ -338,9 +338,9 @@ export const QuotationPreviewPage: React.FC = () => {
                   <td className="py-1.5 px-2.5 text-right font-bold text-amber-700">+{formatCurrency(quotation.previousDebt)}</td>
                 </tr>
               ) : null}
-              <tr className="border-t border-slate-300 text-blue-900 text-[13px] font-black bg-blue-50/50">
+              <tr className="border-t border-slate-300 text-slate-900 text-[13px] font-black bg-emerald-50/40">
                 <td colSpan={5} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG THANH TOÁN:</td>
-                <td className="py-2.5 px-2.5 text-right text-blue-700 text-[14px]">{formatCurrency(quotation.grandTotal)}</td>
+                <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[14px]">{formatCurrency(quotation.grandTotal)}</td>
               </tr>
             </tfoot>
           </table>

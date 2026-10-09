@@ -8,7 +8,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Đơn hàng ${quotation.quotationNumber} - EUPLUS</title>
+  <title>Đơn hàng ${quotation.quotationNumber} - Bích Điều</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -42,7 +42,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #1e3a8a;
+      border-bottom: 2px solid #1B9550;
       padding-bottom: 12px;
       margin-bottom: 14px;
     }
@@ -54,7 +54,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .brand-logo-text {
-      background: #1e40af;
+      background: #1B9550;
       color: #ffffff;
       font-size: 22px;
       font-weight: 900;
@@ -105,7 +105,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     .doc-title {
       font-size: 17px;
       font-weight: 800;
-      color: #1e3a8a;
+      color: #14733E;
       letter-spacing: -0.2px;
       text-transform: uppercase;
     }
@@ -149,7 +149,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #1e40af;
+      color: #1B9550;
       margin-bottom: 6px;
       border-bottom: 1px solid #e2e8f0;
       padding-bottom: 3px;
@@ -300,7 +300,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .summary-row.grand-total {
-      border-top: 2px solid #1e3a8a;
+      border-top: 2px solid #1B9550;
       margin-top: 6px;
       padding-top: 6px;
       font-size: 12.5px;
@@ -309,7 +309,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .grand-total .amount {
-      color: #1e40af;
+      color: #1B9550;
       font-size: 13.5px;
     }
 
@@ -346,7 +346,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     .sig-name {
       font-size: 11px;
       font-weight: 700;
-      color: #1e40af;
+      color: #14733E;
     }
 
     /* FOOTER */
@@ -365,10 +365,10 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <!-- Header -->
     <div class="header">
       <div class="brand-box">
-        <div class="brand-logo-text">EUPLUS</div>
+        <div class="brand-logo-text">BÍCH ĐIỀU</div>
         <div>
-          <div class="company-title">CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC</div>
-          <div class="company-sub">Số nhà 1, ngách 298/77/30/21 Đ.Ngọc Hồi, T. Yên Ngưu, X.Đại Thanh, TP Hà Nội</div>
+          <div class="company-title">NHÀ PHÂN PHỐI PHỤ KIỆN TỦ BẾP & TỦ BẾP THÔNG MINH</div>
+          <div class="company-sub">Phân phối chính hãng: GRÖB • EUPLUS • KINGENBLU</div>
         </div>
       </div>
       <div class="distributor-box">
@@ -381,7 +381,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <!-- Title & Meta -->
     <div class="title-section">
       <div>
-        <div class="doc-title">${quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP EUPLUS'}</div>
+        <div class="doc-title">${quotation.title || 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP CAO CẤP'}</div>
         <div class="doc-subtitle">Đơn hàng phụ kiện tủ bếp thông minh Inox SUS304 chính hãng</div>
       </div>
       <div class="doc-meta-badge">
@@ -397,15 +397,17 @@ export function renderQuotationHtml(quotation: Quotation): string {
         <div class="info-row">
           <span>Khách hàng:</span> <strong>${customer?.companyName || 'Khách hàng đại lý'}</strong>
         </div>
+        ${customer?.contactName ? `
         <div class="info-row">
-          <span>Người đại diện:</span> <strong>${customer?.contactName || '---'}</strong>
-        </div>
+          <span>Người đại diện:</span> <strong>${customer.contactName}</strong>
+        </div>` : ''}
         <div class="info-row">
           <span>Điện thoại:</span> ${customer?.phone || '---'}
         </div>
+        ${customer?.email ? `
         <div class="info-row">
-          <span>Email:</span> ${customer?.email || '---'}
-        </div>
+          <span>Email:</span> ${customer.email}
+        </div>` : ''}
         <div class="info-row">
           <span>Địa chỉ công trình:</span> ${customer?.address || '---'}
         </div>
@@ -451,7 +453,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <div class="bottom-section">
       <div class="notes-box">
         <div class="notes-title">Chính sách bảo hành & Cam kết</div>
-        <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ 02 năm đổi mới.\n- Cảm ơn Quý đối tác đã tin tưởng lựa chọn thiết bị phụ kiện tủ bếp EUPLUS!`}</div>
+        <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng GRÖB, EUPLUS, KINGENBLU.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ 02 năm đổi mới.\n- Cảm ơn Quý đối tác đã tin tưởng lựa chọn thiết bị phụ kiện tủ bếp của chúng tôi!`}</div>
       </div>
       <div class="summary-box">
         <div class="summary-row">
@@ -493,16 +495,16 @@ export function renderQuotationHtml(quotation: Quotation): string {
         <div class="sig-space"></div>
       </div>
       <div class="signature-col">
-        <div class="sig-title">NHÀ PHÂN PHỐI EUPLUS - BÍCH ĐIỀU</div>
+        <div class="sig-title">NHÀ PHÂN PHỐI BÍCH ĐIỀU</div>
         <div class="sig-sub">(Ký, ghi rõ họ tên & đóng dấu)</div>
         <div class="sig-space"></div>
-        <div class="sig-name">Đại Diện Kinh Doanh & Kỹ Thuật</div>
+        <div class="sig-name">Đại Diện NPP: Trần Thị Bích Điều</div>
       </div>
     </div>
 
     <!-- Footer -->
     <div class="footer">
-      Đơn hàng số ${quotation.quotationNumber} • EUPLUS Smart Kitchen Hardware • Trang 1/1
+      Đơn hàng số ${quotation.quotationNumber} • Hệ thống Phụ kiện Tủ bếp Thông minh (GRÖB • EUPLUS • KINGENBLU) • Trang 1/1
     </div>
   </div>
 </body>

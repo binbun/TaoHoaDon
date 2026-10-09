@@ -78,7 +78,7 @@ export const QuotationSchema = z.object({
   customerId: z.string().min(1, 'Vui lòng chọn hoặc tạo khách hàng'),
   quotationDate: z.string().min(1, 'Ngày tạo đơn không được để trống'),
   validUntil: z.string().optional(),
-  title: z.string().min(1, 'Tiêu đề đơn hàng không được để trống').default('ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS'),
+  title: z.string().min(1, 'Tiêu đề đơn hàng không được để trống').default('ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP'),
   note: z.string().max(1000).optional().nullable(),
   status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),

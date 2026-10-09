@@ -41,7 +41,6 @@ import {
   Trash2,
   Building,
   Phone,
-  Mail,
   MoreVertical,
   MapPin,
 } from 'lucide-react';
@@ -56,8 +55,6 @@ export const CustomersPage: React.FC = () => {
 
   // Form State
   const [companyName, setCompanyName] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [taxCode, setTaxCode] = useState('');
@@ -71,8 +68,6 @@ export const CustomersPage: React.FC = () => {
   const openCreateModal = () => {
     setEditingCustomer(null);
     setCompanyName('');
-    setContactName('');
-    setEmail('');
     setPhone('');
     setAddress('');
     setTaxCode('');
@@ -82,8 +77,6 @@ export const CustomersPage: React.FC = () => {
   const openEditModal = (c: Customer) => {
     setEditingCustomer(c);
     setCompanyName(c.companyName);
-    setContactName(c.contactName || '');
-    setEmail(c.email || '');
     setPhone(c.phone || '');
     setAddress(c.address || '');
     setTaxCode(c.taxCode || '');
@@ -99,8 +92,6 @@ export const CustomersPage: React.FC = () => {
 
     const payload = {
       companyName: companyName.trim(),
-      contactName: contactName.trim() || null,
-      email: email.trim() || null,
       phone: phone.trim() || null,
       address: address.trim() || null,
       taxCode: taxCode.trim() || null,
@@ -132,7 +123,7 @@ export const CustomersPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-lg sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-            <Users className="w-6 h-6 text-blue-600" />
+            <Users className="w-6 h-6 text-emerald-600" />
             Danh Bạ Khách Hàng & Đại Lý ({customers.length})
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -153,7 +144,7 @@ export const CustomersPage: React.FC = () => {
       <Card className="p-3 sm:p-4">
         <div className="w-full sm:w-96">
           <Input
-            placeholder="Tìm theo tên công ty, số điện thoại, email..."
+            placeholder="Tìm theo tên công ty, số điện thoại, mã số thuế..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftElement={<Search className="w-4 h-4 text-slate-400" />}
@@ -174,8 +165,7 @@ export const CustomersPage: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Khách hàng / Công ty</TableHead>
-                <TableHead>Người đại diện</TableHead>
-                <TableHead>Liên hệ</TableHead>
+                <TableHead>Số điện thoại</TableHead>
                 <TableHead>Địa chỉ</TableHead>
                 <TableHead className="text-right">Thao tác</TableHead>
               </TableRow>
@@ -185,7 +175,7 @@ export const CustomersPage: React.FC = () => {
                 <TableRow key={c.id}>
                   <TableCell>
                     <div className="font-semibold text-slate-900 flex items-center gap-2">
-                      <Building className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <Building className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                       <span>{c.companyName}</span>
                     </div>
                     {c.taxCode && (
@@ -194,23 +184,15 @@ export const CustomersPage: React.FC = () => {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium text-slate-800">
-                    {c.contactName || '---'}
-                  </TableCell>
-                  <TableCell className="text-xs space-y-0.5">
-                    {c.phone && (
+                  <TableCell className="text-xs">
+                    {c.phone ? (
                       <div className="flex items-center gap-1.5 text-slate-700 font-medium">
                         <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                         <span>{c.phone}</span>
                       </div>
+                    ) : (
+                      <span className="text-slate-400">---</span>
                     )}
-                    {c.email && (
-                      <div className="flex items-center gap-1.5 text-slate-500">
-                        <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="truncate max-w-[150px]">{c.email}</span>
-                      </div>
-                    )}
-                    {!c.phone && !c.email && <span className="text-slate-400">---</span>}
                   </TableCell>
                   <TableCell className="text-xs text-slate-600 max-w-xs truncate">
                     {c.address ? (
@@ -228,7 +210,7 @@ export const CustomersPage: React.FC = () => {
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => openEditModal(c)}
-                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
+                            className="p-2 text-slate-500 hover:text-[#1B9550] hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -244,7 +226,7 @@ export const CustomersPage: React.FC = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEditModal(c)}>
-                            <Edit2 className="w-4 h-4 text-blue-500 mr-2" />
+                            <Edit2 className="w-4 h-4 text-[#1B9550] mr-2" />
                             <span>Sửa thông tin</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -292,32 +274,16 @@ export const CustomersPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
-              label="Người liên hệ đại diện"
-              placeholder="VD: Anh Tuấn Anh"
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-            />
-            <Input
-              label="Mã số thuế"
-              placeholder="VD: 0108992345"
-              value={taxCode}
-              onChange={(e) => setTaxCode(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <Input
               label="Số điện thoại"
               placeholder="VD: 0988 567 890"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
             <Input
-              label="Email"
-              type="email"
-              placeholder="VD: tuananh@homedecor.vn"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              label="Mã số thuế"
+              placeholder="VD: 0108992345"
+              value={taxCode}
+              onChange={(e) => setTaxCode(e.target.value)}
             />
           </div>
 

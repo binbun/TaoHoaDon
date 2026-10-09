@@ -166,7 +166,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               value={formData.brand}
               onChange={(e) => handleChange('brand', e.target.value)}
               placeholder="GROB, EUPLUS, HAFELE..."
-              className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B9550]"
               required
             />
             <datalist id="brandSuggestions">
@@ -189,7 +189,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               value={formData.category}
               onChange={(e) => handleChange('category', e.target.value)}
               placeholder="Giá bát đĩa, Tủ đồ khô..."
-              className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B9550]"
               required
             />
             <datalist id="categorySuggestions">
@@ -244,7 +244,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             placeholder="Inox 304 bảo hành gỉ vĩnh viễn, ray giảm chấn, bảo hành 24 tháng..."
             value={formData.shortDescription}
             onChange={(e) => handleChange('shortDescription', e.target.value)}
-            className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B9550]"
           />
         </div>
 
@@ -267,7 +267,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             onCheckedChange={(checked) => handleChange('active', checked)}
           />
           <label htmlFor="activeSwitch" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
-            Kích hoạt sử dụng sản phẩm này trong tạo đơn & báo giá
+            Kích hoạt sử dụng sản phẩm này trong tạo đơn hàng
           </label>
         </div>
 

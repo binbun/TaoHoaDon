@@ -200,7 +200,7 @@ export const QuotationsListPage: React.FC = () => {
                   <TableCell>
                     <span
                       onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                      className="font-bold text-blue-600 hover:underline cursor-pointer block text-sm"
+                      className="font-bold text-[#1B9550] hover:underline cursor-pointer block text-sm"
                     >
                       {q.quotationNumber}
                     </span>
@@ -241,7 +241,7 @@ export const QuotationsListPage: React.FC = () => {
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => navigate(`/quotations/${q.id}/preview`)}
-                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors active:scale-95"
+                            className="p-2 text-slate-500 hover:text-[#1B9550] hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
                           >
                             <Eye className="w-4 h-4" />
                           </button>

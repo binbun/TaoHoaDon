@@ -52,7 +52,7 @@ export const LoginPage: React.FC = () => {
 
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 sm:p-10 border border-slate-100">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 mb-4">
+          <div className="w-14 h-14 bg-[#1B9550] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#1B9550]/30 mb-4">
             <Building2 className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">QuotationPro</h1>
@@ -84,7 +84,7 @@ export const LoginPage: React.FC = () => {
             <Button
               type="submit"
               variant="primary"
-              className="w-full py-2.5 text-sm font-semibold shadow-md shadow-blue-500/20"
+              className="w-full py-2.5 text-sm font-semibold shadow-md shadow-[#1B9550]/20"
               isLoading={isLoading}
             >
               Đăng nhập hệ thống

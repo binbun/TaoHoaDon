@@ -148,7 +148,7 @@ export const AuditLogsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-            <Activity className="w-6 h-6 text-blue-600" />
+            <Activity className="w-6 h-6 text-emerald-600" />
             Nhật Ký Hoạt Động & Bảo Mật
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -316,7 +316,7 @@ export const AuditLogsPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-[10px] flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-[10px] flex-shrink-0">
                         {log.userName ? log.userName.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
                       </div>
                       <div className="truncate max-w-[180px]">

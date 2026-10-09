@@ -140,7 +140,7 @@ export async function deleteCustomer(req: Request, res: Response, next: NextFunc
     if (count > 0) {
       return res.status(400).json({
         success: false,
-        message: `Không thể xóa khách hàng này vì đang có ${count} báo giá liên kết`,
+        message: `Không thể xóa khách hàng này vì đang có ${count} đơn hàng liên kết`,
       });
     }
 

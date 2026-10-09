@@ -79,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       case 'SUPER_ADMIN':
         return <span className="text-[9px] font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded">SUPER ADMIN</span>;
       case 'ADMIN':
-        return <span className="text-[9px] font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-1.5 py-0.5 rounded">QUẢN TRỊ VIÊN</span>;
+        return <span className="text-[9px] font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 rounded">QUẢN TRỊ VIÊN</span>;
       default:
         return <span className="text-[9px] font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 rounded">NHÂN VIÊN</span>;
     }
@@ -137,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                   clsx(
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                     isActive
-                      ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                      ? 'bg-[#1B9550] text-white shadow-sm shadow-[#1B9550]/20 font-semibold'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   )
                 }
@@ -157,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                         clsx(
                           'flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
                           isActive
-                            ? 'text-blue-400 font-semibold bg-slate-800/80'
+                            ? 'text-emerald-400 font-semibold bg-slate-800/80'
                             : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                         )
                       }
@@ -177,7 +177,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       <div className="p-3 border-t border-slate-800 bg-slate-950/40 pb-safe">
         <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/40">
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/30 flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#1B9550]/20 text-emerald-400 flex items-center justify-center font-bold text-xs border border-[#1B9550]/30 flex-shrink-0">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'E'}
             </div>
             <div className="truncate">

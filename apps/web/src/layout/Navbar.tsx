@@ -14,15 +14,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileSidebar }) => {
   const getPageTitle = () => {
     const path = location.pathname;
     if (path === '/') return 'Tổng Quan';
-    if (path === '/quotations') return 'Quản Lý Báo Giá';
-    if (path === '/quotations/new') return 'Tạo Báo Giá';
-    if (path.includes('/preview')) return 'Xem Trước Báo Giá';
-    if (path.includes('/edit')) return 'Chỉnh Sửa Báo Giá';
+    if (path === '/quotations') return 'Quản Lý Đơn Hàng';
+    if (path === '/quotations/new') return 'Tạo Đơn Hàng';
+    if (path.includes('/preview')) return 'Xem Trước Đơn Hàng';
+    if (path.includes('/edit')) return 'Chỉnh Sửa Đơn Hàng';
     if (path === '/products') return 'Phụ Kiện & Tủ Bếp';
     if (path === '/customers') return 'Khách Hàng & Đại Lý';
     if (path === '/users') return 'Quản Lý Tài Khoản';
     if (path === '/audit-logs') return 'Nhật Ký Hoạt Động & Bảo Mật';
-    return 'Hệ Thống Báo Giá';
+    return 'Hệ Thống Đơn Hàng';
   };
 
   return (
@@ -52,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileSidebar }) => {
             leftIcon={<PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             onClick={() => navigate('/quotations/new')}
           >
-            <span className="hidden sm:inline">Tạo báo giá</span>
+            <span className="hidden sm:inline">Tạo đơn hàng</span>
             <span className="sm:hidden">Tạo mới</span>
           </Button>
         )}

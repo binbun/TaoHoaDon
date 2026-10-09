@@ -106,7 +106,7 @@ const AlertDialogAction = React.forwardRef<
       'inline-flex h-9 sm:h-10 items-center justify-center rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
       variant === 'destructive'
         ? 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-500 shadow-sm shadow-rose-600/20'
-        : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 shadow-sm shadow-blue-600/20',
+        : 'bg-[#1B9550] hover:bg-[#14733E] focus:ring-[#1B9550] shadow-sm shadow-[#1B9550]/20',
       className
     )}
     {...props}

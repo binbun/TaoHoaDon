@@ -397,7 +397,7 @@ export const QuotationBuilderPage: React.FC = () => {
           <Card
             title={
               <div className="flex items-center gap-2 text-slate-900">
-                <Building className="w-5 h-5 text-blue-600" />
+                <Building className="w-5 h-5 text-emerald-600" />
                 <span className="font-bold text-base">1. Thông Tin Khách Hàng / Đối Tác</span>
               </div>
             }
@@ -506,7 +506,7 @@ export const QuotationBuilderPage: React.FC = () => {
                 <div className="sm:col-span-2">
                   <Input
                     label="Tiêu đề đơn hàng"
-                    placeholder="VD: ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP EUPLUS"
+                    placeholder="VD: ĐƠN HÀNG PHỤ KIỆN TỦ BẾP & TỦ BẾP CAO CẤP"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -661,7 +661,7 @@ export const QuotationBuilderPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDuplicateItem(index)}
-                                className="p-1.5 text-slate-400 hover:text-blue-600 active:scale-95 rounded-md hover:bg-blue-50 transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-[#1B9550] active:scale-95 rounded-md hover:bg-emerald-50 transition-colors"
                               >
                                 <Copy className="w-4 h-4" />
                               </button>
@@ -790,14 +790,14 @@ export const QuotationBuilderPage: React.FC = () => {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Nhập các điều khoản về bảo hành Inox 304, vận chuyển, lắp đặt và thanh toán..."
-              className="w-full text-sm rounded-lg border border-slate-300 p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-sm rounded-lg border border-slate-300 p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1B9550]"
             />
           </Card>
         </div>
 
         {/* Right 4 Columns: Summary Panel (Desktop sticky, Mobile inline) */}
         <div className="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
-          <Card className="border-t-4 border-t-blue-600 shadow-md">
+          <Card className="border-t-4 border-t-[#1B9550] shadow-md">
             <h3 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center justify-between">
               <span>Tổng Kết Đơn Hàng</span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">
@@ -836,11 +836,11 @@ export const QuotationBuilderPage: React.FC = () => {
               )}
 
               <div className="pt-4">
-                <div className="bg-blue-50/80 p-4 rounded-xl border border-blue-100 flex flex-col gap-1">
-                  <span className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+                <div className="bg-emerald-50/80 p-4 rounded-xl border border-emerald-100 flex flex-col gap-1">
+                  <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
                     TỔNG CỘNG THANH TOÁN
                   </span>
-                  <span className="text-2xl font-black text-blue-700">
+                  <span className="text-2xl font-black text-[#1B9550]">
                     {formatCurrency(summary.grandTotal)}
                   </span>
                 </div>
@@ -851,7 +851,7 @@ export const QuotationBuilderPage: React.FC = () => {
               <Button
                 type="button"
                 variant="primary"
-                className="w-full py-2.5 font-bold shadow-md shadow-blue-500/20 justify-center"
+                className="w-full py-2.5 font-bold shadow-md shadow-[#1B9550]/20 justify-center"
                 leftIcon={<Eye className="w-4 h-4" />}
                 onClick={() => handleSave(true)}
                 isLoading={isSaving}
@@ -940,11 +940,11 @@ export const QuotationBuilderPage: React.FC = () => {
                 <div
                   key={p.id}
                   onClick={() => handleAddProductFromCatalog(p)}
-                  className="p-3 sm:p-3.5 border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group active:scale-[0.99]"
+                  className="p-3 sm:p-3.5 border border-slate-200 hover:border-[#1B9550] hover:bg-emerald-50/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group active:scale-[0.99]"
                 >
                   <div className="space-y-1 min-w-0 pr-2">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded flex-shrink-0">
+                      <span className="font-mono text-[11px] font-bold text-slate-800 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded flex-shrink-0">
                         {p.code}
                       </span>
                       {p.oldCode && (
@@ -953,7 +953,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         </span>
                       )}
                       <BrandBadge brand={p.brand} />
-                      <span className="font-bold text-slate-900 group-hover:text-blue-600 text-sm truncate">
+                      <span className="font-bold text-slate-900 group-hover:text-[#1B9550] text-sm truncate">
                         {p.name}
                       </span>
                     </div>

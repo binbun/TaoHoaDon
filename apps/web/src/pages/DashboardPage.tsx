@@ -36,7 +36,7 @@ export const DashboardPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 text-emerald-50 text-xs font-semibold mb-2 backdrop-blur-sm border border-white/20">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Hệ thống Báo giá & Đơn hàng Phụ kiện Tủ bếp (GROB • EUPLUS • KINGENBLU)</span>
+            <span>Hệ thống Quản lý Đơn hàng Phụ kiện Tủ bếp (GROB • EUPLUS • KINGENBLU)</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Xin chào, NPP Bích Điều! 👋</h1>
           <p className="text-emerald-50 text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
@@ -56,7 +56,7 @@ export const DashboardPage: React.FC = () => {
 
       {/* 4 KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <Card className="border-l-4 border-l-blue-500 p-4 sm:p-6">
+        <Card className="border-l-4 border-l-[#1B9550] p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Hàng</p>
@@ -68,7 +68,7 @@ export const DashboardPage: React.FC = () => {
                 </h3>
               )}
             </div>
-            <div className="p-2.5 sm:p-3 bg-blue-50 text-blue-600 rounded-xl">
+            <div className="p-2.5 sm:p-3 bg-emerald-50 text-[#1B9550] rounded-xl">
               <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
@@ -166,7 +166,7 @@ export const DashboardPage: React.FC = () => {
             <TableBody>
               {stats.recentQuotations.map((q) => (
                 <TableRow key={q.id}>
-                  <TableCell className="font-bold text-blue-600">
+                  <TableCell className="font-bold text-[#1B9550]">
                     <span
                       onClick={() => navigate(`/quotations/${q.id}/preview`)}
                       className="cursor-pointer hover:underline"

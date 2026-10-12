@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
 import { QuotationSchema, QuotationItemInput, CalculatedQuotationItem } from '@taohoadon/shared';
 import { generateQuotationNumber, calculateQuotationTotals } from './quotations.service';
-import { generateQuotationPdf } from '../pdf/pdf.service';
+import { generateQuotationPdf, generateDeliverySlipPdf } from '../pdf/pdf.service';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { createAuditLog } from '../audit/audit.service';
 
@@ -527,9 +527,17 @@ export async function downloadQuotationPdf(req: AuthenticatedRequest, res: Respo
       });
     }
 
-    const pdfBuffer = await generateQuotationPdf(quotation as any);
+    const type = req.query.type as string;
+    const isDelivery = type === 'delivery';
 
-    const safeFilename = `Don_Hang_${quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+    const pdfBuffer = isDelivery
+      ? await generateDeliverySlipPdf(quotation as any)
+      : await generateQuotationPdf(quotation as any);
+
+    const safeNumber = quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeFilename = isDelivery
+      ? `Phieu_Giao_Hang_${safeNumber}.pdf`
+      : `Don_Hang_${safeNumber}.pdf`;
 
     if (currentUser) {
       await createAuditLog({

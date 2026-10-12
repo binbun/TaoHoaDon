@@ -609,3 +609,376 @@ export function renderQuotationHtml(quotation: Quotation): string {
 </body>
 </html>`;
 }
+
+/**
+ * Renders the Delivery Note / Delivery Check Slip HTML template (without prices/totals).
+ * Matches the paper invoice layout provided:
+ * HÓA ĐƠN BÁN HÀNG / Số / Ngày... tháng... năm... / Stt - Mã hàng - Tên sản phẩm - ĐVT - Số lượng / Khách hàng - Người bán hàng.
+ */
+export function renderDeliverySlipHtml(quotation: Quotation): string {
+  const customer = quotation.customer;
+  const items = quotation.items || [];
+
+  const dateObj = new Date(quotation.quotationDate);
+  const day = !isNaN(dateObj.getTime()) ? String(dateObj.getDate()).padStart(2, '0') : '.....';
+  const month = !isNaN(dateObj.getTime()) ? String(dateObj.getMonth() + 1).padStart(2, '0') : '.....';
+  const year = !isNaN(dateObj.getTime()) ? String(dateObj.getFullYear()) : '2026';
+
+  // Ensure table looks complete with minimum 8 rows like paper invoice
+  const minRows = 8;
+  const blankRowsCount = Math.max(0, minRows - items.length);
+
+  return `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Phiếu giao hàng ${quotation.quotationNumber} - Bích Điều</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 12mm 15mm 15mm 15mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #0f172a;
+      background: #ffffff;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+    }
+
+    /* TOP DISTRIBUTOR INFO */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1B9550;
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+    }
+
+    .distributor-name {
+      font-size: 15px;
+      font-weight: 900;
+      color: #14733E;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .distributor-sub {
+      font-size: 9px;
+      color: #475569;
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .distributor-contact {
+      text-align: right;
+      font-size: 9.5px;
+      color: #334155;
+      line-height: 1.35;
+    }
+
+    .distributor-contact strong {
+      color: #b91c1c;
+    }
+
+    /* TITLE SECTION */
+    .title-section {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .main-title {
+      font-size: 20px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+
+    .order-number {
+      font-size: 12px;
+      color: #334155;
+      margin-bottom: 2px;
+    }
+
+    .order-number strong {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .order-date {
+      font-size: 11.5px;
+      font-style: italic;
+      color: #475569;
+    }
+
+    /* RECIPIENT DETAILS */
+    .delivery-info-card {
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      background: #f8fafc;
+      font-size: 10.5px;
+    }
+
+    .delivery-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      column-gap: 16px;
+      row-gap: 3px;
+    }
+
+    .delivery-item span.label {
+      color: #64748b;
+      display: inline-block;
+      min-width: 85px;
+    }
+
+    .delivery-item strong {
+      color: #0f172a;
+    }
+
+    /* TABLE */
+    table.delivery-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+    }
+
+    table.delivery-table th,
+    table.delivery-table td {
+      border: 1px solid #334155;
+      padding: 7px 8px;
+      font-size: 11px;
+      vertical-align: middle;
+    }
+
+    table.delivery-table th {
+      background-color: #f1f5f9;
+      font-weight: 800;
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 10.5px;
+      letter-spacing: 0.3px;
+      color: #0f172a;
+      padding: 8px 6px;
+    }
+
+    .col-stt {
+      width: 42px;
+      text-align: center;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .col-code {
+      width: 130px;
+      text-align: center;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 10.5px;
+      color: #0f172a;
+    }
+
+    .col-name {
+      text-align: left;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .col-unit {
+      width: 60px;
+      text-align: center;
+      color: #475569;
+    }
+
+    .col-qty {
+      width: 70px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 11.5px;
+      color: #0f172a;
+    }
+
+    .blank-cell {
+      height: 28px;
+    }
+
+    /* SUMMARY TOTAL PIECES */
+    .delivery-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 16px;
+      padding: 6px 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+
+    /* SIGNATURES */
+    .signature-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      text-align: center;
+      margin-top: 14px;
+      padding-top: 10px;
+    }
+
+    .sig-col .sig-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .sig-col .sig-sub {
+      font-size: 9.5px;
+      font-style: italic;
+      color: #64748b;
+    }
+
+    .sig-space {
+      height: 75px;
+    }
+
+    /* FOOTER */
+    .footer-note {
+      text-align: center;
+      font-size: 9px;
+      color: #64748b;
+      margin-top: 16px;
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Top Distributor Bar -->
+    <div class="top-header">
+      <div>
+        <div class="distributor-name">NPP BÍCH ĐIỀU</div>
+        <div class="distributor-sub">Phụ kiện tủ bếp thông minh chính hãng GRÖB • EUPLUS • KINGENBLU</div>
+      </div>
+      <div class="distributor-contact">
+        <div>Hotline: <strong>0917 418 989 - 0945 636 567</strong></div>
+        <div>Địa chỉ: Số 147 phố Hát, Hát Môn, Hà Nội</div>
+      </div>
+    </div>
+
+    <!-- Title Section -->
+    <div class="title-section">
+      <h1 class="main-title">HÓA ĐƠN BÁN HÀNG</h1>
+      <div class="order-number">số: <strong>${quotation.quotationNumber}</strong></div>
+      <div class="order-date">Ngày ${day} tháng ${month} năm ${year}</div>
+    </div>
+
+    <!-- Delivery & Customer Details -->
+    <div class="delivery-info-card">
+      <div class="delivery-grid">
+        <div class="delivery-item">
+          <span class="label">Khách hàng:</span>
+          <strong>${customer?.companyName || 'Khách hàng đại lý'}</strong>
+        </div>
+        <div class="delivery-item">
+          <span class="label">Điện thoại:</span>
+          <strong>${customer?.phone || '---'}</strong>
+        </div>
+        <div class="delivery-item" style="grid-column: span 2;">
+          <span class="label">Địa chỉ giao:</span>
+          <span>${customer?.address || '---'}</span>
+        </div>
+        ${quotation.note ? `
+        <div class="delivery-item" style="grid-column: span 2;">
+          <span class="label">Ghi chú giao:</span>
+          <span style="font-style: italic; color: #334155;">${quotation.note}</span>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+
+    <!-- Table of Items (Clean bordered grid like invoice image) -->
+    <table class="delivery-table">
+      <thead>
+        <tr>
+          <th class="col-stt">Stt</th>
+          <th class="col-code">Mã hàng</th>
+          <th class="col-name">Tên sản phẩm</th>
+          <th class="col-unit">ĐVT</th>
+          <th class="col-qty">Số lượng</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map((item, index) => {
+          const productCode = item.productCodeSnapshot || (item as any).product?.code || '-';
+          return `
+          <tr>
+            <td class="col-stt">${index + 1}</td>
+            <td class="col-code">${productCode}</td>
+            <td class="col-name">${item.productNameSnapshot}</td>
+            <td class="col-unit">${item.unit || 'Bộ'}</td>
+            <td class="col-qty">${item.quantity}</td>
+          </tr>
+        `;}).join('')}
+        ${Array.from({ length: blankRowsCount }).map((_, idx) => `
+          <tr class="blank-row">
+            <td class="col-stt blank-cell">${items.length + idx + 1}</td>
+            <td class="col-code blank-cell"></td>
+            <td class="col-name blank-cell"></td>
+            <td class="col-unit blank-cell"></td>
+            <td class="col-qty blank-cell"></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <!-- Total quantity summary -->
+    <div class="delivery-summary">
+      <div>Tổng số mặt hàng: <strong>${items.length}</strong></div>
+      <div>Tổng số lượng sản phẩm giao: <strong>${items.reduce((sum, it) => sum + (it.quantity || 0), 0)}</strong></div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signature-section">
+      <div class="sig-col">
+        <div class="sig-title">Khách hàng</div>
+        <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+        <div class="sig-space"></div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-title">Người bán hàng</div>
+        <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+        <div class="sig-space"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-note">
+      Vui lòng kiểm tra kỹ số lượng, mã hàng và tình trạng sản phẩm trước khi ký nhận bàn giao.
+    </div>
+  </div>
+</body>
+</html>`;
+}

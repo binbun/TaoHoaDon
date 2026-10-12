@@ -1,6 +1,6 @@
 import puppeteer, { Browser } from 'puppeteer';
 import { Quotation } from '@taohoadon/shared';
-import { renderQuotationHtml } from './pdf.template';
+import { renderQuotationHtml, renderDeliverySlipHtml } from './pdf.template';
 
 let browserInstance: Browser | null = null;
 
@@ -25,6 +25,37 @@ async function getBrowser(): Promise<Browser> {
  */
 export async function generateQuotationPdf(quotation: Quotation): Promise<Buffer> {
   const htmlContent = renderQuotationHtml(quotation);
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+
+  try {
+    await page.setContent(htmlContent, {
+      waitUntil: ['load', 'networkidle0'],
+      timeout: 30000,
+    });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '12mm',
+        right: '12mm',
+        bottom: '12mm',
+        left: '12mm',
+      },
+    });
+
+    return Buffer.from(pdfBuffer);
+  } finally {
+    await page.close();
+  }
+}
+
+/**
+ * Generates an A4 PDF Buffer for delivery checking slip using Puppeteer.
+ */
+export async function generateDeliverySlipPdf(quotation: Quotation): Promise<Buffer> {
+  const htmlContent = renderDeliverySlipHtml(quotation);
   const browser = await getBrowser();
   const page = await browser.newPage();
 

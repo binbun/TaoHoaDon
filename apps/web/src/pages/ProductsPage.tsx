@@ -66,7 +66,7 @@ import {
   TooltipTrigger,
 } from '../components/ui/tooltip';
 
-const POPULAR_BRANDS = ['Tất cả', 'GROB', 'EUPLUS', 'KINGENBLU', 'HAFELE', 'GARIS'];
+const POPULAR_BRANDS = ['Tất cả', 'GROB', 'EUPLUS', 'KINGENBLU', 'BLUM', 'EUROKING'];
 const PAGE_SIZE_OPTIONS = [15, 30, 50, 100, 200];
 
 export const ProductsPage: React.FC = () => {

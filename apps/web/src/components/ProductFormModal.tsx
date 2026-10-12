@@ -165,7 +165,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               list="brandSuggestions"
               value={formData.brand}
               onChange={(e) => handleChange('brand', e.target.value)}
-              placeholder="GROB, EUPLUS, HAFELE..."
+              placeholder="GROB, EUPLUS, BLUM, EUROKING..."
               className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B9550]"
               required
             />
@@ -173,9 +173,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <option value="GROB" />
               <option value="EUPLUS" />
               <option value="KINGENBLU" />
-              <option value="HAFELE" />
-              <option value="GARIS" />
               <option value="BLUM" />
+              <option value="EUROKING" />
             </datalist>
           </div>
 

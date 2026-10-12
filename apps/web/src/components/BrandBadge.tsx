@@ -27,6 +27,18 @@ export const BRAND_CONFIG: Record<
     border: 'rgba(13, 78, 160, 0.3)',
     label: 'EUPLUS',
   },
+  BLUM: {
+    primary: '#FF6724',
+    bg: '#FFF2EB',
+    border: 'rgba(255, 103, 36, 0.3)',
+    label: 'BLUM',
+  },
+  EUROKING: {
+    primary: '#1C4C8F',
+    bg: '#EDF3FA',
+    border: 'rgba(28, 76, 143, 0.3)',
+    label: 'EUROKING',
+  },
 };
 
 export const getBrandStyle = (brandName?: string | null) => {
@@ -39,6 +51,12 @@ export const getBrandStyle = (brandName?: string | null) => {
   }
   if (normalized.includes('EUPLUS')) {
     return BRAND_CONFIG.EUPLUS;
+  }
+  if (normalized.includes('BLUM')) {
+    return BRAND_CONFIG.BLUM;
+  }
+  if (normalized.includes('EUROKING')) {
+    return BRAND_CONFIG.EUROKING;
   }
   return {
     primary: '#475569',

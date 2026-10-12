@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -15,6 +16,7 @@ import {
   Sparkles,
   MoreVertical,
   FileSpreadsheet,
+  Tag,
 } from 'lucide-react';
 import { Product, formatCurrency } from '@taohoadon/shared';
 import { useProducts, useDeleteProduct } from '../hooks/useProducts';
@@ -73,6 +75,8 @@ const POPULAR_BRANDS = ['Tất cả', 'GROB', 'EUPLUS', 'KINGENBLU', 'BLUM', 'EU
 const PAGE_SIZE_OPTIONS = [15, 30, 50, 100, 200];
 
 export const ProductsPage: React.FC = () => {
+  const navigate = useNavigate();
+
   // Search & Filters State
   const [search, setSearch] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string>('Tất cả');
@@ -105,6 +109,15 @@ export const ProductsPage: React.FC = () => {
   const deleteMutation = useDeleteProduct();
 
   const { data: dbBrands = [] } = useBrands();
+
+  const brandColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    dbBrands.forEach((b) => {
+      if (b.color) map[b.name] = b.color;
+    });
+    return map;
+  }, [dbBrands]);
+
   const availableBrands = useMemo(() => {
     const list = ['Tất cả'];
     if (dbBrands && dbBrands.length > 0) {
@@ -190,26 +203,38 @@ export const ProductsPage: React.FC = () => {
       </div>
 
       {/* Brand Tabs with Radix Tabs */}
-      <Tabs value={selectedBrand} onValueChange={setSelectedBrand} className="w-full">
-        <TabsList className="w-full sm:w-auto justify-start overflow-x-auto">
-          {availableBrands.map((b) => {
-            const style = b === 'Tất cả' ? null : getBrandStyle(b);
-            return (
-              <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">
-                {style ? (
-                  <span
-                    className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
-                    style={{ backgroundColor: style.primary }}
-                  />
-                ) : (
-                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                )}
-                <span>{b}</span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <Tabs value={selectedBrand} onValueChange={setSelectedBrand} className="w-full sm:w-auto">
+          <TabsList className="w-full sm:w-auto justify-start overflow-x-auto">
+            {availableBrands.map((b) => {
+              const style = b === 'Tất cả' ? null : getBrandStyle(b, brandColorMap[b]);
+              return (
+                <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">
+                  {style ? (
+                    <span
+                      className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
+                      style={{ backgroundColor: style.primary }}
+                    />
+                  ) : (
+                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                  <span>{b}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="self-start sm:self-auto shrink-0 text-xs text-slate-600 hover:text-[#1B9550] border-slate-200 hover:border-[#1B9550] bg-white font-medium"
+          leftIcon={<Tag className="w-3.5 h-3.5 text-[#1B9550]" />}
+          onClick={() => navigate('/brands')}
+        >
+          Quản lý thương hiệu
+        </Button>
+      </div>
 
       {/* Filter Toolbar with Radix Selects */}
       <Card className="p-3 sm:p-4">
@@ -297,7 +322,7 @@ export const ProductsPage: React.FC = () => {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex flex-col gap-1 items-start">
-                        <BrandBadge brand={prod.brand} />
+                        <BrandBadge brand={prod.brand} color={brandColorMap[prod.brand]} />
                         <span className="text-xs text-slate-600 truncate max-w-[150px]">
                           {prod.category || 'Khác'}
                         </span>

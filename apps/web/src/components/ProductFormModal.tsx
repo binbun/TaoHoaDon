@@ -7,6 +7,8 @@ import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
 import { Switch } from './ui/switch';
+import { BrandBadge } from './BrandBadge';
+import { Plus, X, Sparkles } from 'lucide-react';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -46,6 +48,16 @@ const getInitialFormData = (brand = 'GROB', category = 'Phụ kiện tủ bếp'
   active: true,
 });
 
+const BRAND_PRESET_COLORS = [
+  '#1B9550', // GROB Green
+  '#0D4EA0', // EUPLUS Blue
+  '#FF6724', // BLUM Orange
+  '#1C4C8F', // EUROKING Deep Blue
+  '#E11D48', // Red / Rose
+  '#7C3AED', // Purple
+  '#0891B2', // Cyan
+];
+
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isOpen,
   onClose,
@@ -61,6 +73,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
   const [newBrandName, setNewBrandName] = useState('');
+  const [selectedColor, setSelectedColor] = useState('#1B9550');
 
   const brandList = useMemo(() => {
     if (brands && brands.length > 0) return brands;
@@ -77,13 +90,17 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     getInitialFormData(defaultBrand, defaultCategory)
   );
 
+  const currentBrandObj = useMemo(() => {
+    return brandList.find((b) => b.name === formData.brand);
+  }, [brandList, formData.brand]);
+
   const handleAddNewBrand = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!newBrandName.trim()) return;
     const name = newBrandName.trim().toUpperCase();
     createBrandMutation.mutate(
-      { name },
+      { name, color: selectedColor },
       {
         onSuccess: () => {
           handleChange('brand', name);
@@ -163,7 +180,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={product ? 'Chỉnh Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
-      maxWidth="lg"
+      maxWidth="xl"
     >
       <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -189,56 +206,107 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                Hãng sản xuất / Thương hiệu *
-              </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Hãng / Thương hiệu *
+                </label>
+                {formData.brand && !isAddingNewBrand && (
+                  <BrandBadge brand={formData.brand} color={currentBrandObj?.color} />
+                )}
+              </div>
               {!isAddingNewBrand && (
                 <button
                   type="button"
                   onClick={() => setIsAddingNewBrand(true)}
-                  className="text-[11px] font-semibold text-[#1B9550] hover:text-[#14733E] flex items-center gap-1 hover:underline"
+                  className="text-xs font-semibold text-[#1B9550] hover:text-[#14733E] flex items-center gap-1 hover:underline cursor-pointer"
                 >
-                  + Thêm hãng mới
+                  <Plus className="w-3.5 h-3.5" />
+                  Thêm hãng
                 </button>
               )}
             </div>
 
             {isAddingNewBrand ? (
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  placeholder="Nhập tên hãng (VD: BOSCH...)"
-                  value={newBrandName}
-                  onChange={(e) => setNewBrandName(e.target.value.toUpperCase())}
-                  className="flex-1 text-sm rounded-lg border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-[#1B9550] uppercase font-semibold"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={handleAddNewBrand}
-                  disabled={!newBrandName.trim() || createBrandMutation.isPending}
-                  className="px-2.5 py-2 bg-[#1B9550] text-white text-xs font-bold rounded-lg hover:bg-[#14733E] disabled:opacity-50 shrink-0"
-                >
-                  {createBrandMutation.isPending ? 'Lưu...' : 'Lưu'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAddingNewBrand(false);
-                    setNewBrandName('');
-                  }}
-                  className="px-2 py-2 border border-slate-300 text-slate-600 text-xs rounded-lg hover:bg-slate-100 shrink-0"
-                >
-                  Hủy
-                </button>
+              <div className="bg-emerald-50/70 border border-emerald-300 rounded-xl p-3 space-y-2.5 shadow-xs animate-in fade-in-50 duration-150">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#1B9550]" />
+                    Thêm thương hiệu mới
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingNewBrand(false);
+                      setNewBrandName('');
+                    }}
+                    className="text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Tên hãng (VD: BOSCH, HAFELE...)"
+                    value={newBrandName}
+                    onChange={(e) => setNewBrandName(e.target.value.toUpperCase())}
+                    className="w-full text-xs font-bold uppercase rounded-lg border border-slate-300 p-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B9550]"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-1 pt-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-500 font-medium">Màu:</span>
+                    {BRAND_PRESET_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setSelectedColor(c)}
+                        className={`w-3.5 h-3.5 rounded-full transition-all cursor-pointer ${
+                          selectedColor === c ? 'ring-2 ring-slate-900 ring-offset-1 scale-110' : 'opacity-70 hover:opacity-100 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingNewBrand(false);
+                        setNewBrandName('');
+                      }}
+                      className="px-2 py-1 text-[11px] font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-100 cursor-pointer"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddNewBrand}
+                      disabled={!newBrandName.trim() || createBrandMutation.isPending}
+                      className="px-2.5 py-1 text-[11px] font-bold text-white bg-[#1B9550] rounded-md hover:bg-[#14733E] disabled:opacity-50 cursor-pointer"
+                    >
+                      {createBrandMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <select
                 value={formData.brand}
-                onChange={(e) => handleChange('brand', e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === '__NEW__') {
+                    setIsAddingNewBrand(true);
+                  } else {
+                    handleChange('brand', e.target.value);
+                  }
+                }}
                 className="w-full text-sm font-semibold rounded-lg border border-slate-300 p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B9550] cursor-pointer"
                 required
               >
@@ -250,6 +318,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     {b.name} {b.description ? `(${b.description})` : ''}
                   </option>
                 ))}
+                <option value="__NEW__" className="text-[#1B9550] font-bold">
+                  + Thêm thương hiệu mới...
+                </option>
               </select>
             )}
           </div>

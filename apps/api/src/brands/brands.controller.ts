@@ -71,9 +71,21 @@ export async function getBrands(req: Request, res: Response, next: NextFunction)
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
 
+    // Enriched with product count
+    const productGroups = await prisma.product.groupBy({
+      by: ['brand'],
+      _count: { id: true },
+    });
+    const countMap = new Map(productGroups.map((g) => [g.brand.toUpperCase(), g._count.id]));
+
+    const enriched = brands.map((b) => ({
+      ...b,
+      productCount: countMap.get(b.name.toUpperCase()) || 0,
+    }));
+
     return res.json({
       success: true,
-      data: brands,
+      data: enriched,
     });
   } catch (error) {
     next(error);
@@ -110,7 +122,7 @@ export async function createBrand(req: Request, res: Response, next: NextFunctio
     return res.status(201).json({
       success: true,
       message: 'Tạo thương hiệu thành công',
-      data: brand,
+      data: { ...brand, productCount: 0 },
     });
   } catch (error) {
     next(error);
@@ -133,10 +145,25 @@ export async function updateBrand(req: Request, res: Response, next: NextFunctio
       });
     }
 
+    const newName = validated.name ? validated.name.trim().toUpperCase() : existing.name;
+
+    // Check if new name collides with another brand
+    if (newName !== existing.name) {
+      const duplicate = await prisma.brand.findUnique({
+        where: { name: newName },
+      });
+      if (duplicate && duplicate.id !== id) {
+        return res.status(400).json({
+          success: false,
+          message: `Tên thương hiệu "${newName}" đã tồn tại`,
+        });
+      }
+    }
+
     const updated = await prisma.brand.update({
       where: { id },
       data: {
-        ...(validated.name ? { name: validated.name.trim().toUpperCase() } : {}),
+        ...(validated.name ? { name: newName } : {}),
         ...(validated.code !== undefined ? { code: validated.code?.trim().toUpperCase() || null } : {}),
         ...(validated.color ? { color: validated.color.trim() } : {}),
         ...(validated.description !== undefined ? { description: validated.description?.trim() || null } : {}),
@@ -145,10 +172,20 @@ export async function updateBrand(req: Request, res: Response, next: NextFunctio
       },
     });
 
+    // If brand name was updated, update associated products brand field
+    if (newName !== existing.name) {
+      await prisma.product.updateMany({
+        where: { brand: existing.name },
+        data: { brand: newName },
+      });
+    }
+
+    const count = await prisma.product.count({ where: { brand: updated.name } });
+
     return res.json({
       success: true,
       message: 'Cập nhật thương hiệu thành công',
-      data: updated,
+      data: { ...updated, productCount: count },
     });
   } catch (error) {
     next(error);
@@ -167,6 +204,18 @@ export async function deleteBrand(req: Request, res: Response, next: NextFunctio
       return res.status(404).json({
         success: false,
         message: 'Không tìm thấy thương hiệu',
+      });
+    }
+
+    // Check if brand is referenced by existing products
+    const productCount = await prisma.product.count({
+      where: { brand: existing.name },
+    });
+
+    if (productCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa thương hiệu "${existing.name}" vì đang có ${productCount} sản phẩm thuộc hãng này. Bạn có thể tạm ngừng kích hoạt thay vì xóa.`,
       });
     }
 

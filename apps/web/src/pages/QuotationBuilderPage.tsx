@@ -135,6 +135,14 @@ export const QuotationBuilderPage: React.FC = () => {
   }, [products, pickerBrand, pickerCategory, productSearch]);
 
   const { data: dbBrands = [] } = useBrands();
+  const brandColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    dbBrands.forEach((b) => {
+      if (b.color) map[b.name] = b.color;
+    });
+    return map;
+  }, [dbBrands]);
+
   const availablePickerBrands = useMemo(() => {
     const list = ['Tất cả'];
     if (dbBrands && dbBrands.length > 0) {
@@ -911,7 +919,7 @@ export const QuotationBuilderPage: React.FC = () => {
           <Tabs value={pickerBrand} onValueChange={setPickerBrand} className="w-full">
             <TabsList className="w-full sm:w-auto justify-start">
               {availablePickerBrands.map((b) => {
-                const style = b === 'Tất cả' ? null : getBrandStyle(b);
+                const style = b === 'Tất cả' ? null : getBrandStyle(b, brandColorMap[b]);
                 return (
                   <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">
                     {style && (
@@ -967,7 +975,7 @@ export const QuotationBuilderPage: React.FC = () => {
                           Cũ: {p.oldCode}
                         </span>
                       )}
-                      <BrandBadge brand={p.brand} />
+                      <BrandBadge brand={p.brand} color={brandColorMap[p.brand]} />
                       <span className="font-bold text-slate-900 group-hover:text-[#1B9550] text-sm truncate">
                         {p.name}
                       </span>

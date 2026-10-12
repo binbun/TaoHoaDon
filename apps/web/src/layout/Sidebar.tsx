@@ -11,6 +11,7 @@ import {
   KeyRound,
   LogOut,
   X,
+  Tag,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
@@ -51,6 +52,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       label: 'Phụ kiện & Tủ bếp',
       path: '/products',
       icon: Package,
+    },
+    {
+      label: 'Thương hiệu',
+      path: '/brands',
+      icon: Tag,
     },
     {
       label: 'Khách hàng & Đại lý',

@@ -151,6 +151,7 @@ export interface Brand {
   description?: string | null;
   sortOrder: number;
   active: boolean;
+  productCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -2,6 +2,7 @@ import React from 'react';
 
 interface BrandBadgeProps {
   brand?: string | null;
+  color?: string | null;
   className?: string;
 }
 
@@ -41,7 +42,17 @@ export const BRAND_CONFIG: Record<
   },
 };
 
-export const getBrandStyle = (brandName?: string | null) => {
+export const getBrandStyle = (brandName?: string | null, customColor?: string | null) => {
+  if (customColor && /^#([0-9A-Fa-f]{3}){1,2}$/i.test(customColor.trim())) {
+    const primary = customColor.trim();
+    return {
+      primary,
+      bg: `${primary}18`,
+      border: `${primary}40`,
+      label: brandName || 'Khác',
+    };
+  }
+
   const normalized = (brandName || 'GROB').trim().toUpperCase();
   if (normalized.includes('GROB') || normalized.includes('GRÖB')) {
     return BRAND_CONFIG.GROB;
@@ -66,9 +77,9 @@ export const getBrandStyle = (brandName?: string | null) => {
   };
 };
 
-export const BrandBadge: React.FC<BrandBadgeProps> = ({ brand, className = '' }) => {
+export const BrandBadge: React.FC<BrandBadgeProps> = ({ brand, color, className = '' }) => {
   const brandName = brand || 'GROB';
-  const style = getBrandStyle(brandName);
+  const style = getBrandStyle(brandName, color);
 
   return (
     <span

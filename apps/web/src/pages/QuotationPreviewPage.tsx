@@ -500,12 +500,6 @@ export const QuotationPreviewPage: React.FC = () => {
                   <span className="text-slate-500 inline-block w-24">Địa chỉ giao:</span>
                   <span className="text-slate-800 font-medium">{customer?.address || '---'}</span>
                 </div>
-                {quotation.note && (
-                  <div className="sm:col-span-2">
-                    <span className="text-slate-500 inline-block w-24">Ghi chú giao:</span>
-                    <span className="text-slate-700 italic">{quotation.note}</span>
-                  </div>
-                )}
               </div>
             </div>
 

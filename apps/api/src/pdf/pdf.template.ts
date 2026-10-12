@@ -516,8 +516,8 @@ export function renderQuotationHtml(quotation: Quotation): string {
       </thead>
       <tbody>
         ${items.map((item, index) => {
-          const productCode = item.productCodeSnapshot || (item as any).product?.code || '-';
-          return `
+    const productCode = item.productCodeSnapshot || (item as any).product?.code || '-';
+    return `
           <tr>
             <td class="col-stt">${index + 1}</td>
             <td class="col-code">${productCode}</td>
@@ -532,7 +532,8 @@ export function renderQuotationHtml(quotation: Quotation): string {
             </td>
             <td class="col-total">${formatCurrency(item.total)}</td>
           </tr>
-        `;}).join('')}
+        `;
+  }).join('')}
       </tbody>
     </table>
 
@@ -584,7 +585,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <!-- Notes & Terms -->
     <div class="notes-box">
       <div class="notes-title">Chính sách bảo hành & Cam kết</div>
-      <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng GRÖB, EUPLUS, KINGENBLU.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ 02 năm đổi mới.\n- Cảm ơn Quý đối tác đã tin tưởng lựa chọn thiết bị phụ kiện tủ bếp của chúng tôi!`}</div>
+      <div class="notes-content">${quotation.note || `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.\n- Bảo hành sản phẩm 24 tháng lỗi 1 đổi 1 đối với phụ kiện GROB\n- Miễn phí vận chuyển trong khu vực, giao hàng toàn quốc`}</div>
     </div>
 
     <!-- Signatures -->
@@ -910,12 +911,6 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
           <span class="label">Địa chỉ giao:</span>
           <span>${customer?.address || '---'}</span>
         </div>
-        ${quotation.note ? `
-        <div class="delivery-item" style="grid-column: span 2;">
-          <span class="label">Ghi chú giao:</span>
-          <span style="font-style: italic; color: #334155;">${quotation.note}</span>
-        </div>
-        ` : ''}
       </div>
     </div>
 
@@ -932,8 +927,8 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
       </thead>
       <tbody>
         ${items.map((item, index) => {
-          const productCode = item.productCodeSnapshot || (item as any).product?.code || '-';
-          return `
+    const productCode = item.productCodeSnapshot || (item as any).product?.code || '-';
+    return `
           <tr>
             <td class="col-stt">${index + 1}</td>
             <td class="col-code">${productCode}</td>
@@ -941,7 +936,8 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
             <td class="col-unit">${item.unit || 'Bộ'}</td>
             <td class="col-qty">${item.quantity}</td>
           </tr>
-        `;}).join('')}
+        `;
+  }).join('')}
         ${Array.from({ length: blankRowsCount }).map((_, idx) => `
           <tr class="blank-row">
             <td class="col-stt blank-cell">${items.length + idx + 1}</td>

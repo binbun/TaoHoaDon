@@ -140,7 +140,7 @@ async function main() {
       quotationDate,
       validUntil,
       title: 'ĐƠN HÀNG PHỤ KIỆN TỦ BẾP INOX 304 CAO CẤP EUPLUS',
-      note: '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng EUPLUS.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.',
+      note: '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.\n- Bảo hành sản phẩm 24 tháng lỗi 1 đổi 1 đối với phụ kiện GROB\n- Miễn phí vận chuyển trong khu vực, giao hàng toàn quốc',
       status: 'SENT',
       subtotal: summary.subtotal,
       discountTotal: summary.discountTotal,

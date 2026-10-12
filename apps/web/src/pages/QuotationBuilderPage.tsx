@@ -68,9 +68,11 @@ export const QuotationBuilderPage: React.FC = () => {
   const [quotationDate, setQuotationDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
-  const [note, setNote] = useState(
-    '- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.\n- Bảo hành ray trượt giảm chấn, cơ cấu piston nâng hạ thủy lực 02 năm đổi mới.\n- Miễn phí vận chuyển nội thành Hà Nội cho đơn hàng từ 5.000.000 ₫.'
-  );
+const DEFAULT_WARRANTY_NOTE = `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.
+- Bảo hành sản phẩm 24 tháng lỗi 1 đổi 1 đối với phụ kiện GROB
+- Miễn phí vận chuyển trong khu vực, giao hàng toàn quốc`;
+
+  const [note, setNote] = useState(DEFAULT_WARRANTY_NOTE);
 
   // Customer State
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
@@ -772,6 +774,16 @@ export const QuotationBuilderPage: React.FC = () => {
 
           {/* Section 4: Notes */}
           <Card title="4. Chính Sách Bảo Hành & Điều Khoản Đơn Hàng">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs text-slate-500">Nội dung ghi chú & cam kết bảo hành hiển thị trên hóa đơn:</span>
+              <button
+                type="button"
+                onClick={() => setNote(DEFAULT_WARRANTY_NOTE)}
+                className="text-xs text-[#1B9550] hover:text-[#14733E] font-medium hover:underline"
+              >
+                + Dùng mẫu bảo hành chuẩn
+              </button>
+            </div>
             <textarea
               rows={4}
               value={note}

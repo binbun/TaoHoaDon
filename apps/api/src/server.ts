@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import authRoutes from './auth/auth.routes';
 import usersRoutes from './users/users.routes';
+import brandsRoutes from './brands/brands.routes';
 import productsRoutes from './products/products.routes';
 import customersRoutes from './customers/customers.routes';
 import quotationsRoutes from './quotations/quotations.routes';
@@ -110,6 +111,7 @@ app.get(['/', '/health', '/api/health'], (req, res) => {
 // API Routes (Supports both with /api prefix and without /api prefix)
 app.use(['/api/auth', '/auth'], authRoutes);
 app.use(['/api/users', '/users'], usersRoutes);
+app.use(['/api/brands', '/brands'], brandsRoutes);
 app.use(['/api/products', '/products'], productsRoutes);
 app.use(['/api/customers', '/customers'], customersRoutes);
 app.use(['/api/quotations', '/quotations'], quotationsRoutes);
@@ -182,6 +184,21 @@ async function initPostgresDatabase() {
         "phone" TEXT,
         "address" TEXT,
         "taxCode" TEXT,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 2.1 Create Brand table
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Brand" (
+        "id" TEXT PRIMARY KEY,
+        "name" TEXT UNIQUE NOT NULL,
+        "code" TEXT UNIQUE,
+        "color" TEXT DEFAULT '#1B9550',
+        "description" TEXT,
+        "sortOrder" INTEGER NOT NULL DEFAULT 0,
+        "active" BOOLEAN NOT NULL DEFAULT true,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
@@ -328,23 +345,26 @@ async function initPostgresDatabase() {
       });
     }
 
+    // 6.1 Ensure default brands exist (GROB, EUPLUS, BLUM, EUROKING, KINGENBLU)
+    try {
+      const { DEFAULT_BRANDS } = await import('./brands/brands.controller');
+      for (const b of DEFAULT_BRANDS) {
+        await prisma.brand.upsert({
+          where: { name: b.name },
+          update: {
+            color: b.color,
+            description: b.description,
+          },
+          create: b,
+        });
+      }
+      console.log('✅ Đã đồng bộ các thương hiệu chuẩn (GROB, EUPLUS, BLUM, EUROKING, KINGENBLU).');
+    } catch (brandErr) {
+      console.warn('Lỗi khi đồng bộ Brand:', brandErr);
+    }
+
     // 7. Seed & Sync Catalog Products from GROB, EUPLUS, KINGENBLU official catalogs
     const { ALL_CATALOG_PRODUCTS } = await import('@taohoadon/shared');
-    const catalogCodes = ALL_CATALOG_PRODUCTS.map((p) => p.code);
-
-    // Tự động xóa các sản phẩm cũ không thuộc catalogue đơn hàng mới
-    try {
-      const deleteResult = await prisma.product.deleteMany({
-        where: {
-          code: { notIn: catalogCodes },
-        },
-      });
-      if (deleteResult.count > 0) {
-        console.log(`🗑️ Đã xóa ${deleteResult.count} sản phẩm cũ không thuộc catalogue mới.`);
-      }
-    } catch (delErr) {
-      console.warn('Cảnh báo khi dọn dẹp sản phẩm cũ:', delErr);
-    }
 
     console.log(`🌱 Đang đồng bộ toàn bộ danh mục sản phẩm phụ kiện GROB, EUPLUS, KINGENBLU (${ALL_CATALOG_PRODUCTS.length} sản phẩm)...`);
 

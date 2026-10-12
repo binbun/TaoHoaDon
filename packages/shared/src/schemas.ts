@@ -85,3 +85,13 @@ export const QuotationSchema = z.object({
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
   items: z.array(QuotationItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm/dịch vụ'),
 });
+
+export const BrandSchema = z.object({
+  name: z.string().min(1, 'Tên thương hiệu không được để trống').max(100, 'Tối đa 100 ký tự'),
+  code: z.string().max(50).optional().nullable(),
+  color: z.string().max(30).optional().nullable(),
+  description: z.string().max(500).optional().nullable(),
+  sortOrder: z.coerce.number().int().default(0),
+  active: z.boolean().default(true),
+});
+

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Product, formatThousands, parseThousands } from '@taohoadon/shared';
 import { useCreateProduct, useUpdateProduct } from '../hooks/useProducts';
+import { useBrands, useCreateBrand } from '../hooks/useBrands';
 import { useToast } from '../context/ToastContext';
 import { Modal } from './Modal';
 import { Button } from './Button';
@@ -55,10 +56,43 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const { error } = useToast();
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
+  const { data: brands = [] } = useBrands();
+  const createBrandMutation = useCreateBrand();
+
+  const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+
+  const brandList = useMemo(() => {
+    if (brands && brands.length > 0) return brands;
+    return [
+      { id: '1', name: 'GROB', color: '#1B9550', description: 'Inox 304 GROB' },
+      { id: '2', name: 'EUPLUS', color: '#0D4EA0', description: 'Thiết bị & phụ kiện EUPLUS' },
+      { id: '3', name: 'BLUM', color: '#FF6724', description: 'Tay nâng & bản lề BLUM' },
+      { id: '4', name: 'EUROKING', color: '#1C4C8F', description: 'Phụ kiện tủ bếp EUROKING' },
+      { id: '5', name: 'KINGENBLU', color: '#247948', description: 'Phụ kiện KINGENBLU' },
+    ];
+  }, [brands]);
 
   const [formData, setFormData] = useState<ProductFormData>(() =>
     getInitialFormData(defaultBrand, defaultCategory)
   );
+
+  const handleAddNewBrand = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!newBrandName.trim()) return;
+    const name = newBrandName.trim().toUpperCase();
+    createBrandMutation.mutate(
+      { name },
+      {
+        onSuccess: () => {
+          handleChange('brand', name);
+          setNewBrandName('');
+          setIsAddingNewBrand(false);
+        },
+      }
+    );
+  };
 
   // Sync state whenever modal opens or editing product changes
   useEffect(() => {
@@ -157,25 +191,67 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Hãng sản xuất / Thương hiệu
-            </label>
-            <input
-              type="text"
-              list="brandSuggestions"
-              value={formData.brand}
-              onChange={(e) => handleChange('brand', e.target.value)}
-              placeholder="GROB, EUPLUS, BLUM, EUROKING..."
-              className="w-full text-sm rounded-lg border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B9550]"
-              required
-            />
-            <datalist id="brandSuggestions">
-              <option value="GROB" />
-              <option value="EUPLUS" />
-              <option value="KINGENBLU" />
-              <option value="BLUM" />
-              <option value="EUROKING" />
-            </datalist>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Hãng sản xuất / Thương hiệu *
+              </label>
+              {!isAddingNewBrand && (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingNewBrand(true)}
+                  className="text-[11px] font-semibold text-[#1B9550] hover:text-[#14733E] flex items-center gap-1 hover:underline"
+                >
+                  + Thêm hãng mới
+                </button>
+              )}
+            </div>
+
+            {isAddingNewBrand ? (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Nhập tên hãng (VD: BOSCH...)"
+                  value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value.toUpperCase())}
+                  className="flex-1 text-sm rounded-lg border border-slate-300 p-2 focus:outline-none focus:ring-2 focus:ring-[#1B9550] uppercase font-semibold"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={handleAddNewBrand}
+                  disabled={!newBrandName.trim() || createBrandMutation.isPending}
+                  className="px-2.5 py-2 bg-[#1B9550] text-white text-xs font-bold rounded-lg hover:bg-[#14733E] disabled:opacity-50 shrink-0"
+                >
+                  {createBrandMutation.isPending ? 'Lưu...' : 'Lưu'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingNewBrand(false);
+                    setNewBrandName('');
+                  }}
+                  className="px-2 py-2 border border-slate-300 text-slate-600 text-xs rounded-lg hover:bg-slate-100 shrink-0"
+                >
+                  Hủy
+                </button>
+              </div>
+            ) : (
+              <select
+                value={formData.brand}
+                onChange={(e) => handleChange('brand', e.target.value)}
+                className="w-full text-sm font-semibold rounded-lg border border-slate-300 p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B9550] cursor-pointer"
+                required
+              >
+                {formData.brand && !brandList.some((b) => b.name === formData.brand) && (
+                  <option value={formData.brand}>{formData.brand}</option>
+                )}
+                {brandList.map((b) => (
+                  <option key={b.id || b.name} value={b.name}>
+                    {b.name} {b.description ? `(${b.description})` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div>

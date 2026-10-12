@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Product, formatCurrency } from '@taohoadon/shared';
 import { useProducts, useDeleteProduct } from '../hooks/useProducts';
+import { useBrands } from '../hooks/useBrands';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -103,6 +104,21 @@ export const ProductsPage: React.FC = () => {
 
   const deleteMutation = useDeleteProduct();
 
+  const { data: dbBrands = [] } = useBrands();
+  const availableBrands = useMemo(() => {
+    const list = ['Tất cả'];
+    if (dbBrands && dbBrands.length > 0) {
+      dbBrands.forEach((b) => {
+        if (!list.includes(b.name)) list.push(b.name);
+      });
+    } else {
+      ['GROB', 'EUPLUS', 'KINGENBLU', 'BLUM', 'EUROKING'].forEach((b) => {
+        if (!list.includes(b)) list.push(b);
+      });
+    }
+    return list;
+  }, [dbBrands]);
+
   // Extract all categories from products for filter dropdown
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
@@ -176,7 +192,7 @@ export const ProductsPage: React.FC = () => {
       {/* Brand Tabs with Radix Tabs */}
       <Tabs value={selectedBrand} onValueChange={setSelectedBrand} className="w-full">
         <TabsList className="w-full sm:w-auto justify-start overflow-x-auto">
-          {POPULAR_BRANDS.map((b) => {
+          {availableBrands.map((b) => {
             const style = b === 'Tất cả' ? null : getBrandStyle(b);
             return (
               <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">

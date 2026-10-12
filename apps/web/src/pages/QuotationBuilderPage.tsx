@@ -7,6 +7,7 @@ import {
   useCreateQuotation,
   useUpdateQuotation,
   useCreateCustomer,
+  useBrands,
 } from '../hooks';
 import {
   Product,
@@ -132,6 +133,21 @@ export const QuotationBuilderPage: React.FC = () => {
       return matchBrand && matchCat && matchSearch;
     });
   }, [products, pickerBrand, pickerCategory, productSearch]);
+
+  const { data: dbBrands = [] } = useBrands();
+  const availablePickerBrands = useMemo(() => {
+    const list = ['Tất cả'];
+    if (dbBrands && dbBrands.length > 0) {
+      dbBrands.forEach((b) => {
+        if (!list.includes(b.name)) list.push(b.name);
+      });
+    } else {
+      ['GROB', 'EUPLUS', 'KINGENBLU', 'BLUM', 'EUROKING'].forEach((b) => {
+        if (!list.includes(b)) list.push(b);
+      });
+    }
+    return list;
+  }, [dbBrands]);
 
   // Populate data when editing
   useEffect(() => {
@@ -894,7 +910,7 @@ export const QuotationBuilderPage: React.FC = () => {
           {/* Brand Tabs with Radix Tabs */}
           <Tabs value={pickerBrand} onValueChange={setPickerBrand} className="w-full">
             <TabsList className="w-full sm:w-auto justify-start">
-              {['Tất cả', 'GROB', 'EUPLUS', 'KINGENBLU', 'BLUM', 'EUROKING'].map((b) => {
+              {availablePickerBrands.map((b) => {
                 const style = b === 'Tất cả' ? null : getBrandStyle(b);
                 return (
                   <TabsTrigger key={b} value={b} className="flex items-center gap-1.5">

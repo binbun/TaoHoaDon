@@ -142,3 +142,34 @@ export interface DashboardStats {
   recentQuotations: Quotation[];
   statusDistribution: Record<QuotationStatus, number>;
 }
+
+export interface Brand {
+  id: string;
+  name: string;
+  code?: string | null;
+  color?: string | null;
+  description?: string | null;
+  sortOrder: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateBrandInput {
+  name: string;
+  code?: string | null;
+  color?: string | null;
+  description?: string | null;
+  sortOrder?: number;
+  active?: boolean;
+}
+
+export interface UpdateBrandInput {
+  name?: string;
+  code?: string | null;
+  color?: string | null;
+  description?: string | null;
+  sortOrder?: number;
+  active?: boolean;
+}
+

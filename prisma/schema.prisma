@@ -115,3 +115,15 @@ model AuditLog {
   createdAt  DateTime @default(now())
 }
 
+model Brand {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  code        String?  @unique
+  color       String?  @default("#1B9550")
+  description String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

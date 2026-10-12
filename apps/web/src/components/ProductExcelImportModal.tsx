@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { useQueryClient } from '@tanstack/react-query';
 import { productKeys } from '../hooks/useProducts';
+import { brandKeys } from '../hooks/useBrands';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { BrandBadge } from './BrandBadge';
@@ -393,6 +394,7 @@ export const ProductExcelImportModal: React.FC<ProductExcelImportModalProps> = (
       const skippedCount = response?.skippedCount ?? 0;
 
       queryClient.invalidateQueries({ queryKey: productKeys.all });
+      queryClient.invalidateQueries({ queryKey: brandKeys.all });
       success(
         `Nhập dữ liệu thành công! Thêm mới: ${createdCount}, Cập nhật: ${updatedCount}` +
           (skippedCount > 0 ? `, Bỏ qua: ${skippedCount}` : '')

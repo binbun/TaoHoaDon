@@ -68,7 +68,7 @@ export const QuotationBuilderPage: React.FC = () => {
   const [quotationDate, setQuotationDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
-const DEFAULT_WARRANTY_NOTE = `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.
+  const DEFAULT_WARRANTY_NOTE = `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.
 - Bảo hành sản phẩm 24 tháng lỗi 1 đổi 1 đối với phụ kiện GROB
 - Miễn phí vận chuyển trong khu vực, giao hàng toàn quốc`;
 
@@ -425,7 +425,7 @@ const DEFAULT_WARRANTY_NOTE = `- Toàn bộ phụ kiện Inox SUS304 bảo hành
               </div>
 
               <Input
-                label="Tên Công Ty / Tên Khách Hàng *"
+                label="Tên Công Ty / Tên Khách Hàng"
                 placeholder="VD: Cty TNHH Nội Thất Minh Quân"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}

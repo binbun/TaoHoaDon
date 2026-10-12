@@ -93,7 +93,11 @@ export const QuotationBuilderPage: React.FC = () => {
 
   // Custom Hooks
   const { data: customers = [] } = useCustomers();
-  const { data: products = [] } = useProducts({ active: true });
+  const { data: rawProducts = [] } = useProducts({ active: true, all: true });
+  const products: Product[] = useMemo(() => {
+    if (Array.isArray(rawProducts)) return rawProducts;
+    return rawProducts?.data || [];
+  }, [rawProducts]);
   const { data: existingQuote } = useQuotation(id);
 
   const createQuotationMutation = useCreateQuotation();

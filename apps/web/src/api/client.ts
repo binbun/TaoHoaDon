@@ -67,5 +67,9 @@ export async function apiClient<T = any>(endpoint: string, options: RequestOptio
     throw new ApiError(errorMsg, response.status, responseData?.errors);
   }
 
+  if (responseData && typeof responseData === 'object' && responseData.pagination !== undefined) {
+    return responseData;
+  }
+
   return responseData.data !== undefined ? responseData.data : responseData;
 }

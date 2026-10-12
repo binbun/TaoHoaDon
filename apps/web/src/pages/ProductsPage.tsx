@@ -19,7 +19,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { Product, formatCurrency } from '@taohoadon/shared';
-import { useProducts, useDeleteProduct } from '../hooks/useProducts';
+import { useProducts, useDeleteProduct, useProductCategories } from '../hooks/useProducts';
 import { useBrands } from '../hooks/useBrands';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -99,16 +99,25 @@ export const ProductsPage: React.FC = () => {
   }, [search, selectedBrand, selectedCategory, activeFilter]);
 
   // Queries & Mutations
-  const { data: products = [], isLoading } = useProducts({
+  const { data: responseData, isLoading } = useProducts({
     search,
     active: activeFilter === 'ALL' ? '' : activeFilter,
     brand: selectedBrand === 'Tất cả' ? undefined : selectedBrand,
     category: selectedCategory === 'ALL' ? undefined : selectedCategory,
+    page: currentPage,
+    limit: pageSize,
   });
+
+  const products: Product[] = useMemo(() => {
+    if (!responseData) return [];
+    if (Array.isArray(responseData)) return responseData;
+    return responseData.data || [];
+  }, [responseData]);
 
   const deleteMutation = useDeleteProduct();
 
   const { data: dbBrands = [] } = useBrands();
+  const { data: serverCategories = [] } = useProductCategories();
 
   const brandColorMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -132,24 +141,25 @@ export const ProductsPage: React.FC = () => {
     return list;
   }, [dbBrands]);
 
-  // Extract all categories from products for filter dropdown
+  // Categories list from server
   const availableCategories = useMemo(() => {
+    if (serverCategories && serverCategories.length > 0) {
+      return serverCategories;
+    }
     const cats = new Set<string>();
     products.forEach((p) => {
       if (p.category) cats.add(p.category);
     });
     return Array.from(cats).sort();
-  }, [products]);
+  }, [serverCategories, products]);
 
-  // Pagination calculations
-  const totalItems = products.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  // Server-side Pagination calculations
+  const totalItems = responseData?.pagination?.total ?? products.length;
+  const totalPages = responseData?.pagination?.totalPages ?? Math.max(1, Math.ceil(totalItems / pageSize));
   const validPage = Math.min(currentPage, totalPages);
 
-  const paginatedProducts = useMemo(() => {
-    const start = (validPage - 1) * pageSize;
-    return products.slice(start, start + pageSize);
-  }, [products, validPage, pageSize]);
+  // Directly use server-paginated products
+  const paginatedProducts = products;
 
   const openCreateModal = () => {
     setEditingProduct(null);

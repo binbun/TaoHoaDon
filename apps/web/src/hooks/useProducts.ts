@@ -3,15 +3,37 @@ import { apiClient } from '../api/client';
 import { Product } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 
+export interface ProductsQueryParams {
+  search?: string;
+  active?: string | boolean;
+  brand?: string;
+  category?: string;
+  cabinetWidth?: string;
+  page?: number;
+  limit?: number;
+  all?: boolean | string;
+}
+
+export interface ProductsResponse {
+  data: Product[];
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export const productKeys = {
   all: ['products'] as const,
-  list: (params?: { search?: string; active?: string | boolean; brand?: string; category?: string; cabinetWidth?: string }) =>
+  list: (params?: ProductsQueryParams) =>
     ['products', 'list', params] as const,
   detail: (id: string) => ['products', 'detail', id] as const,
+  categories: ['products', 'categories'] as const,
 };
 
-export function useProducts(params?: { search?: string; active?: string | boolean; brand?: string; category?: string; cabinetWidth?: string }) {
-  return useQuery<Product[]>({
+export function useProducts(params?: ProductsQueryParams) {
+  return useQuery<any>({
     queryKey: productKeys.list(params),
     queryFn: () => {
       const searchParams = new URLSearchParams();
@@ -22,9 +44,20 @@ export function useProducts(params?: { search?: string; active?: string | boolea
       if (params?.active !== undefined && params?.active !== '') {
         searchParams.append('active', String(params.active));
       }
+      if (params?.page) searchParams.append('page', String(params.page));
+      if (params?.limit) searchParams.append('limit', String(params.limit));
+      if (params?.all !== undefined) searchParams.append('all', String(params.all));
+
       const query = searchParams.toString();
       return apiClient(`/products${query ? `?${query}` : ''}`);
     },
+  });
+}
+
+export function useProductCategories() {
+  return useQuery<string[]>({
+    queryKey: productKeys.categories,
+    queryFn: () => apiClient<string[]>('/products/categories'),
   });
 }
 

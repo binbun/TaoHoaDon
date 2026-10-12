@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getProducts,
+  getProductCategories,
   getProductById,
   createProduct,
   updateProduct,
@@ -14,6 +15,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', getProducts);
+router.get('/categories', getProductCategories);
 router.post('/bulk-import', bulkImportProducts);
 router.get('/:id', getProductById);
 router.post('/', createProduct);

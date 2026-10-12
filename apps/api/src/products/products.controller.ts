@@ -4,7 +4,7 @@ import { ProductSchema } from '@taohoadon/shared';
 
 export async function getProducts(req: Request, res: Response, next: NextFunction) {
   try {
-    const { search, active, brand, category, cabinetWidth } = req.query;
+    const { search, active, brand, category, cabinetWidth, page, limit, all } = req.query;
 
     const where: any = {};
     if (active !== undefined && active !== '') {
@@ -31,6 +31,36 @@ export async function getProducts(req: Request, res: Response, next: NextFunctio
       ];
     }
 
+    const isAll = all === 'true';
+    const isPaginated = !isAll && (page !== undefined || limit !== undefined);
+
+    if (isPaginated) {
+      const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+      const limitNum = Math.max(1, Math.min(200, parseInt(limit as string, 10) || 30));
+      const skip = (pageNum - 1) * limitNum;
+
+      const [total, products] = await Promise.all([
+        prisma.product.count({ where }),
+        prisma.product.findMany({
+          where,
+          orderBy: [{ brand: 'asc' }, { category: 'asc' }, { code: 'asc' }],
+          skip,
+          take: limitNum,
+        }),
+      ]);
+
+      return res.json({
+        success: true,
+        data: products,
+        pagination: {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(total / limitNum),
+        },
+      });
+    }
+
     const products = await prisma.product.findMany({
       where,
       orderBy: [{ brand: 'asc' }, { category: 'asc' }, { code: 'asc' }],
@@ -39,6 +69,32 @@ export async function getProducts(req: Request, res: Response, next: NextFunctio
     return res.json({
       success: true,
       data: products,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getProductCategories(req: Request, res: Response, next: NextFunction) {
+  try {
+    const categories = await prisma.product.findMany({
+      select: { category: true },
+      distinct: ['category'],
+      where: {
+        category: {
+          not: '',
+        },
+      },
+      orderBy: { category: 'asc' },
+    });
+
+    const categoryList = categories
+      .map((c) => c.category)
+      .filter((c): c is string => Boolean(c && c.trim()));
+
+    return res.json({
+      success: true,
+      data: categoryList,
     });
   } catch (error) {
     next(error);

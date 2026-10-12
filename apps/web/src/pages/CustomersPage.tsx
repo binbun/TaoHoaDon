@@ -265,7 +265,7 @@ export const CustomersPage: React.FC = () => {
       >
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <Input
-            label="Tên công ty / Tên khách hàng *"
+            label="Tên công ty / Tên khách hàng"
             placeholder="VD: Cty TNHH Nội Thất Minh Quân"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}

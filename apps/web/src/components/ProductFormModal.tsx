@@ -8,6 +8,7 @@ import { Button } from './Button';
 import { Input } from './Input';
 import { Switch } from './ui/switch';
 import { BrandBadge } from './BrandBadge';
+import { Star } from 'lucide-react';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export interface ProductFormData {
   price: number | string;
   vatRate: number | string;
   active: boolean;
+  isFavorite: boolean;
 }
 
 const getInitialFormData = (brand = 'GROB', category = 'Phụ kiện tủ bếp'): ProductFormData => ({
@@ -45,6 +47,7 @@ const getInitialFormData = (brand = 'GROB', category = 'Phụ kiện tủ bếp'
   price: 0,
   vatRate: 0,
   active: true,
+  isFavorite: false,
 });
 
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -95,6 +98,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           price: product.price,
           vatRate: product.vatRate ?? 0,
           active: product.active,
+          isFavorite: product.isFavorite ?? false,
         });
       } else {
         setFormData(getInitialFormData(defaultBrand, defaultCategory));
@@ -126,6 +130,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       price: Number(formData.price) || 0,
       vatRate: Number(formData.vatRate) || 0,
       active: formData.active,
+      isFavorite: formData.isFavorite,
     };
 
     if (product) {
@@ -290,6 +295,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           />
           <label htmlFor="activeSwitch" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
             Kích hoạt sử dụng sản phẩm này trong tạo đơn hàng
+          </label>
+        </div>
+
+        <div className="flex items-center gap-3 p-3 bg-amber-50/60 rounded-xl border border-amber-200/80">
+          <Switch
+            id="favoriteSwitch"
+            checked={formData.isFavorite}
+            onCheckedChange={(checked) => handleChange('isFavorite', checked)}
+          />
+          <label htmlFor="favoriteSwitch" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer flex items-center gap-1.5">
+            <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
+            <span>Đánh dấu là sản phẩm yêu thích (Ưu tiên hiển thị khi lên đơn)</span>
           </label>
         </div>
 

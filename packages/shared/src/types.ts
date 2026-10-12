@@ -73,6 +73,7 @@ export interface Product {
   discountRate?: number | null;
   vatRate: number; // e.g. 0 for 0%, 8 for 8%, 10 for 10%
   active: boolean;
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }

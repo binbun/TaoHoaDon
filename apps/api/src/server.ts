@@ -135,6 +135,7 @@ if (process.env.NODE_ENV !== 'test') {
     try {
       await prisma.$connect();
       console.log('✅ Đã kết nối cơ sở dữ liệu PostgreSQL thành công!');
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "isFavorite" BOOLEAN NOT NULL DEFAULT false;`).catch(() => {});
     } catch (dbErr) {
       console.error('❌ Lỗi kết nối PostgreSQL:', dbErr);
     }

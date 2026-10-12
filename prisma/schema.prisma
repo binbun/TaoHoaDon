@@ -50,6 +50,7 @@ model Product {
   discountRate     Float?          @default(0)
   vatRate          Float           @default(0)
   active           Boolean         @default(true)
+  isFavorite       Boolean         @default(false)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   quotationItems   QuotationItem[]

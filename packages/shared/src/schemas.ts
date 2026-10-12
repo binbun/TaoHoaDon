@@ -49,6 +49,7 @@ export const ProductSchema = z.object({
   discountRate: z.coerce.number().min(0).max(100).optional().nullable().default(0),
   vatRate: z.coerce.number().min(0, 'VAT không được âm').max(100, 'VAT tối đa 100%').default(0),
   active: z.boolean().default(true),
+  isFavorite: z.boolean().default(false).optional(),
 });
 
 export const CustomerSchema = z.object({

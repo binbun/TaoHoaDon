@@ -17,9 +17,10 @@ import {
   MoreVertical,
   FileSpreadsheet,
   Tag,
+  Star,
 } from 'lucide-react';
 import { Product, formatCurrency } from '@taohoadon/shared';
-import { useProducts, useDeleteProduct, useProductCategories } from '../hooks/useProducts';
+import { useProducts, useDeleteProduct, useProductCategories, useToggleFavoriteProduct } from '../hooks/useProducts';
 import { useBrands } from '../hooks/useBrands';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -82,6 +83,7 @@ export const ProductsPage: React.FC = () => {
   const [selectedBrand, setSelectedBrand] = useState<string>('Tất cả');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
+  const [favoriteFilter, setFavoriteFilter] = useState<boolean>(false);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -93,10 +95,12 @@ export const ProductsPage: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
 
+  const toggleFavoriteMutation = useToggleFavoriteProduct();
+
   // Reset page to 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedBrand, selectedCategory, activeFilter]);
+  }, [search, selectedBrand, selectedCategory, activeFilter, favoriteFilter]);
 
   // Queries & Mutations
   const { data: responseData, isLoading } = useProducts({
@@ -104,6 +108,7 @@ export const ProductsPage: React.FC = () => {
     active: activeFilter === 'ALL' ? '' : activeFilter,
     brand: selectedBrand === 'Tất cả' ? undefined : selectedBrand,
     category: selectedCategory === 'ALL' ? undefined : selectedCategory,
+    isFavorite: favoriteFilter ? true : undefined,
     page: currentPage,
     limit: pageSize,
   });
@@ -250,7 +255,7 @@ export const ProductsPage: React.FC = () => {
       <Card className="p-3 sm:p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
           {/* Search Input */}
-          <div className="sm:col-span-2 lg:col-span-6">
+          <div className="sm:col-span-2 lg:col-span-5">
             <Input
               placeholder="Tìm theo mã mới, mã cũ (GP1-70, C1EC...), tên hoặc kích thước..."
               value={search}
@@ -280,7 +285,7 @@ export const ProductsPage: React.FC = () => {
           </div>
 
           {/* Active Status Select */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <Select value={activeFilter} onValueChange={setActiveFilter}>
               <SelectTrigger>
                 <div className="flex items-center gap-2 truncate">
@@ -294,6 +299,23 @@ export const ProductsPage: React.FC = () => {
                 <SelectItem value="false">Tạm ngưng</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Favorite Filter Button */}
+          <div className="lg:col-span-2">
+            <button
+              type="button"
+              onClick={() => setFavoriteFilter(!favoriteFilter)}
+              className={`w-full h-10 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                favoriteFilter
+                  ? 'bg-amber-500 border-amber-500 text-white shadow-xs'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-amber-400 hover:text-amber-600'
+              }`}
+              title="Lọc chỉ các sản phẩm yêu thích"
+            >
+              <Star className={`w-3.5 h-3.5 ${favoriteFilter ? 'fill-white text-white' : 'fill-amber-400 text-amber-500'}`} />
+              <span className="whitespace-nowrap">⭐ Yêu thích</span>
+            </button>
           </div>
         </div>
       </Card>
@@ -339,9 +361,23 @@ export const ProductsPage: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="max-w-sm">
-                      <div className="font-semibold text-slate-900 text-sm">{prod.name}</div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => toggleFavoriteMutation.mutate(prod.id)}
+                          title={prod.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
+                          className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-all active:scale-125 focus:outline-hidden flex-shrink-0"
+                        >
+                          {prod.isFavorite ? (
+                            <Star className="w-4 h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
+                          ) : (
+                            <Star className="w-4 h-4 text-slate-300 hover:text-amber-400 hover:fill-amber-100 transition-colors" />
+                          )}
+                        </button>
+                        <span className="font-semibold text-slate-900 text-sm truncate">{prod.name}</span>
+                      </div>
                       {prod.shortDescription && (
-                        <div className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                        <div className="text-xs text-slate-500 line-clamp-1 mt-0.5 ml-6">
                           {prod.shortDescription}
                         </div>
                       )}

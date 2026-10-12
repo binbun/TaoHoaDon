@@ -8,6 +8,7 @@ import {
   useUpdateQuotation,
   useCreateCustomer,
   useBrands,
+  useToggleFavoriteProduct,
 } from '../hooks';
 import {
   Product,
@@ -55,6 +56,7 @@ import {
   Info,
   ArrowLeft,
   FileSpreadsheet,
+  Star,
 } from 'lucide-react';
 
 export const QuotationBuilderPage: React.FC = () => {
@@ -87,6 +89,7 @@ export const QuotationBuilderPage: React.FC = () => {
   const [productSearch, setProductSearch] = useState('');
   const [pickerBrand, setPickerBrand] = useState('Tất cả');
   const [pickerCategory, setPickerCategory] = useState('');
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
 
   // Items State
   const [items, setItems] = useState<QuotationItemInput[]>([]);
@@ -103,6 +106,7 @@ export const QuotationBuilderPage: React.FC = () => {
   const createQuotationMutation = useCreateQuotation();
   const updateQuotationMutation = useUpdateQuotation();
   const createCustomerMutation = useCreateCustomer();
+  const toggleFavoriteMutation = useToggleFavoriteProduct();
 
   const isSaving =
     createQuotationMutation.isPending ||
@@ -120,11 +124,14 @@ export const QuotationBuilderPage: React.FC = () => {
     return Array.from(cats).sort();
   }, [products, pickerBrand]);
 
+  const favoriteCount = useMemo(() => products.filter((p) => p.isFavorite).length, [products]);
+
   const filteredProducts = useMemo(() => {
     const q = productSearch.toLowerCase().trim();
-    return products.filter((p) => {
+    const result = products.filter((p) => {
       const matchBrand = pickerBrand === 'Tất cả' || p.brand === pickerBrand;
       const matchCat = !pickerCategory || p.category === pickerCategory;
+      const matchFavorite = !onlyFavorites || Boolean(p.isFavorite);
       const matchSearch =
         !q ||
         p.name.toLowerCase().includes(q) ||
@@ -134,9 +141,12 @@ export const QuotationBuilderPage: React.FC = () => {
         (p.cabinetWidth && p.cabinetWidth.toLowerCase().includes(q)) ||
         (p.shortDescription && p.shortDescription.toLowerCase().includes(q));
 
-      return matchBrand && matchCat && matchSearch;
+      return matchBrand && matchCat && matchFavorite && matchSearch;
     });
-  }, [products, pickerBrand, pickerCategory, productSearch]);
+
+    // Ưu tiên hiển thị sản phẩm yêu thích lên đầu
+    return result.sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0));
+  }, [products, pickerBrand, pickerCategory, productSearch, onlyFavorites]);
 
   const { data: dbBrands = [] } = useBrands();
   const brandColorMap = useMemo(() => {
@@ -939,26 +949,45 @@ export const QuotationBuilderPage: React.FC = () => {
             </TabsList>
           </Tabs>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <Input
-              placeholder="Tìm mã mới, mã cũ, tên, kích thước..."
-              value={productSearch}
-              onChange={(e) => setProductSearch(e.target.value)}
-              leftElement={<Search className="w-4 h-4 text-slate-400" />}
-            />
-            <Select value={pickerCategory || 'ALL'} onValueChange={(val) => setPickerCategory(val === 'ALL' ? '' : val)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tất cả danh mục" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Tất cả danh mục</SelectItem>
-                {availablePickerCategories.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+            <div className="sm:col-span-6">
+              <Input
+                placeholder="Tìm mã mới, mã cũ, tên, kích thước..."
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                leftElement={<Search className="w-4 h-4 text-slate-400" />}
+              />
+            </div>
+            <div className="sm:col-span-4">
+              <Select value={pickerCategory || 'ALL'} onValueChange={(val) => setPickerCategory(val === 'ALL' ? '' : val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả danh mục" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Tất cả danh mục</SelectItem>
+                  {availablePickerCategories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="sm:col-span-2 flex items-center">
+              <button
+                type="button"
+                onClick={() => setOnlyFavorites(!onlyFavorites)}
+                className={`w-full h-10 px-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  onlyFavorites
+                    ? 'bg-amber-500 border-amber-500 text-white shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-amber-400 hover:text-amber-600'
+                }`}
+                title="Lọc chỉ các sản phẩm được yêu thích"
+              >
+                <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-white text-white' : 'fill-amber-400 text-amber-500'}`} />
+                <span className="whitespace-nowrap">Yêu thích {favoriteCount > 0 ? `(${favoriteCount})` : ''}</span>
+              </button>
+            </div>
           </div>
 
           <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto space-y-2 pr-1">
@@ -980,6 +1009,24 @@ export const QuotationBuilderPage: React.FC = () => {
                         </span>
                       )}
                       <BrandBadge brand={p.brand} color={brandColorMap[p.brand]} />
+                      
+                      {/* Biểu tượng ngôi sao vàng yêu thích */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavoriteMutation.mutate(p.id);
+                        }}
+                        title={p.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
+                        className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-transform active:scale-125 focus:outline-hidden"
+                      >
+                        {p.isFavorite ? (
+                          <Star className="w-4 h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
+                        ) : (
+                          <Star className="w-4 h-4 text-slate-300 hover:text-amber-400 hover:fill-amber-100 transition-colors" />
+                        )}
+                      </button>
+
                       <span className="font-bold text-slate-900 group-hover:text-[#1B9550] text-sm truncate">
                         {p.name}
                       </span>

@@ -9,6 +9,7 @@ export interface ProductsQueryParams {
   brand?: string;
   category?: string;
   cabinetWidth?: string;
+  isFavorite?: string | boolean;
   page?: number;
   limit?: number;
   all?: boolean | string;
@@ -43,6 +44,9 @@ export function useProducts(params?: ProductsQueryParams) {
       if (params?.cabinetWidth) searchParams.append('cabinetWidth', params.cabinetWidth);
       if (params?.active !== undefined && params?.active !== '') {
         searchParams.append('active', String(params.active));
+      }
+      if (params?.isFavorite !== undefined && params?.isFavorite !== '') {
+        searchParams.append('isFavorite', String(params.isFavorite));
       }
       if (params?.page) searchParams.append('page', String(params.page));
       if (params?.limit) searchParams.append('limit', String(params.limit));
@@ -115,6 +119,27 @@ export function useDeleteProduct() {
     },
     onError: (err: any) => {
       error(err.message || 'Không thể xóa sản phẩm');
+    },
+  });
+}
+
+export function useToggleFavoriteProduct() {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient<Product>(`/products/${id}/toggle-favorite`, { method: 'PATCH' }),
+    onSuccess: (updatedProd) => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      if (updatedProd.isFavorite) {
+        success(`Đã thêm "${updatedProd.name}" vào danh sách yêu thích ⭐`);
+      } else {
+        success(`Đã bỏ "${updatedProd.name}" khỏi danh sách yêu thích`);
+      }
+    },
+    onError: (err: any) => {
+      error(err.message || 'Không thể cập nhật trạng thái yêu thích');
     },
   });
 }

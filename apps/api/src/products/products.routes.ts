@@ -7,6 +7,7 @@ import {
   updateProduct,
   deleteProduct,
   bulkImportProducts,
+  toggleFavoriteProduct,
 } from './products.controller';
 import { requireAuth } from '../middleware/auth';
 
@@ -20,6 +21,7 @@ router.post('/bulk-import', bulkImportProducts);
 router.get('/:id', getProductById);
 router.post('/', createProduct);
 router.patch('/:id', updateProduct);
+router.patch('/:id/toggle-favorite', toggleFavoriteProduct);
 router.delete('/:id', deleteProduct);
 
 export default router;

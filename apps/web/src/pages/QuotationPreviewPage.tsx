@@ -262,23 +262,26 @@ export const QuotationPreviewPage: React.FC = () => {
           <div className="a4-sheet font-sans text-slate-800 text-[11px] leading-relaxed select-text shadow-xl">
             {/* Header */}
             <div className="flex justify-between items-center border-b-2 border-slate-800 pb-3 mb-4 gap-3">
-              <div className="flex items-center gap-3.5">
-                <div className="bg-[#1B9550] text-white font-black text-xl px-5 py-2 rounded-lg tracking-wider whitespace-nowrap shrink-0 border-2 border-[#14733E] print:border-slate-800 shadow-sm flex items-center justify-center min-w-[140px]">
-                  BÍCH ĐIỀU
-                </div>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/grob-logo.png"
+                  alt="Logo GROB"
+                  className="h-11 sm:h-12 w-auto object-contain shrink-0"
+                />
                 <div>
-                  <div className="text-xs font-bold text-slate-900 uppercase">
-                    NHÀ PHÂN PHỐI PHỤ KIỆN TỦ BẾP & TỦ BẾP THÔNG MINH
+                  <div className="text-xs sm:text-[12.5px] font-black text-slate-900 uppercase tracking-tight leading-tight">
+                    CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
                   </div>
-                  <div className="text-[9.5px] text-slate-500 mt-0.5 font-medium">
-                    Phân phối chính hãng: GRÖB • EUPLUS • KINGENBLU
+                  <div className="text-[10px] text-slate-600 mt-1 font-medium">
+                    Phân phối chính hãng: GROB - EUPLUS - EUROKING - KINGENBLU - BLUM
                   </div>
                 </div>
               </div>
               <div className="text-right text-[10px] text-slate-600 bg-slate-50 border border-slate-200 p-2 rounded-lg leading-tight shrink-0">
                 <div className="font-bold text-rose-600">NPP BÍCH ĐIỀU</div>
                 <div>Hotline: 0917 418 989 - 0945 636 567</div>
-                <div>ĐC: Số 147 phố Hát, Thôn Đông Thành, Hát Môn, Hà Nội</div>
+                <div>Zalo: 0348 932 347 - 0917 418 989</div>
+                <div>Địa chỉ: Số 147 phố Hát, Thôn Đông Thành, xã Hát Môn, Tp. Hà Nội</div>
               </div>
             </div>
 
@@ -455,12 +458,19 @@ export const QuotationPreviewPage: React.FC = () => {
           <div className="a4-sheet font-sans text-slate-900 text-[11px] leading-relaxed select-text shadow-xl">
             {/* Top Distributor Bar */}
             <div className="flex justify-between items-center border-b-2 border-[#1B9550] pb-2.5 mb-3.5 gap-3">
-              <div>
-                <div className="text-sm font-black text-[#14733E] uppercase tracking-wide">
-                  NPP BÍCH ĐIỀU
-                </div>
-                <div className="text-[9.5px] text-slate-500 font-medium">
-                  Phụ kiện tủ bếp thông minh chính hãng GRÖB • EUPLUS • KINGENBLU
+              <div className="flex items-center gap-2.5">
+                <img
+                  src="/grob-logo.png"
+                  alt="Logo GROB"
+                  className="h-10 w-auto object-contain shrink-0"
+                />
+                <div>
+                  <div className="text-xs font-black text-slate-900 uppercase tracking-tight leading-tight">
+                    CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
+                  </div>
+                  <div className="text-[9.5px] text-slate-600 font-medium mt-0.5">
+                    Phân phối chính hãng: GROB - EUPLUS - EUROKING - KINGENBLU - BLUM
+                  </div>
                 </div>
               </div>
               <div className="text-right text-[9.5px] text-slate-600 leading-tight">

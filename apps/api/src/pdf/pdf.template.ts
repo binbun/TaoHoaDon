@@ -1,5 +1,6 @@
 import { Quotation, formatCurrency, formatDate } from '@taohoadon/shared';
 import { PAYMENT_QR_BASE64 } from './paymentQr';
+import { GROB_LOGO_BASE64 } from './grobLogo';
 
 export function renderQuotationHtml(quotation: Quotation): string {
   const customer = quotation.customer;
@@ -54,27 +55,18 @@ export function renderQuotationHtml(quotation: Quotation): string {
       gap: 12px;
     }
 
-    .brand-logo-text {
-      background: #1B9550;
-      color: #ffffff;
-      font-size: 20px;
-      font-weight: 900;
-      padding: 6px 18px;
-      border-radius: 6px;
-      letter-spacing: 1px;
-      display: inline-block;
-      white-space: nowrap;
-      min-width: 130px;
-      text-align: center;
-      border: 2px solid #14733E;
+    .brand-logo-img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
     }
 
     .company-title {
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 11.5px;
+      font-weight: 800;
       color: #0f172a;
       text-transform: uppercase;
-      line-height: 1.3;
+      line-height: 1.25;
     }
 
     .company-sub {
@@ -449,14 +441,14 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <!-- Header -->
     <div class="header">
       <div class="brand-box">
-        <div class="brand-logo-text">BÍCH ĐIỀU</div>
+        <img src="${GROB_LOGO_BASE64}" alt="Logo GROB" class="brand-logo-img" />
         <div>
-          <div class="company-title">NHÀ PHÂN PHỐI PHỤ KIỆN TỦ BẾP & TỦ BẾP THÔNG MINH</div>
-          <div class="company-sub">Phân phối chính hãng: GRÖB • EUPLUS • KINGENBLU</div>
+          <div class="company-title">CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC</div>
+          <div class="company-sub">Phân phối chính hãng: GROB - EUPLUS - EUROKING - KINGENBLU - BLUM</div>
         </div>
       </div>
       <div class="distributor-box">
-        <div><strong>NHÀ PHÂN PHỐI: BÍCH ĐIỀU</strong></div>
+        <div><strong>NPP BÍCH ĐIỀU</strong></div>
         <div>Hotline: 0917 418 989 - 0945 636 567</div>
         <div>ĐC: Số 147 phố Hát, Thôn Đông Thành, xã Hát Môn, TP. Hà Nội</div>
       </div>
@@ -879,13 +871,22 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
   <div class="container">
     <!-- Top Distributor Bar -->
     <div class="top-header">
-      <div>
-        <div class="distributor-name">NPP BÍCH ĐIỀU</div>
-        <div class="distributor-sub">Phụ kiện tủ bếp thông minh chính hãng GRÖB • EUPLUS • KINGENBLU</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="${GROB_LOGO_BASE64}" alt="Logo GROB" style="height: 38px; width: auto; object-fit: contain;" />
+        <div>
+          <div style="font-size: 11.5px; font-weight: 800; color: #0f172a; text-transform: uppercase; line-height: 1.2;">
+            CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
+          </div>
+          <div style="font-size: 9px; color: #475569; margin-top: 1px;">
+            Phân phối chính hãng: GROB - EUPLUS - EUROKING - KINGENBLU - BLUM
+          </div>
+        </div>
       </div>
       <div class="distributor-contact">
-        <div>Hotline: <strong>0917 418 989 - 0945 636 567</strong></div>
-        <div>Địa chỉ: Số 147 phố Hát, Hát Môn, Hà Nội</div>
+        <div><strong style="color: #b91c1c;">NPP BÍCH ĐIỀU</strong></div>
+        <div>Hotline: 0917 418 989 - 0945 636 567</div>
+        <div>Zalo: 0348 932 347 - 0917 418 989</div>
+        <div>Địa chỉ: Số 147 phố Hát, Thôn Đông Thành, xã Hát Môn, Tp. Hà Nội</div>
       </div>
     </div>
 

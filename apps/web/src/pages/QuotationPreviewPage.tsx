@@ -217,33 +217,25 @@ export const QuotationPreviewPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('invoice')}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
-              activeTab === 'invoice'
-                ? 'bg-white text-[#14733E] shadow-sm font-bold border border-slate-200/60'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${activeTab === 'invoice'
+              ? 'bg-white text-[#14733E] shadow-sm font-bold border border-slate-200/60'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
           >
             <FileText className="w-4 h-4 text-[#1B9550]" />
             <span>Hóa đơn khách hàng</span>
-            <span className="text-[10.5px] bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded-md font-medium">
-              Đầy đủ giá & QR
-            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('delivery')}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
-              activeTab === 'delivery'
-                ? 'bg-white text-[#14733E] shadow-sm font-bold border border-slate-200/60'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${activeTab === 'delivery'
+              ? 'bg-white text-[#14733E] shadow-sm font-bold border border-slate-200/60'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
           >
             <Truck className="w-4 h-4 text-[#1B9550]" />
             <span>Phiếu giao hàng / Kiểm hàng</span>
-            <span className="text-[10.5px] bg-emerald-100 text-[#14733E] px-1.5 py-0.5 rounded-md font-bold">
-              Theo mẫu ảnh
-            </span>
           </button>
         </div>
 

@@ -14,6 +14,7 @@ import {
   ChevronsRight,
   Sparkles,
   MoreVertical,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Product, formatCurrency } from '@taohoadon/shared';
 import { useProducts, useDeleteProduct } from '../hooks/useProducts';
@@ -22,6 +23,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { EmptyState } from '../components/EmptyState';
 import { ProductFormModal } from '../components/ProductFormModal';
+import { ProductExcelImportModal } from '../components/ProductExcelImportModal';
 import { BrandBadge, getBrandStyle } from '../components/BrandBadge';
 import {
   Table,
@@ -82,6 +84,7 @@ export const ProductsPage: React.FC = () => {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
 
@@ -150,14 +153,24 @@ export const ProductsPage: React.FC = () => {
             Quản lý giá phân phối phụ kiện Inox 304, nhôm phủ nano, bếp, hút mùi, chậu vòi...
           </p>
         </div>
-        <Button
-          variant="primary"
-          className="self-stretch sm:self-auto justify-center"
-          leftIcon={<Plus className="w-4 h-4" />}
-          onClick={openCreateModal}
-        >
-          Thêm sản phẩm mới
-        </Button>
+        <div className="flex items-center gap-2 self-stretch sm:self-auto">
+          <Button
+            variant="outline"
+            className="flex-1 sm:flex-none justify-center border-slate-300 hover:border-[#1B9550] text-slate-700 hover:text-[#14733E] hover:bg-emerald-50/50 text-xs sm:text-sm font-semibold"
+            leftIcon={<FileSpreadsheet className="w-4 h-4 text-[#1B9550]" />}
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            Nhập từ Excel
+          </Button>
+          <Button
+            variant="primary"
+            className="flex-1 sm:flex-none justify-center text-xs sm:text-sm font-bold shadow-xs shadow-[#1B9550]/20"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={openCreateModal}
+          >
+            Thêm sản phẩm mới
+          </Button>
+        </div>
       </div>
 
       {/* Brand Tabs with Radix Tabs */}
@@ -436,6 +449,13 @@ export const ProductsPage: React.FC = () => {
         product={editingProduct}
         defaultBrand={selectedBrand === 'Tất cả' ? 'GROB' : selectedBrand}
         defaultCategory={selectedCategory === 'ALL' ? '' : selectedCategory}
+      />
+
+      {/* Product Excel Bulk Import Modal */}
+      <ProductExcelImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {}}
       />
 
       {/* Delete Confirmation with Radix AlertDialog */}

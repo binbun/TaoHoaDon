@@ -199,3 +199,98 @@ export async function deleteProduct(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function bulkImportProducts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { products, overwriteExisting = true } = req.body;
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Danh sách sản phẩm không hợp lệ hoặc rỗng',
+      });
+    }
+
+    let createdCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
+    const errors: Array<{ code: string; error: string }> = [];
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of products) {
+        try {
+          const validated = ProductSchema.parse(item);
+          const normalizedCode = validated.code.trim().toUpperCase();
+
+          const existing = await tx.product.findUnique({
+            where: { code: normalizedCode },
+          });
+
+          if (existing) {
+            if (overwriteExisting) {
+              await tx.product.update({
+                where: { id: existing.id },
+                data: {
+                  oldCode: validated.oldCode?.trim() || null,
+                  name: validated.name.trim(),
+                  brand: validated.brand?.trim() || existing.brand,
+                  category: validated.category?.trim() || existing.category,
+                  shortDescription: validated.shortDescription?.trim() || null,
+                  cabinetWidth: validated.cabinetWidth?.trim() || null,
+                  dimensions: validated.dimensions?.trim() || null,
+                  unit: validated.unit?.trim() || existing.unit,
+                  price: validated.price,
+                  retailPrice: validated.retailPrice !== undefined && validated.retailPrice !== null ? validated.retailPrice : existing.retailPrice,
+                  discountRate: validated.discountRate !== undefined && validated.discountRate !== null ? validated.discountRate : existing.discountRate,
+                  vatRate: validated.vatRate !== undefined && validated.vatRate !== null ? validated.vatRate : existing.vatRate,
+                  active: validated.active !== undefined && validated.active !== null ? validated.active : existing.active,
+                },
+              });
+              updatedCount++;
+            } else {
+              skippedCount++;
+            }
+          } else {
+            await tx.product.create({
+              data: {
+                code: normalizedCode,
+                oldCode: validated.oldCode?.trim() || null,
+                name: validated.name.trim(),
+                brand: validated.brand?.trim() || 'GROB',
+                category: validated.category?.trim() || 'Khác',
+                shortDescription: validated.shortDescription?.trim() || null,
+                cabinetWidth: validated.cabinetWidth?.trim() || null,
+                dimensions: validated.dimensions?.trim() || null,
+                unit: validated.unit?.trim() || 'Bộ',
+                price: validated.price,
+                retailPrice: validated.retailPrice ?? 0,
+                discountRate: validated.discountRate ?? 0,
+                vatRate: validated.vatRate ?? 0,
+                active: validated.active ?? true,
+              },
+            });
+            createdCount++;
+          }
+        } catch (err: any) {
+          errors.push({
+            code: item.code || 'UNKNOWN',
+            error: err.errors?.[0]?.message || err.message || 'Lỗi dữ liệu sản phẩm',
+          });
+        }
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: `Nhập sản phẩm hoàn tất: Thêm mới ${createdCount}, Cập nhật ${updatedCount}, Bỏ qua ${skippedCount}`,
+      data: {
+        createdCount,
+        updatedCount,
+        skippedCount,
+        errors,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}

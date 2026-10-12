@@ -5,6 +5,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  bulkImportProducts,
 } from './products.controller';
 import { requireAuth } from '../middleware/auth';
 
@@ -13,6 +14,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', getProducts);
+router.post('/bulk-import', bulkImportProducts);
 router.get('/:id', getProductById);
 router.post('/', createProduct);
 router.patch('/:id', updateProduct);

@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
-import { QuotationSchema, QuotationItemInput } from '@taohoadon/shared';
+import { QuotationSchema, QuotationItemInput, CalculatedQuotationItem } from '@taohoadon/shared';
 import { generateQuotationNumber, calculateQuotationTotals } from './quotations.service';
 import { generateQuotationPdf } from '../pdf/pdf.service';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -57,6 +57,11 @@ export async function getQuotations(req: AuthenticatedRequest, res: Response, ne
           },
           items: {
             orderBy: { sortOrder: 'asc' },
+            include: {
+              product: {
+                select: { id: true, code: true, name: true },
+              },
+            },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -94,6 +99,11 @@ export async function getQuotationById(req: AuthenticatedRequest, res: Response,
         },
         items: {
           orderBy: { sortOrder: 'asc' },
+          include: {
+            product: {
+              select: { id: true, code: true, name: true },
+            },
+          },
         },
       },
     });
@@ -162,8 +172,9 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
         grandTotal: summary.grandTotal,
         createdBy: currentUser.id,
         items: {
-          create: calculatedItems.map((item) => ({
+          create: calculatedItems.map((item: CalculatedQuotationItem) => ({
             productId: item.productId || null,
+            productCodeSnapshot: item.productCodeSnapshot || null,
             productNameSnapshot: item.productNameSnapshot,
             descriptionSnapshot: item.descriptionSnapshot || null,
             unit: item.unit || 'Gói',
@@ -181,7 +192,14 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
       },
       include: {
         customer: true,
-        items: true,
+        items: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            product: {
+              select: { id: true, code: true, name: true },
+            },
+          },
+        },
       },
     });
 
@@ -262,8 +280,9 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
           previousDebt: summary.previousDebt || 0,
           grandTotal: summary.grandTotal,
           items: {
-            create: calculatedItems.map((item) => ({
+            create: calculatedItems.map((item: CalculatedQuotationItem) => ({
               productId: item.productId || null,
+              productCodeSnapshot: item.productCodeSnapshot || null,
               productNameSnapshot: item.productNameSnapshot,
               descriptionSnapshot: item.descriptionSnapshot || null,
               unit: item.unit || 'Gói',
@@ -283,6 +302,11 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
           customer: true,
           items: {
             orderBy: { sortOrder: 'asc' },
+            include: {
+              product: {
+                select: { id: true, code: true, name: true },
+              },
+            },
           },
         },
       });
@@ -414,6 +438,7 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
         items: {
           create: source.items.map((item) => ({
             productId: item.productId,
+            productCodeSnapshot: item.productCodeSnapshot || (item as any).product?.code || null,
             productNameSnapshot: item.productNameSnapshot,
             descriptionSnapshot: item.descriptionSnapshot,
             unit: item.unit,
@@ -433,6 +458,11 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
         customer: true,
         items: {
           orderBy: { sortOrder: 'asc' },
+          include: {
+            product: {
+              select: { id: true, code: true, name: true },
+            },
+          },
         },
       },
     });
@@ -473,6 +503,11 @@ export async function downloadQuotationPdf(req: AuthenticatedRequest, res: Respo
         customer: true,
         items: {
           orderBy: { sortOrder: 'asc' },
+          include: {
+            product: {
+              select: { id: true, code: true, name: true },
+            },
+          },
         },
       },
     });

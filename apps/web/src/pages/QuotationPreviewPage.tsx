@@ -274,38 +274,47 @@ export const QuotationPreviewPage: React.FC = () => {
             <thead>
               <tr className="bg-slate-100 text-slate-800 text-[10.5px] font-bold uppercase tracking-wider border-t border-slate-300 border-b-2 border-slate-400">
                 <th className="py-2 px-2.5 text-center w-8">STT</th>
+                <th className="py-2 px-2.5 text-left w-28">Mã sản phẩm</th>
                 <th className="py-2 px-2.5 text-left">Tên sản phẩm</th>
-                <th className="py-2 px-2.5 text-center w-16">ĐVT</th>
+                <th className="py-2 px-2.5 text-center w-14">ĐVT</th>
                 <th className="py-2 px-2.5 text-center w-12">SL</th>
                 <th className="py-2 px-2.5 text-right w-24">Đơn giá</th>
                 <th className="py-2 px-2.5 text-right w-28">Thành tiền (đ)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {items.map((item, index) => (
-                <tr key={item.id || index} className="align-top">
-                  <td className="py-2.5 px-2.5 text-center text-slate-500">{index + 1}</td>
-                  <td className="py-2.5 px-2.5">
-                    <div className="font-bold text-slate-900 text-[11.5px]">{item.productNameSnapshot}</div>
-                  </td>
-                  <td className="py-2.5 px-2.5 text-center text-slate-600">{item.unit || 'Bộ'}</td>
-                  <td className="py-2.5 px-2.5 text-center font-medium">{item.quantity}</td>
-                  <td className="py-2.5 px-2.5 text-right">
-                    <div className="text-slate-700">{formatCurrency(item.unitPrice)}</div>
-                    {item.discount > 0 && (
-                      <div className="text-[9.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
-                        -{formatCurrency(item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100)))} ({item.discount}%)
-                      </div>
-                    )}
-                  </td>
-                  <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatCurrency(item.total)}</td>
-                </tr>
-              ))}
+              {items.map((item, index) => {
+                const productCode = item.productCodeSnapshot || (item as any).product?.code || '---';
+                return (
+                  <tr key={item.id || index} className="align-top">
+                    <td className="py-2.5 px-2.5 text-center text-slate-500">{index + 1}</td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="font-mono font-bold text-slate-800 text-[11px] bg-slate-100/90 px-1.5 py-0.5 rounded border border-slate-200 inline-block tracking-tight">
+                        {productCode}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2.5">
+                      <div className="font-bold text-slate-900 text-[11.5px]">{item.productNameSnapshot}</div>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-center text-slate-600">{item.unit || 'Bộ'}</td>
+                    <td className="py-2.5 px-2.5 text-center font-medium">{item.quantity}</td>
+                    <td className="py-2.5 px-2.5 text-right">
+                      <div className="text-slate-700">{formatCurrency(item.unitPrice)}</div>
+                      {item.discount > 0 && (
+                        <div className="text-[9.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
+                          -{formatCurrency(item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100)))} ({item.discount}%)
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatCurrency(item.total)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-400 font-medium text-slate-700 text-[11px]">
                 <td
-                  colSpan={3}
+                  colSpan={4}
                   rowSpan={
                     2 +
                     (quotation.discountTotal > 0 ? 1 : 0) +

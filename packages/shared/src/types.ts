@@ -80,6 +80,7 @@ export interface Product {
 export interface QuotationItemInput {
   id?: string;
   productId?: string | null;
+  productCodeSnapshot?: string | null;
   productNameSnapshot: string;
   descriptionSnapshot?: string | null;
   unit: string;
@@ -93,6 +94,7 @@ export interface QuotationItemInput {
 export interface CalculatedQuotationItem extends QuotationItemInput {
   id: string;
   quotationId?: string;
+  product?: { id: string; code: string; name: string } | null;
   subtotal: number; // quantity * unitPrice
   discountAmount?: number; // subtotal * (discount / 100)
   taxableAmount: number; // subtotal - discountAmount

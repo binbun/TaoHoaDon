@@ -214,11 +214,12 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .col-stt { width: 5%; text-align: center; color: #64748b; }
-    .col-product { width: 45%; }
-    .col-unit { width: 10%; text-align: center; color: #475569; }
-    .col-qty { width: 8%; text-align: center; }
-    .col-price { width: 15%; text-align: right; }
-    .col-total { width: 17%; text-align: right; font-weight: 700; color: #0f172a; }
+    .col-code { width: 14%; font-weight: 700; color: #0f172a; font-family: monospace; font-size: 10px; }
+    .col-product { width: 36%; }
+    .col-unit { width: 8%; text-align: center; color: #475569; }
+    .col-qty { width: 7%; text-align: center; }
+    .col-price { width: 14%; text-align: right; }
+    .col-total { width: 16%; text-align: right; font-weight: 700; color: #0f172a; }
 
     .product-title {
       font-weight: 700;
@@ -505,6 +506,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
       <thead>
         <tr>
           <th class="col-stt">STT</th>
+          <th class="col-code">Mã SP</th>
           <th class="col-product">Tên sản phẩm</th>
           <th class="col-unit">ĐVT</th>
           <th class="col-qty">SL</th>
@@ -513,9 +515,12 @@ export function renderQuotationHtml(quotation: Quotation): string {
         </tr>
       </thead>
       <tbody>
-        ${items.map((item, index) => `
+        ${items.map((item, index) => {
+          const productCode = item.productCodeSnapshot || (item as any).product?.code || '-';
+          return `
           <tr>
             <td class="col-stt">${index + 1}</td>
+            <td class="col-code">${productCode}</td>
             <td class="col-product">
               <div class="product-title">${item.productNameSnapshot}</div>
             </td>
@@ -527,7 +532,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
             </td>
             <td class="col-total">${formatCurrency(item.total)}</td>
           </tr>
-        `).join('')}
+        `;}).join('')}
       </tbody>
     </table>
 

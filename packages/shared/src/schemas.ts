@@ -63,6 +63,7 @@ export const CustomerSchema = z.object({
 export const QuotationItemSchema = z.object({
   id: z.string().optional(),
   productId: z.string().optional().nullable(),
+  productCodeSnapshot: z.string().max(100).optional().nullable(),
   productNameSnapshot: z.string().min(1, 'Tên sản phẩm không được để trống'),
   descriptionSnapshot: z.string().max(300).optional().nullable(),
   unit: z.string().min(1, 'Đơn vị tính không được để trống').default('Bộ'),

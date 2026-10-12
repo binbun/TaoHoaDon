@@ -255,6 +255,7 @@ async function initPostgresDatabase() {
         "id" TEXT PRIMARY KEY,
         "quotationId" TEXT NOT NULL REFERENCES "Quotation"("id") ON DELETE CASCADE,
         "productId" TEXT REFERENCES "Product"("id") ON DELETE SET NULL,
+        "productCodeSnapshot" TEXT,
         "productNameSnapshot" TEXT NOT NULL,
         "descriptionSnapshot" TEXT,
         "unit" TEXT NOT NULL DEFAULT 'Bộ',
@@ -271,6 +272,11 @@ async function initPostgresDatabase() {
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure productCodeSnapshot column exists if table was created previously
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "QuotationItem" ADD COLUMN IF NOT EXISTS "productCodeSnapshot" TEXT;`);
+    } catch (_) {}
 
     console.log('✅ Cấu trúc bảng PostgreSQL đã sẵn sàng!');
 

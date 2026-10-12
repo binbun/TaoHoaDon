@@ -153,6 +153,7 @@ export const QuotationBuilderPage: React.FC = () => {
         existingQuote.items.map((item, index) => ({
           id: item.id,
           productId: item.productId,
+          productCodeSnapshot: item.productCodeSnapshot || (item as any).product?.code || '',
           productNameSnapshot: item.productNameSnapshot,
           descriptionSnapshot: item.descriptionSnapshot,
           unit: item.unit,
@@ -183,6 +184,7 @@ export const QuotationBuilderPage: React.FC = () => {
     const newItem: QuotationItemInput = {
       id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       productId: prod.id,
+      productCodeSnapshot: prod.code,
       productNameSnapshot: prod.name,
       descriptionSnapshot: prod.shortDescription || '',
       unit: prod.unit || 'Bộ',
@@ -200,6 +202,7 @@ export const QuotationBuilderPage: React.FC = () => {
   const handleAddBlankItem = () => {
     const newItem: QuotationItemInput = {
       id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      productCodeSnapshot: '',
       productNameSnapshot: '',
       descriptionSnapshot: '',
       unit: 'Bộ',
@@ -300,6 +303,7 @@ export const QuotationBuilderPage: React.FC = () => {
         customerId,
         items: items.map((it, idx) => ({
           productId: it.productId || undefined,
+          productCodeSnapshot: it.productCodeSnapshot?.trim() || undefined,
           productNameSnapshot: it.productNameSnapshot.trim(),
           descriptionSnapshot: it.descriptionSnapshot?.trim() || undefined,
           unit: it.unit?.trim() || 'Bộ',
@@ -661,7 +665,15 @@ export const QuotationBuilderPage: React.FC = () => {
 
                       {/* Inputs */}
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3">
-                        <div className="sm:col-span-8">
+                        <div className="sm:col-span-3">
+                          <Input
+                            placeholder="Mã SP (ví dụ: C1E.70B)"
+                            value={item.productCodeSnapshot || ''}
+                            onChange={(e) => handleItemChange(index, 'productCodeSnapshot', e.target.value)}
+                            className="font-mono text-xs uppercase"
+                          />
+                        </div>
+                        <div className="sm:col-span-6">
                           <Input
                             placeholder="Tên phụ kiện / thiết bị tủ bếp *"
                             value={item.productNameSnapshot}
@@ -669,9 +681,9 @@ export const QuotationBuilderPage: React.FC = () => {
                             required
                           />
                         </div>
-                        <div className="sm:col-span-4">
+                        <div className="sm:col-span-3">
                           <Input
-                            placeholder="ĐVT (Bộ, Chiếc, Mét dài...)"
+                            placeholder="ĐVT (Bộ, Chiếc...)"
                             value={item.unit}
                             onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                           />

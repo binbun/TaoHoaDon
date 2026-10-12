@@ -41,6 +41,9 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
         orderBy: { createdAt: 'desc' },
         include: {
           customer: true,
+          creator: {
+            select: { id: true, name: true, email: true },
+          },
           items: { take: 3 },
         },
       }),

@@ -5,19 +5,20 @@ import { useToast } from '../context/ToastContext';
 
 export const quotationKeys = {
   all: ['quotations'] as const,
-  list: (params?: { search?: string; status?: string }) =>
+  list: (params?: { search?: string; status?: string; creatorId?: string }) =>
     ['quotations', 'list', params] as const,
   detail: (id: string) => ['quotations', 'detail', id] as const,
   dashboardStats: ['dashboard-stats'] as const,
 };
 
-export function useQuotations(params?: { search?: string; status?: string }) {
+export function useQuotations(params?: { search?: string; status?: string; creatorId?: string }) {
   return useQuery<Quotation[]>({
     queryKey: quotationKeys.list(params),
     queryFn: () => {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.append('search', params.search);
       if (params?.status) searchParams.append('status', params.status);
+      if (params?.creatorId) searchParams.append('creatorId', params.creatorId);
       const query = searchParams.toString();
       return apiClient(`/quotations${query ? `?${query}` : ''}`);
     },

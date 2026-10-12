@@ -157,6 +157,7 @@ export const DashboardPage: React.FC = () => {
               <TableRow>
                 <TableHead>Số đơn hàng</TableHead>
                 <TableHead>Khách hàng / Đại lý</TableHead>
+                <TableHead>Nhân viên lên đơn</TableHead>
                 <TableHead className="text-right">Tổng tiền</TableHead>
                 <TableHead>Ngày lập</TableHead>
                 <TableHead className="text-center">Trạng thái</TableHead>
@@ -176,6 +177,20 @@ export const DashboardPage: React.FC = () => {
                   </TableCell>
                   <TableCell className="font-medium text-slate-900">
                     {q.customer?.companyName || '---'}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {q.creator ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[11px] uppercase flex-shrink-0">
+                          {q.creator.name ? q.creator.name.charAt(0) : 'U'}
+                        </div>
+                        <span className="font-medium text-slate-800 text-xs">
+                          {q.creator.name || q.creator.email}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">Hệ thống</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-bold text-slate-900 whitespace-nowrap">
                     {formatCurrency(q.grandTotal)}

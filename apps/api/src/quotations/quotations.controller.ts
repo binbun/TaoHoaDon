@@ -501,6 +501,9 @@ export async function downloadQuotationPdf(req: AuthenticatedRequest, res: Respo
       where: { id },
       include: {
         customer: true,
+        creator: {
+          select: { id: true, name: true, email: true },
+        },
         items: {
           orderBy: { sortOrder: 'asc' },
           include: {

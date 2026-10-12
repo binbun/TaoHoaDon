@@ -188,6 +188,7 @@ export const QuotationsListPage: React.FC = () => {
               <TableRow>
                 <TableHead>Số đơn hàng & Tiêu đề</TableHead>
                 <TableHead>Khách hàng / Đại lý</TableHead>
+                <TableHead>Nhân viên lên đơn</TableHead>
                 <TableHead className="text-right">Tổng tiền</TableHead>
                 <TableHead>Ngày tạo</TableHead>
                 <TableHead className="text-center">Trạng thái</TableHead>
@@ -215,6 +216,26 @@ export const QuotationsListPage: React.FC = () => {
                       {q.customer?.contactName ? `LH: ${q.customer.contactName}` : ''}
                       {q.customer?.phone ? ` - ${q.customer.phone}` : ''}
                     </div>
+                  </TableCell>
+
+                  <TableCell className="whitespace-nowrap">
+                    {q.creator ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
+                          {q.creator.name ? q.creator.name.charAt(0) : 'U'}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-800 text-xs truncate max-w-[130px] sm:max-w-[160px]">
+                            {q.creator.name || 'Chưa đặt tên'}
+                          </div>
+                          <div className="text-[11px] text-slate-400 truncate max-w-[130px] sm:max-w-[160px]">
+                            {q.creator.email}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">Hệ thống</span>
+                    )}
                   </TableCell>
 
                   <TableCell className="text-right font-bold text-slate-900 whitespace-nowrap text-sm">

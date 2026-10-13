@@ -45,10 +45,10 @@ model Product {
   cabinetWidth     String?
   dimensions       String?
   unit             String          @default("Bộ")
-  price            Float           @default(0)
-  retailPrice      Float?          @default(0)
-  discountRate     Float?          @default(0)
-  vatRate          Float           @default(0)
+  price            Decimal         @default(0) @db.Decimal(18, 4)
+  retailPrice      Decimal?        @default(0) @db.Decimal(18, 4)
+  discountRate     Decimal?        @default(0) @db.Decimal(5, 2)
+  vatRate          Decimal         @default(0) @db.Decimal(5, 2)
   active           Boolean         @default(true)
   isFavorite       Boolean         @default(false)
   createdAt        DateTime        @default(now())
@@ -57,26 +57,42 @@ model Product {
 }
 
 model Quotation {
-  id              String          @id @default(uuid())
-  quotationNumber String          @unique
-  customerId      String
-  customer        Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  quotationDate   DateTime        @default(now())
-  validUntil      DateTime
-  title           String          @default("HÓA ĐƠN BÁN HÀNG")
-  note            String?
-  status          String          @default("DRAFT") // DRAFT, SENT, PAID
-  subtotal        Float           @default(0)
-  discountTotal   Float           @default(0)
-  taxableTotal    Float           @default(0)
-  vatTotal        Float           @default(0)
-  previousDebt    Float           @default(0)
-  grandTotal      Float           @default(0)
-  createdBy       String?
-  creator         User?           @relation(fields: [createdBy], references: [id], onDelete: SetNull)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  items           QuotationItem[]
+  id                String          @id @default(uuid())
+  quotationNumber   String          @unique
+  invoiceType       String          @default("STANDARD") // STANDARD, CREDIT_NOTE, DEBIT_NOTE
+  originalInvoiceId String?
+  originalInvoice   Quotation?      @relation("InvoiceAdjustments", fields: [originalInvoiceId], references: [id], onDelete: SetNull)
+  adjustments       Quotation[]     @relation("InvoiceAdjustments")
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quotationDate     DateTime        @default(now())
+  validUntil        DateTime
+  title             String          @default("HÓA ĐƠN BÁN HÀNG")
+  note              String?
+  status            String          @default("DRAFT") // DRAFT, ISSUED, SENT, PARTIALLY_PAID, PAID, OVERDUE, VOIDED, CANCELLED
+  currency          String          @default("VND")
+  exchangeRate      Decimal         @default(1.0) @db.Decimal(18, 6)
+  subtotal          Decimal         @default(0) @db.Decimal(18, 2)
+  discountTotal     Decimal         @default(0) @db.Decimal(18, 2)
+  taxableTotal      Decimal         @default(0) @db.Decimal(18, 2)
+  vatTotal          Decimal         @default(0) @db.Decimal(18, 2)
+  previousDebt      Decimal         @default(0) @db.Decimal(18, 2)
+  grandTotal        Decimal         @default(0) @db.Decimal(18, 2)
+  balanceDue        Decimal         @default(0) @db.Decimal(18, 2)
+  issuedAt          DateTime?
+  voidedAt          DateTime?
+  voidReason        String?
+  voidedBy          String?
+  createdBy         String?
+  creator           User?           @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  items             QuotationItem[]
+  payments          Payment[]
+
+  @@index([status])
+  @@index([quotationDate])
+  @@index([customerId])
 }
 
 model QuotationItem {
@@ -89,17 +105,34 @@ model QuotationItem {
   productNameSnapshot String
   descriptionSnapshot String?
   unit                String     @default("Bộ")
-  quantity            Float      @default(1)
-  unitPrice           Float      @default(0)
-  discount            Float      @default(0)
-  vatRate             Float      @default(0)
-  subtotal            Float      @default(0)
-  taxableAmount       Float      @default(0)
-  vatAmount           Float      @default(0)
-  total               Float      @default(0)
+  quantity            Decimal    @default(1) @db.Decimal(14, 3)
+  unitPrice           Decimal    @default(0) @db.Decimal(18, 4)
+  discount            Decimal    @default(0) @db.Decimal(5, 2)
+  vatRate             Decimal    @default(0) @db.Decimal(5, 2)
+  subtotal            Decimal    @default(0) @db.Decimal(18, 2)
+  taxableAmount       Decimal    @default(0) @db.Decimal(18, 2)
+  vatAmount           Decimal    @default(0) @db.Decimal(18, 2)
+  total               Decimal    @default(0) @db.Decimal(18, 2)
   sortOrder           Int        @default(0)
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
+}
+
+model Payment {
+  id                   String     @id @default(uuid())
+  quotationId          String
+  quotation            Quotation  @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  amount               Decimal    @db.Decimal(18, 2)
+  currency             String     @default("VND")
+  gateway              String     @default("MANUAL") // MANUAL, VIETQR, BANK_TRANSFER, CASH
+  gatewayTransactionId String?    @unique
+  referenceCode        String?
+  note                 String?
+  paymentDate          DateTime   @default(now())
+  recordedBy           String?
+  createdAt            DateTime   @default(now())
+
+  @@index([quotationId])
 }
 
 model AuditLog {
@@ -112,8 +145,13 @@ model AuditLog {
   resource   String
   resourceId String?
   details    String?
+  delta      String?
   ipAddress  String?
   createdAt  DateTime @default(now())
+
+  @@index([resource, resourceId])
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }
 
 model Brand {

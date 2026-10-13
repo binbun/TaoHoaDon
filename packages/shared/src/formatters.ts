@@ -64,11 +64,21 @@ export function getStatusInfo(status: string): { label: string; color: string; b
   switch (status) {
     case 'DRAFT':
       return { label: 'Bản nháp', color: 'gray', bg: 'bg-slate-100', text: 'text-slate-700' };
+    case 'ISSUED':
+      return { label: 'Đã phát hành', color: 'indigo', bg: 'bg-indigo-50 text-indigo-700 border border-indigo-200/60', text: 'text-indigo-700' };
     case 'SENT':
       return { label: 'Đã gửi', color: 'blue', bg: 'bg-blue-100', text: 'text-blue-700' };
+    case 'PARTIALLY_PAID':
+      return { label: 'Thanh toán 1 phần', color: 'amber', bg: 'bg-amber-100 text-amber-800 border border-amber-200/80', text: 'text-amber-800' };
     case 'PAID':
     case 'ACCEPTED':
       return { label: 'Đã thanh toán', color: 'green', bg: 'bg-emerald-100', text: 'text-emerald-700' };
+    case 'OVERDUE':
+      return { label: 'Quá hạn thanh toán', color: 'rose', bg: 'bg-rose-100 text-rose-800 border border-rose-200', text: 'text-rose-800' };
+    case 'VOIDED':
+      return { label: 'Đã hủy (Void)', color: 'slate', bg: 'bg-slate-100 text-slate-500 border border-slate-300 line-through', text: 'text-slate-500' };
+    case 'CANCELLED':
+      return { label: 'Đã hủy', color: 'slate', bg: 'bg-slate-100 text-slate-500 border border-slate-200', text: 'text-slate-500' };
     default:
       return { label: status, color: 'gray', bg: 'bg-slate-100', text: 'text-slate-700' };
   }

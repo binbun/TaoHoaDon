@@ -112,3 +112,81 @@ export function useDuplicateQuotation() {
     },
   });
 }
+
+export function useIssueQuotation() {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient<Quotation>(`/quotations/${id}/issue`, { method: 'POST' }),
+    onSuccess: (issuedQuote) => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(issuedQuote.id) });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      success(`Đã phát hành chính thức hóa đơn ${issuedQuote.quotationNumber}!`);
+    },
+    onError: (err: any) => {
+      error(err.message || 'Không thể phát hành đơn hàng');
+    },
+  });
+}
+
+export function useVoidQuotation() {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      apiClient<Quotation>(`/quotations/${id}/void`, { method: 'POST', data: { reason } }),
+    onSuccess: (voidedQuote) => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(voidedQuote.id) });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      success(`Đã hủy hóa đơn ${voidedQuote.quotationNumber}!`);
+    },
+    onError: (err: any) => {
+      error(err.message || 'Không thể hủy hóa đơn');
+    },
+  });
+}
+
+export function useCreateCreditNote() {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      apiClient<Quotation>(`/quotations/${id}/credit-note`, { method: 'POST', data }),
+    onSuccess: (creditNote) => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      success(`Đã tạo hóa đơn điều chỉnh ${creditNote.quotationNumber} thành công!`);
+    },
+    onError: (err: any) => {
+      error(err.message || 'Không thể tạo hóa đơn điều chỉnh');
+    },
+  });
+}
+
+export function useRecordPayment() {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      apiClient<{ payment: any; updatedQuotation: Quotation }>(`/quotations/${id}/payments`, {
+        method: 'POST',
+        data,
+      }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(res.updatedQuotation.id) });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      success(`Ghi nhận thanh toán thành công!`);
+    },
+    onError: (err: any) => {
+      error(err.message || 'Không thể ghi nhận thanh toán');
+    },
+  });
+}

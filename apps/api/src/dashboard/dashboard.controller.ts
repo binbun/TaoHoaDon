@@ -16,7 +16,9 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
     const [
       totalQuotations,
       monthQuotations,
-      allQuotations,
+      totalRevenueAgg,
+      paidRevenueAgg,
+      statusGroups,
       recentQuotations,
     ] = await Promise.all([
       prisma.quotation.count({ where: baseWhere }),
@@ -28,12 +30,28 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
           },
         },
       }),
-      prisma.quotation.findMany({
-        where: baseWhere,
-        select: {
-          status: true,
+      prisma.quotation.aggregate({
+        where: {
+          ...baseWhere,
+          status: { notIn: ['VOIDED', 'CANCELLED'] },
+        },
+        _sum: {
           grandTotal: true,
         },
+      }),
+      prisma.quotation.aggregate({
+        where: {
+          ...baseWhere,
+          status: { in: ['PAID', 'ACCEPTED'] },
+        },
+        _sum: {
+          grandTotal: true,
+        },
+      }),
+      prisma.quotation.groupBy({
+        by: ['status'],
+        where: baseWhere,
+        _count: { id: true },
       }),
       prisma.quotation.findMany({
         where: baseWhere,
@@ -49,22 +67,23 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
       }),
     ]);
 
-    let totalGrandTotal = 0;
-    let acceptedGrandTotal = 0;
+    const totalGrandTotal = Number(totalRevenueAgg._sum.grandTotal || 0);
+    const acceptedGrandTotal = Number(paidRevenueAgg._sum.grandTotal || 0);
+
     const statusDistribution: Record<string, number> = {
       DRAFT: 0,
+      ISSUED: 0,
       SENT: 0,
+      PARTIALLY_PAID: 0,
       PAID: 0,
+      OVERDUE: 0,
+      VOIDED: 0,
+      CANCELLED: 0,
     };
 
-    allQuotations.forEach((q) => {
-      totalGrandTotal += q.grandTotal;
-      if (q.status === 'PAID' || q.status === 'ACCEPTED') {
-        acceptedGrandTotal += q.grandTotal;
-        statusDistribution.PAID = (statusDistribution.PAID || 0) + 1;
-      } else if (statusDistribution[q.status] !== undefined) {
-        statusDistribution[q.status]++;
-      }
+    statusGroups.forEach((group) => {
+      const statusKey = group.status === 'ACCEPTED' ? 'PAID' : group.status;
+      statusDistribution[statusKey] = (statusDistribution[statusKey] || 0) + group._count.id;
     });
 
     return res.json({

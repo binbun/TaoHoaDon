@@ -1,6 +1,13 @@
 import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
-import { QuotationSchema, QuotationItemInput, CalculatedQuotationItem } from '@taohoadon/shared';
+import {
+  QuotationSchema,
+  QuotationItemInput,
+  CalculatedQuotationItem,
+  VoidQuotationSchema,
+  CreditNoteSchema,
+  RecordPaymentSchema,
+} from '@taohoadon/shared';
 import { generateQuotationNumber, calculateQuotationTotals } from './quotations.service';
 import { generateQuotationPdf, generateDeliverySlipPdf } from '../pdf/pdf.service';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -164,12 +171,22 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
         title: validatedData.title.trim(),
         note: validatedData.note?.trim() || null,
         status: validatedData.status || 'DRAFT',
+        currency: validatedData.currency || 'VND',
+        invoiceType: validatedData.invoiceType || 'STANDARD',
+        originalInvoiceId: validatedData.originalInvoiceId || null,
         subtotal: summary.subtotal,
         discountTotal: summary.discountTotal,
         taxableTotal: summary.taxableTotal,
         vatTotal: summary.vatTotal,
         previousDebt: summary.previousDebt || 0,
         grandTotal: summary.grandTotal,
+        balanceDue: summary.grandTotal,
+        issuedAt:
+          validatedData.status === 'ISSUED' ||
+          validatedData.status === 'SENT' ||
+          validatedData.status === 'PAID'
+            ? new Date()
+            : null,
         createdBy: currentUser.id,
         items: {
           create: calculatedItems.map((item: CalculatedQuotationItem) => ({
@@ -253,6 +270,23 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
       });
     }
 
+    // Immutability Check: Locked invoices cannot be modified directly
+    const LOCKED_STATUSES = [
+      'ISSUED',
+      'SENT',
+      'PARTIALLY_PAID',
+      'PAID',
+      'OVERDUE',
+      'VOIDED',
+      'CANCELLED',
+    ];
+    if (LOCKED_STATUSES.includes(existing.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Hóa đơn đã ở trạng thái "${existing.status}" và đã được khóa chứng từ. Không thể chỉnh sửa trực tiếp. Vui lòng lập Hóa đơn điều chỉnh (Credit Note) hoặc Hủy hóa đơn (Void).`,
+      });
+    }
+
     const { calculatedItems, summary } = calculateQuotationTotals(
       validatedData.items as QuotationItemInput[],
       validatedData.previousDebt || 0
@@ -273,12 +307,21 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
           title: validatedData.title.trim(),
           note: validatedData.note?.trim() || null,
           status: validatedData.status || existing.status,
+          currency: validatedData.currency || existing.currency,
           subtotal: summary.subtotal,
           discountTotal: summary.discountTotal,
           taxableTotal: summary.taxableTotal,
           vatTotal: summary.vatTotal,
           previousDebt: summary.previousDebt || 0,
           grandTotal: summary.grandTotal,
+          balanceDue: summary.grandTotal,
+          issuedAt:
+            (validatedData.status === 'ISSUED' ||
+              validatedData.status === 'SENT' ||
+              validatedData.status === 'PAID') &&
+            !existing.issuedAt
+              ? new Date()
+              : existing.issuedAt,
           items: {
             create: calculatedItems.map((item: CalculatedQuotationItem) => ({
               productId: item.productId || null,
@@ -325,6 +368,10 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
         grandTotal: updatedQuotation.grandTotal,
         status: updatedQuotation.status,
         itemCount: updatedQuotation.items.length,
+        before: {
+          status: existing.status,
+          grandTotal: existing.grandTotal,
+        },
       },
     });
 
@@ -345,6 +392,9 @@ export async function deleteQuotation(req: AuthenticatedRequest, res: Response, 
 
     const existing = await prisma.quotation.findUnique({
       where: { id },
+      include: {
+        items: true,
+      },
     });
 
     if (!existing) {
@@ -359,6 +409,14 @@ export async function deleteQuotation(req: AuthenticatedRequest, res: Response, 
       return res.status(403).json({
         success: false,
         message: 'Bạn không có quyền xóa đơn hàng này',
+      });
+    }
+
+    // Hard delete prevention: Only DRAFT quotations can be deleted
+    if (existing.status !== 'DRAFT') {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa hóa đơn ở trạng thái "${existing.status}". Theo quy tắc kế toán, chỉ hóa đơn Bản nháp (DRAFT) mới có thể xóa. Hóa đơn đã phát hành hoặc thanh toán phải thực hiện Hủy hóa đơn (Void) để bảo toàn chuỗi số chứng từ.`,
       });
     }
 
@@ -377,6 +435,7 @@ export async function deleteQuotation(req: AuthenticatedRequest, res: Response, 
       details: {
         quotationNumber: existing.quotationNumber,
         grandTotal: existing.grandTotal,
+        itemCount: existing.items.length,
       },
     });
 
@@ -560,6 +619,396 @@ export async function downloadQuotationPdf(req: AuthenticatedRequest, res: Respo
     res.setHeader('Content-Length', pdfBuffer.length);
 
     return res.send(pdfBuffer);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Transitions a DRAFT quotation into an officially locked, ISSUED invoice.
+ */
+export async function issueQuotation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const currentUser = req.user!;
+    const { id } = req.params;
+
+    const quotation = await prisma.quotation.findUnique({
+      where: { id },
+    });
+
+    if (!quotation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng',
+      });
+    }
+
+    if (currentUser.role === 'USER' && quotation.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền phát hành đơn hàng này',
+      });
+    }
+
+    if (quotation.status !== 'DRAFT') {
+      return res.status(400).json({
+        success: false,
+        message: `Đơn hàng đang ở trạng thái "${quotation.status}", không thể thực hiện phát hành lại.`,
+      });
+    }
+
+    const issued = await prisma.quotation.update({
+      where: { id },
+      data: {
+        status: 'ISSUED',
+        issuedAt: new Date(),
+        balanceDue: quotation.grandTotal,
+      },
+      include: {
+        customer: true,
+        items: true,
+      },
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'ISSUE_QUOTATION',
+      resource: 'QUOTATION',
+      resourceId: issued.id,
+      details: {
+        quotationNumber: issued.quotationNumber,
+        grandTotal: issued.grandTotal,
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: `Đã phát hành chính thức hóa đơn ${issued.quotationNumber}. Chứng từ hiện đã được khóa để bảo vệ tính toàn vẹn dữ liệu.`,
+      data: issued,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Marks an issued invoice as VOIDED with an explicit reason, preventing hard-deletes.
+ */
+export async function voidQuotation(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const currentUser = req.user!;
+    const { id } = req.params;
+    const { reason } = VoidQuotationSchema.parse(req.body);
+
+    const quotation = await prisma.quotation.findUnique({
+      where: { id },
+      include: {
+        payments: true,
+      },
+    });
+
+    if (!quotation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy hóa đơn cần hủy',
+      });
+    }
+
+    if (currentUser.role === 'USER' && quotation.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền hủy hóa đơn này',
+      });
+    }
+
+    if (quotation.status === 'VOIDED') {
+      return res.status(400).json({
+        success: false,
+        message: 'Hóa đơn này đã được hủy trước đó.',
+      });
+    }
+
+    if (quotation.payments && quotation.payments.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Hóa đơn đã có các giao dịch thanh toán được ghi nhận. Vui lòng lập Hóa đơn điều chỉnh / giảm trừ (Credit Note) thay vì Hủy toàn bộ hóa đơn.',
+      });
+    }
+
+    const voided = await prisma.quotation.update({
+      where: { id },
+      data: {
+        status: 'VOIDED',
+        voidedAt: new Date(),
+        voidReason: reason,
+        voidedBy: currentUser.id,
+        balanceDue: 0,
+      },
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'VOID_QUOTATION',
+      resource: 'QUOTATION',
+      resourceId: voided.id,
+      details: {
+        quotationNumber: voided.quotationNumber,
+        reason,
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: `Đã hủy hóa đơn ${voided.quotationNumber} thành công.`,
+      data: voided,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Creates a Credit Note (Hóa đơn điều chỉnh / giảm trừ) referencing an original invoice.
+ */
+export async function createCreditNote(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const currentUser = req.user!;
+    const { id } = req.params;
+    const validatedData = CreditNoteSchema.parse(req.body);
+
+    const original = await prisma.quotation.findUnique({
+      where: { id },
+    });
+
+    if (!original) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy hóa đơn gốc cần điều chỉnh',
+      });
+    }
+
+    if (original.status === 'DRAFT' || original.status === 'VOIDED' || original.status === 'CANCELLED') {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể lập hóa đơn điều chỉnh cho hóa đơn ở trạng thái "${original.status}". Chỉ hóa đơn đã phát hành mới có thể điều chỉnh.`,
+      });
+    }
+
+    const { calculatedItems, summary } = calculateQuotationTotals(
+      validatedData.items as QuotationItemInput[],
+      0
+    );
+
+    const currentYear = new Date().getFullYear();
+    const cnNumber = await generateQuotationNumber(`CN-${currentYear}-`);
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create Credit Note Quotation record
+      const creditNote = await tx.quotation.create({
+        data: {
+          quotationNumber: cnNumber,
+          invoiceType: 'CREDIT_NOTE',
+          originalInvoiceId: original.id,
+          customerId: original.customerId,
+          quotationDate: new Date(),
+          validUntil: new Date(),
+          title: `HÓA ĐƠN ĐIỀU CHỈNH - ${original.quotationNumber}`,
+          note: validatedData.note?.trim() || `Điều chỉnh cho hóa đơn ${original.quotationNumber}. Lý do: ${validatedData.reason}`,
+          status: 'ISSUED',
+          currency: original.currency,
+          subtotal: summary.subtotal,
+          discountTotal: summary.discountTotal,
+          taxableTotal: summary.taxableTotal,
+          vatTotal: summary.vatTotal,
+          previousDebt: 0,
+          grandTotal: summary.grandTotal,
+          balanceDue: 0,
+          issuedAt: new Date(),
+          createdBy: currentUser.id,
+          items: {
+            create: calculatedItems.map((item: CalculatedQuotationItem) => ({
+              productId: item.productId || null,
+              productCodeSnapshot: item.productCodeSnapshot || null,
+              productNameSnapshot: item.productNameSnapshot,
+              descriptionSnapshot: item.descriptionSnapshot || null,
+              unit: item.unit || 'Bộ',
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discount: item.discount,
+              vatRate: item.vatRate,
+              subtotal: item.subtotal,
+              taxableAmount: item.taxableAmount,
+              vatAmount: item.vatAmount,
+              total: item.total,
+              sortOrder: item.sortOrder,
+            })),
+          },
+        },
+        include: {
+          customer: true,
+          items: true,
+        },
+      });
+
+      // 2. Adjust remaining balance of original invoice
+      const updatedBalanceDue = Math.max(0, Number(original.balanceDue) - summary.grandTotal);
+      await tx.quotation.update({
+        where: { id: original.id },
+        data: {
+          balanceDue: updatedBalanceDue,
+        },
+      });
+
+      return creditNote;
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'CREATE_CREDIT_NOTE',
+      resource: 'QUOTATION',
+      resourceId: result.id,
+      details: {
+        creditNoteNumber: result.quotationNumber,
+        originalQuotationNumber: original.quotationNumber,
+        adjustmentTotal: result.grandTotal,
+        reason: validatedData.reason,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `Đã tạo hóa đơn điều chỉnh ${result.quotationNumber} thành công.`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Records a payment against an invoice and updates balanceDue / status atomically.
+ */
+export async function recordPayment(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const currentUser = req.user!;
+    const { id } = req.params;
+    const validatedData = RecordPaymentSchema.parse(req.body);
+
+    const quotation = await prisma.quotation.findUnique({
+      where: { id },
+      include: { payments: true },
+    });
+
+    if (!quotation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy hóa đơn cần thanh toán',
+      });
+    }
+
+    if (quotation.status === 'DRAFT' || quotation.status === 'VOIDED' || quotation.status === 'CANCELLED') {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể ghi nhận thanh toán cho hóa đơn ở trạng thái "${quotation.status}".`,
+      });
+    }
+
+    const paymentResult = await prisma.$transaction(async (tx) => {
+      // 1. Create Payment record
+      const payment = await tx.payment.create({
+        data: {
+          quotationId: quotation.id,
+          amount: validatedData.amount,
+          currency: quotation.currency,
+          gateway: validatedData.gateway,
+          referenceCode: validatedData.referenceCode || null,
+          note: validatedData.note || null,
+          paymentDate: validatedData.paymentDate ? new Date(validatedData.paymentDate) : new Date(),
+          recordedBy: currentUser.id,
+        },
+      });
+
+      // 2. Aggregate all payments
+      const totalPaidAgg = await tx.payment.aggregate({
+        where: { quotationId: quotation.id },
+        _sum: { amount: true },
+      });
+
+      const totalPaid = Number(totalPaidAgg._sum.amount || 0);
+      const grandTotalNum = Number(quotation.grandTotal);
+      const newBalanceDue = Math.max(0, grandTotalNum - totalPaid);
+
+      // Determine updated status
+      let newStatus = quotation.status;
+      if (newBalanceDue <= 0) {
+        newStatus = 'PAID';
+      } else if (totalPaid > 0) {
+        newStatus = 'PARTIALLY_PAID';
+      }
+
+      const updatedQuotation = await tx.quotation.update({
+        where: { id: quotation.id },
+        data: {
+          balanceDue: newBalanceDue,
+          status: newStatus,
+        },
+      });
+
+      return { payment, updatedQuotation };
+    });
+
+    await createAuditLog({
+      req,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      action: 'RECORD_PAYMENT',
+      resource: 'PAYMENT',
+      resourceId: paymentResult.payment.id,
+      details: {
+        quotationNumber: quotation.quotationNumber,
+        amount: validatedData.amount,
+        balanceDue: paymentResult.updatedQuotation.balanceDue,
+        newStatus: paymentResult.updatedQuotation.status,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `Đã ghi nhận thanh toán ${validatedData.amount.toLocaleString('vi-VN')} đ thành công.`,
+      data: paymentResult,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Retrieves all payment transactions for a given quotation.
+ */
+export async function getQuotationPayments(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+
+    const payments = await prisma.payment.findMany({
+      where: { quotationId: id },
+      orderBy: { paymentDate: 'desc' },
+    });
+
+    return res.json({
+      success: true,
+      data: payments,
+    });
   } catch (error) {
     next(error);
   }

@@ -136,4 +136,54 @@ describe('Calculation Engine - Quotation & VAT & Discount', () => {
     expect(res.vatAmount).toBe(40000);
     expect(res.total).toBe(540000);
   });
+
+  it('should accurately aggregate tax brackets and balanceDue with payments and 2-decimal currencies', () => {
+    const items: QuotationItemInput[] = [
+      {
+        productNameSnapshot: 'Item VAT 0%',
+        unit: 'Pcs',
+        quantity: 2,
+        unitPrice: 50,
+        discount: 0,
+        vatRate: 0,
+        sortOrder: 0,
+      },
+      {
+        productNameSnapshot: 'Item VAT 8%',
+        unit: 'Pcs',
+        quantity: 2,
+        unitPrice: 100,
+        discount: 10, // 200 - 20 = 180 taxable
+        vatRate: 8,
+        sortOrder: 1,
+      },
+      {
+        productNameSnapshot: 'Item VAT 10%',
+        unit: 'Pcs',
+        quantity: 1,
+        unitPrice: 300,
+        discount: 0,
+        vatRate: 10,
+        sortOrder: 2,
+      },
+    ];
+
+    // previousDebt = 0, totalPaid = 150, decimals = 2 (e.g. USD)
+    const { summary } = calculateQuotationTotals(items, 0, 150, 2);
+
+    expect(summary.subtotal).toBe(600);
+    expect(summary.discountTotal).toBe(20);
+    expect(summary.taxableTotal).toBe(580);
+    // VAT 8%: 180 * 0.08 = 14.4; VAT 10%: 300 * 0.10 = 30. Total VAT = 44.4
+    expect(summary.vatTotal).toBe(44.4);
+    expect(summary.grandTotal).toBe(624.4);
+    // Balance due = 624.4 - 150 = 474.4
+    expect(summary.balanceDue).toBe(474.4);
+
+    expect(summary.taxBreakdown).toEqual([
+      { vatRate: 0, taxableBase: 100, vatAmount: 0 },
+      { vatRate: 8, taxableBase: 180, vatAmount: 14.4 },
+      { vatRate: 10, taxableBase: 300, vatAmount: 30 },
+    ]);
+  });
 });

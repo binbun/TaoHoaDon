@@ -4,6 +4,8 @@ import {
   useQuotations,
   useDeleteQuotation,
   useDuplicateQuotation,
+  useIssueQuotation,
+  useVoidQuotation,
 } from '../hooks';
 import { Quotation, formatCurrency, formatDate } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
@@ -12,6 +14,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
+import { Modal } from '../components/Modal';
 import { EmptyState } from '../components/EmptyState';
 import {
   Table,
@@ -61,6 +64,9 @@ import {
   Loader2,
   MoreVertical,
   Layers,
+  ShieldCheck,
+  Ban,
+  Lock,
 } from 'lucide-react';
 
 export const QuotationsListPage: React.FC = () => {
@@ -72,6 +78,10 @@ export const QuotationsListPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
+  // Voiding State
+  const [voidingQuotation, setVoidingQuotation] = useState<Quotation | null>(null);
+  const [voidReason, setVoidReason] = useState('');
+
   // Custom Hooks
   const { data: responseData, isLoading } = useQuotations({
     search,
@@ -80,6 +90,8 @@ export const QuotationsListPage: React.FC = () => {
 
   const deleteMutation = useDeleteQuotation();
   const duplicateMutation = useDuplicateQuotation();
+  const issueMutation = useIssueQuotation();
+  const voidMutation = useVoidQuotation();
 
   const quotations: Quotation[] = responseData?.data || (Array.isArray(responseData) ? responseData : []);
 
@@ -119,10 +131,12 @@ export const QuotationsListPage: React.FC = () => {
   };
 
   const statusTabs = [
-    { key: 'ALL', label: 'Tất cả đơn' },
+    { key: 'ALL', label: 'Tất cả' },
     { key: 'DRAFT', label: 'Bản nháp' },
-    { key: 'SENT', label: 'Đã gửi' },
+    { key: 'ISSUED', label: 'Đã phát hành' },
+    { key: 'PARTIALLY_PAID', label: 'Thanh toán 1 phần' },
     { key: 'PAID', label: 'Đã thanh toán' },
+    { key: 'VOIDED', label: 'Đã hủy' },
   ];
 
   return (
@@ -295,25 +309,65 @@ export const QuotationsListPage: React.FC = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/quotations/${q.id}/edit`)}>
-                            <Edit className="w-4 h-4 text-indigo-500 mr-2" />
-                            <span>Chỉnh sửa</span>
+                          <DropdownMenuItem onClick={() => navigate(`/quotations/${q.id}/preview`)}>
+                            <Eye className="w-4 h-4 text-emerald-600 mr-2" />
+                            <span>Xem chi tiết</span>
                           </DropdownMenuItem>
+
+                          {q.status === 'DRAFT' ? (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => issueMutation.mutate(q.id)}
+                                disabled={issueMutation.isPending}
+                              >
+                                <ShieldCheck className="w-4 h-4 text-emerald-600 mr-2" />
+                                <span>Phát hành đơn</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate(`/quotations/${q.id}/edit`)}>
+                                <Edit className="w-4 h-4 text-indigo-500 mr-2" />
+                                <span>Chỉnh sửa</span>
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <DropdownMenuItem
+                              disabled
+                              className="opacity-50 cursor-not-allowed text-xs"
+                            >
+                              <Lock className="w-4 h-4 text-slate-400 mr-2" />
+                              <span>Đã khóa chứng từ</span>
+                            </DropdownMenuItem>
+                          )}
+
                           <DropdownMenuItem
                             onClick={() => duplicateMutation.mutate(q.id)}
                             disabled={duplicateMutation.isPending}
                           >
-                            <Copy className="w-4 h-4 text-emerald-500 mr-2" />
+                            <Copy className="w-4 h-4 text-blue-500 mr-2" />
                             <span>Nhân bản</span>
                           </DropdownMenuItem>
+
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => setDeletingId(q.id)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            <span>Xóa đơn hàng</span>
-                          </DropdownMenuItem>
+
+                          {q.status === 'DRAFT' ? (
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => setDeletingId(q.id)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              <span>Xóa đơn hàng</span>
+                            </DropdownMenuItem>
+                          ) : q.status !== 'VOIDED' ? (
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => {
+                                setVoidingQuotation(q);
+                                setVoidReason('');
+                              }}
+                            >
+                              <Ban className="w-4 h-4 mr-2 text-rose-500" />
+                              <span className="text-rose-600">Hủy hóa đơn (Void)</span>
+                            </DropdownMenuItem>
+                          ) : null}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -333,13 +387,13 @@ export const QuotationsListPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Delete Confirmation with Radix AlertDialog */}
+      {/* Delete Confirmation with Radix AlertDialog (Only for DRAFT) */}
       <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa đơn hàng</AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận xóa bản nháp đơn hàng</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa đơn hàng này? Toàn bộ danh sách chi tiết phụ kiện bên trong sẽ bị xóa và không thể khôi phục.
+              Bạn có chắc chắn muốn xóa bản nháp này? Hành động này sẽ xóa dữ liệu và chỉ áp dụng cho đơn hàng chưa phát hành.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -354,6 +408,54 @@ export const QuotationsListPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Void Confirmation Modal */}
+      <Modal
+        isOpen={!!voidingQuotation}
+        onClose={() => setVoidingQuotation(null)}
+        title="Hủy hóa đơn (Void Invoice)"
+        subtitle={voidingQuotation ? `Hóa đơn: ${voidingQuotation.quotationNumber}` : ''}
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">
+            Hóa đơn đã phát hành không thể xóa cứng khỏi cơ sở dữ liệu để bảo vệ chuỗi số chứng từ kế toán.
+            Hóa đơn sẽ được chuyển sang trạng thái <strong>ĐÃ HỦY</strong> và ghi nhận lý do vào nhật ký kiểm toán.
+          </p>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Lý do hủy hóa đơn * (Tối thiểu 3 ký tự)
+            </label>
+            <Input
+              placeholder="VD: Khách đổi quy cách sản phẩm, hủy phát hành lại..."
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <Button variant="outline" size="sm" onClick={() => setVoidingQuotation(null)}>
+              Bỏ qua
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={voidReason.trim().length < 3 || voidMutation.isPending}
+              isLoading={voidMutation.isPending}
+              onClick={async () => {
+                if (voidingQuotation) {
+                  await voidMutation.mutateAsync({
+                    id: voidingQuotation.id,
+                    reason: voidReason.trim(),
+                  });
+                  setVoidingQuotation(null);
+                }
+              }}
+            >
+              Xác nhận hủy hóa đơn
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

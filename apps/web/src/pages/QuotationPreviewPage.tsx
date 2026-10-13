@@ -1,12 +1,27 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuotation, useDuplicateQuotation } from '../hooks';
+import {
+  useQuotation,
+  useDuplicateQuotation,
+  useIssueQuotation,
+  useVoidQuotation,
+  useRecordPayment,
+} from '../hooks';
 import { formatCurrency, formatDate } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
+import { Modal } from '../components/Modal';
+import { Input } from '../components/Input';
 import { Skeleton } from '../components/Skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +39,12 @@ import {
   FileText,
   Truck,
   CheckCircle2,
+  ShieldCheck,
+  Ban,
+  CreditCard,
+  Lock,
+  Receipt,
+  FileDiff,
 } from 'lucide-react';
 
 export const QuotationPreviewPage: React.FC = () => {
@@ -37,6 +58,18 @@ export const QuotationPreviewPage: React.FC = () => {
   // Fetch Quotation Details & Duplicate Mutation from custom hooks
   const { data: quotation, isLoading, isError } = useQuotation(id);
   const duplicateMutation = useDuplicateQuotation();
+  const issueMutation = useIssueQuotation();
+  const voidMutation = useVoidQuotation();
+  const recordPaymentMutation = useRecordPayment();
+
+  // Lifecycle Modals State
+  const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState('');
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState<number | string>('');
+  const [paymentGateway, setPaymentGateway] = useState('BANK_TRANSFER');
+  const [paymentRef, setPaymentRef] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
 
   const handleDuplicate = () => {
     if (id) {
@@ -44,6 +77,38 @@ export const QuotationPreviewPage: React.FC = () => {
         onSuccess: (newQuote) => navigate(`/quotations/${newQuote.id}/preview`),
       });
     }
+  };
+
+  const handleVoidInvoice = async () => {
+    if (!quotation || !voidReason.trim()) {
+      error('Vui lòng nhập lý do hủy hóa đơn');
+      return;
+    }
+    await voidMutation.mutateAsync({ id: quotation.id, reason: voidReason.trim() });
+    setIsVoidModalOpen(false);
+    setVoidReason('');
+  };
+
+  const handleRecordPayment = async () => {
+    if (!quotation) return;
+    const amountNum = Number(paymentAmount);
+    if (!amountNum || amountNum <= 0) {
+      error('Số tiền thanh toán phải lớn hơn 0');
+      return;
+    }
+    await recordPaymentMutation.mutateAsync({
+      id: quotation.id,
+      data: {
+        amount: amountNum,
+        gateway: paymentGateway,
+        referenceCode: paymentRef.trim() || undefined,
+        note: paymentNote.trim() || undefined,
+      },
+    });
+    setIsPaymentModalOpen(false);
+    setPaymentAmount('');
+    setPaymentRef('');
+    setPaymentNote('');
   };
 
   // Download Server-Side Puppeteer PDF
@@ -126,6 +191,13 @@ export const QuotationPreviewPage: React.FC = () => {
   const month = !isNaN(dateObj.getTime()) ? String(dateObj.getMonth() + 1).padStart(2, '0') : '.....';
   const year = !isNaN(dateObj.getTime()) ? String(dateObj.getFullYear()) : '2026';
 
+  const isDraft = quotation.status === 'DRAFT';
+  const isVoided = quotation.status === 'VOIDED';
+  const isLocked = !isDraft;
+  const balanceDue = Number(quotation.balanceDue ?? quotation.grandTotal);
+  const canRecordPayment =
+    !isDraft && !isVoided && quotation.status !== 'PAID' && balanceDue > 0;
+
   return (
     <div className="space-y-4 sm:space-y-6 pb-16">
       {/* Top Action Toolbar (Hidden in Print) */}
@@ -143,23 +215,97 @@ export const QuotationPreviewPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="font-mono font-bold text-xs sm:text-sm text-slate-900">{quotation.quotationNumber}</span>
             <Badge status={quotation.status} />
+            {quotation.invoiceType === 'CREDIT_NOTE' && (
+              <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded font-bold">
+                Credit Note
+              </span>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {/* Issue Button for DRAFT */}
+          {isDraft && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs px-2.5 py-1.5 flex-shrink-0 text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                  leftIcon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />}
+                  onClick={() => issueMutation.mutate(quotation.id)}
+                  isLoading={issueMutation.isPending}
+                >
+                  Phát hành đơn
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Khóa chứng từ và phát hành chính thức hóa đơn</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Record Payment Button */}
+          {canRecordPayment && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs px-2.5 py-1.5 flex-shrink-0 text-amber-700 border-amber-300 hover:bg-amber-50"
+                  leftIcon={<CreditCard className="w-3.5 h-3.5 text-amber-600" />}
+                  onClick={() => {
+                    setPaymentAmount(balanceDue);
+                    setIsPaymentModalOpen(true);
+                  }}
+                >
+                  Ghi nhận thanh toán
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Ghi nhận thanh toán chuyển khoản hoặc tiền mặt</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Void Button */}
+          {!isDraft && !isVoided && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs px-2.5 py-1.5 flex-shrink-0 text-rose-700 border-rose-300 hover:bg-rose-50"
+                  leftIcon={<Ban className="w-3.5 h-3.5 text-rose-600" />}
+                  onClick={() => setIsVoidModalOpen(true)}
+                >
+                  Hủy hóa đơn
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Hủy hóa đơn (Void) kèm lý do giải trình kế toán</TooltipContent>
+            </Tooltip>
+          )}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
                 className="text-xs px-2.5 py-1.5 flex-shrink-0"
-                leftIcon={<Edit className="w-3.5 h-3.5" />}
-                onClick={() => navigate(`/quotations/${quotation.id}/edit`)}
+                leftIcon={isLocked ? <Lock className="w-3.5 h-3.5 text-slate-400" /> : <Edit className="w-3.5 h-3.5" />}
+                onClick={() => {
+                  if (isLocked) {
+                    info('Hóa đơn đã phát hành và khóa chứng từ. Hãy lập hóa đơn điều chỉnh (Credit Note) nếu có thay đổi.');
+                  } else {
+                    navigate(`/quotations/${quotation.id}/edit`);
+                  }
+                }}
+                disabled={isLocked}
               >
                 Sửa
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Chỉnh sửa đơn hàng</TooltipContent>
+            <TooltipContent>
+              {isLocked
+                ? 'Hóa đơn đã phát hành và bị khóa chứng từ kế toán'
+                : 'Chỉnh sửa đơn hàng'}
+            </TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -593,6 +739,198 @@ export const QuotationPreviewPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Payment Ledger & Audit Info Card (Hidden in Print) */}
+      <div className="no-print space-y-4">
+        {quotation.payments && quotation.payments.length > 0 && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-4 sm:p-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                  Lịch sử thanh toán & Đối soát ({quotation.payments.length} giao dịch)
+                </h3>
+              </div>
+              <div className="text-xs">
+                <span className="text-slate-500 mr-2">Dư nợ còn lại:</span>
+                <span className="font-bold text-rose-600 font-mono text-sm">
+                  {formatCurrency(balanceDue)}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="text-slate-400 border-b border-slate-100">
+                    <th className="py-2">Ngày thanh toán</th>
+                    <th className="py-2">Phương thức</th>
+                    <th className="py-2">Mã tham chiếu</th>
+                    <th className="py-2">Ghi chú</th>
+                    <th className="py-2 text-right">Số tiền</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {quotation.payments.map((p) => (
+                    <tr key={p.id}>
+                      <td className="py-2.5 font-medium text-slate-700">
+                        {formatDate(p.paymentDate)}
+                      </td>
+                      <td className="py-2.5">
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono text-[11px]">
+                          {p.gateway}
+                        </span>
+                      </td>
+                      <td className="py-2.5 font-mono text-slate-500">{p.referenceCode || '—'}</td>
+                      <td className="py-2.5 text-slate-600">{p.note || '—'}</td>
+                      <td className="py-2.5 text-right font-bold text-emerald-600 font-mono">
+                        +{formatCurrency(p.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Void Reason Notice if Voided */}
+        {isVoided && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-4 flex items-start gap-3">
+            <Ban className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-rose-800">Hóa đơn đã bị HỦY (Voided)</h4>
+              <p className="text-xs text-rose-700 mt-1">
+                Lý do hủy: <span className="font-semibold">{quotation.voidReason || 'Không có lý do'}</span>
+                {quotation.voidedAt && ` (Vào lúc ${formatDate(quotation.voidedAt)})`}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Record Payment Modal */}
+      <Modal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        title="Ghi nhận thanh toán hóa đơn"
+        subtitle={`Đơn hàng: ${quotation.quotationNumber} — Tổng tiền: ${formatCurrency(quotation.grandTotal)}`}
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex justify-between items-center text-xs">
+            <span className="text-amber-800">Số tiền còn phải thanh toán:</span>
+            <span className="font-bold font-mono text-sm text-amber-900">
+              {formatCurrency(balanceDue)}
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Số tiền thanh toán (VNĐ) *
+            </label>
+            <Input
+              type="number"
+              placeholder="Nhập số tiền..."
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Phương thức thanh toán
+            </label>
+            <Select value={paymentGateway} onValueChange={setPaymentGateway}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BANK_TRANSFER">Chuyển khoản ngân hàng</SelectItem>
+                <SelectItem value="VIETQR">Quét mã VietQR</SelectItem>
+                <SelectItem value="CASH">Tiền mặt</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Mã giao dịch / Mã tham chiếu ngân hàng
+            </label>
+            <Input
+              placeholder="VD: FT240987654 hoặc Số UNC"
+              value={paymentRef}
+              onChange={(e) => setPaymentRef(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Ghi chú thanh toán
+            </label>
+            <Input
+              placeholder="VD: Đợt 1 đặt cọc 50%"
+              value={paymentNote}
+              onChange={(e) => setPaymentNote(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button variant="outline" size="sm" onClick={() => setIsPaymentModalOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleRecordPayment}
+              isLoading={recordPaymentMutation.isPending}
+            >
+              Lưu thanh toán
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Void Invoice Modal */}
+      <Modal
+        isOpen={isVoidModalOpen}
+        onClose={() => setIsVoidModalOpen(false)}
+        title="Xác nhận hủy hóa đơn (Void Invoice)"
+        subtitle={`Hóa đơn ${quotation.quotationNumber} sẽ được chuyển sang trạng thái đã hủy.`}
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
+            <strong>Lưu ý quan trọng:</strong> Hành động này sẽ khóa vĩnh viễn hóa đơn và lưu lại lý
+            do giải trình trong nhật ký kiểm toán (Audit Trail) để tuân thủ quy chuẩn kế toán.
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Lý do hủy hóa đơn * (Tối thiểu 3 ký tự)
+            </label>
+            <Input
+              placeholder="VD: Khách hàng đổi thiết kế mẫu mã, hủy đơn phát hành lại"
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button variant="outline" size="sm" onClick={() => setIsVoidModalOpen(false)}>
+              Bỏ qua
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleVoidInvoice}
+              isLoading={voidMutation.isPending}
+            >
+              Xác nhận hủy hóa đơn
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

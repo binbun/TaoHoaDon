@@ -7,6 +7,11 @@ import {
   deleteQuotation,
   duplicateQuotation,
   downloadQuotationPdf,
+  issueQuotation,
+  voidQuotation,
+  createCreditNote,
+  recordPayment,
+  getQuotationPayments,
 } from './quotations.controller';
 import { requireAuth } from '../middleware/auth';
 
@@ -21,6 +26,11 @@ router.post('/', createQuotation);
 router.patch('/:id', updateQuotation);
 router.delete('/:id', deleteQuotation);
 router.post('/:id/duplicate', duplicateQuotation);
+router.post('/:id/issue', issueQuotation);
+router.post('/:id/void', voidQuotation);
+router.post('/:id/credit-note', createCreditNote);
+router.post('/:id/payments', recordPayment);
+router.get('/:id/payments', getQuotationPayments);
 router.get('/:id/pdf', downloadQuotationPdf);
 
 export default router;

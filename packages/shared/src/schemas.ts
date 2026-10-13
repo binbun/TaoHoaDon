@@ -75,6 +75,18 @@ export const QuotationItemSchema = z.object({
   sortOrder: z.number().int().default(0),
 });
 
+export const QuotationStatusSchema = z.enum([
+  'DRAFT',
+  'ISSUED',
+  'SENT',
+  'PARTIALLY_PAID',
+  'PAID',
+  'OVERDUE',
+  'VOIDED',
+  'CANCELLED',
+  'ACCEPTED',
+]);
+
 export const QuotationSchema = z.object({
   quotationNumber: z.string().optional(),
   customerId: z.string().min(1, 'Vui lòng chọn hoặc tạo khách hàng'),
@@ -82,9 +94,31 @@ export const QuotationSchema = z.object({
   validUntil: z.string().optional(),
   title: z.string().min(1, 'Tiêu đề đơn hàng không được để trống').default('HÓA ĐƠN BÁN HÀNG'),
   note: z.string().max(1000).optional().nullable(),
-  status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
+  status: QuotationStatusSchema.default('DRAFT'),
+  currency: z.string().default('VND').optional(),
+  invoiceType: z.enum(['STANDARD', 'CREDIT_NOTE', 'DEBIT_NOTE']).default('STANDARD').optional(),
+  originalInvoiceId: z.string().optional().nullable(),
+  voidReason: z.string().max(500).optional().nullable(),
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
   items: z.array(QuotationItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm/dịch vụ'),
+});
+
+export const VoidQuotationSchema = z.object({
+  reason: z.string().min(3, 'Vui lòng nhập lý do hủy hóa đơn (tối thiểu 3 ký tự)').max(500),
+});
+
+export const CreditNoteSchema = z.object({
+  reason: z.string().min(3, 'Vui lòng nhập lý do điều chỉnh hóa đơn').max(500),
+  items: z.array(QuotationItemSchema).min(1, 'Hóa đơn điều chỉnh phải có ít nhất 1 sản phẩm/dịch vụ'),
+  note: z.string().max(1000).optional().nullable(),
+});
+
+export const RecordPaymentSchema = z.object({
+  amount: z.coerce.number().positive('Số tiền thanh toán phải lớn hơn 0'),
+  gateway: z.string().default('MANUAL'),
+  referenceCode: z.string().max(100).optional().nullable(),
+  note: z.string().max(500).optional().nullable(),
+  paymentDate: z.string().optional(),
 });
 
 export const BrandSchema = z.object({

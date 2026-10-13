@@ -57,6 +57,7 @@ import {
   ArrowLeft,
   FileSpreadsheet,
   Star,
+  Lock,
 } from 'lucide-react';
 
 export const QuotationBuilderPage: React.FC = () => {
@@ -299,8 +300,15 @@ export const QuotationBuilderPage: React.FC = () => {
     Number(previousDebt) || 0
   );
 
+  const isLocked = isEditMode && existingQuote && existingQuote.status !== 'DRAFT';
+
   // Save Quotation
   const handleSave = async (redirectToPreview = false) => {
+    if (isLocked) {
+      error(`Hóa đơn đã ở trạng thái "${existingQuote?.status}" và đã được khóa chứng từ kế toán. Không thể chỉnh sửa trực tiếp.`);
+      return;
+    }
+
     if (!companyName.trim()) {
       error('Vui lòng nhập tên công ty hoặc khách hàng');
       return;
@@ -406,24 +414,56 @@ export const QuotationBuilderPage: React.FC = () => {
             variant="outline"
             size="sm"
             className="flex-1 sm:flex-initial justify-center"
-            leftIcon={<Save className="w-4 h-4" />}
+            leftIcon={isLocked ? <Lock className="w-4 h-4 text-slate-400" /> : <Save className="w-4 h-4" />}
             onClick={() => handleSave(false)}
             isLoading={isSaving}
+            disabled={isLocked}
           >
-            Lưu lại
+            {isLocked ? 'Đã khóa chứng từ' : 'Lưu lại'}
           </Button>
           <Button
             variant="primary"
             size="sm"
             className="flex-1 sm:flex-initial justify-center shadow-xs"
             leftIcon={<Eye className="w-4 h-4" />}
-            onClick={() => handleSave(true)}
+            onClick={() => {
+              if (isLocked) {
+                navigate(`/quotations/${id}/preview`);
+              } else {
+                handleSave(true);
+              }
+            }}
             isLoading={isSaving}
           >
-            Lưu & Xem Trước
+            {isLocked ? 'Xem trước đơn hàng' : 'Lưu & Xem Trước'}
           </Button>
         </div>
       </div>
+
+      {/* Locked Immutability Warning Banner */}
+      {isLocked && existingQuote && (
+        <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-xl text-amber-700 shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm">Hóa đơn đã bị khóa chứng từ kế toán</h4>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Đơn hàng hiện ở trạng thái <strong>{existingQuote.status}</strong>. Để bảo đảm toàn vẹn dữ liệu, không thể chỉnh sửa trực tiếp. Vui lòng lập Hóa đơn điều chỉnh (Credit Note) hoặc Hủy đơn (Void).
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100/50 shrink-0"
+            onClick={() => navigate(`/quotations/${id}/preview`)}
+          >
+            Chuyển sang Xem Trước
+          </Button>
+        </div>
+      )}
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">

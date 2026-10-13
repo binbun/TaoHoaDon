@@ -1,6 +1,37 @@
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'USER';
 
-export type QuotationStatus = 'DRAFT' | 'SENT' | 'PAID';
+export type QuotationStatus =
+  | 'DRAFT'
+  | 'ISSUED'
+  | 'SENT'
+  | 'PARTIALLY_PAID'
+  | 'PAID'
+  | 'OVERDUE'
+  | 'VOIDED'
+  | 'CANCELLED'
+  | 'ACCEPTED';
+
+export type InvoiceType = 'STANDARD' | 'CREDIT_NOTE' | 'DEBIT_NOTE';
+
+export interface Payment {
+  id: string;
+  quotationId: string;
+  amount: number;
+  currency: string;
+  gateway: string;
+  gatewayTransactionId?: string | null;
+  referenceCode?: string | null;
+  note?: string | null;
+  paymentDate: string;
+  recordedBy?: string | null;
+  createdAt: string;
+}
+
+export interface TaxBracketBreakdown {
+  vatRate: number;
+  taxableBase: number;
+  vatAmount: number;
+}
 
 export interface User {
   id: string;
@@ -110,11 +141,16 @@ export interface QuotationSummary {
   vatTotal: number;
   previousDebt?: number;
   grandTotal: number;
+  balanceDue?: number;
+  taxBreakdown?: TaxBracketBreakdown[];
 }
 
 export interface Quotation {
   id: string;
   quotationNumber: string;
+  invoiceType?: InvoiceType;
+  originalInvoiceId?: string | null;
+  originalInvoice?: Quotation | null;
   customerId: string;
   customer?: Customer;
   quotationDate: string;
@@ -122,13 +158,23 @@ export interface Quotation {
   title: string;
   note?: string | null;
   status: QuotationStatus;
+  currency?: string;
+  exchangeRate?: number;
   subtotal: number;
   discountTotal: number;
   taxableTotal: number;
   vatTotal: number;
   previousDebt?: number;
   grandTotal: number;
+  balanceDue?: number;
+  taxBreakdown?: TaxBracketBreakdown[];
+  issuedAt?: string | null;
+  voidedAt?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
   items: CalculatedQuotationItem[];
+  payments?: Payment[];
+  adjustments?: Quotation[];
   createdBy?: string | null;
   creator?: { id: string; name: string; email: string } | null;
   createdAt: string;
@@ -141,7 +187,7 @@ export interface DashboardStats {
   totalGrandTotal: number;
   acceptedGrandTotal: number;
   recentQuotations: Quotation[];
-  statusDistribution: Record<QuotationStatus, number>;
+  statusDistribution: Record<string, number>;
 }
 
 export interface Brand {

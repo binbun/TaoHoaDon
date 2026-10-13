@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuotation, useDuplicateQuotation } from '../hooks';
-import { formatCurrency, formatDate } from '@taohoadon/shared';
+import { formatCurrency, formatDate, generateVietQrUrl } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
@@ -24,6 +24,7 @@ import {
   FileText,
   Truck,
   CheckCircle2,
+  Check,
 } from 'lucide-react';
 
 export const QuotationPreviewPage: React.FC = () => {
@@ -37,6 +38,14 @@ export const QuotationPreviewPage: React.FC = () => {
   // Fetch Quotation Details & Duplicate Mutation from custom hooks
   const { data: quotation, isLoading, isError } = useQuotation(id);
   const duplicateMutation = useDuplicateQuotation();
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    success(`Đã sao chép: ${text}`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const handleDuplicate = () => {
     if (id) {
@@ -380,22 +389,75 @@ export const QuotationPreviewPage: React.FC = () => {
                     }
                     className="py-2.5 px-2 align-top text-left"
                   >
-                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 max-w-[360px] shadow-xs">
-                      <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs">
+                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 max-w-[390px] shadow-xs">
+                      <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs relative group">
                         <img
-                          src="/payment-qr.png"
+                          src={generateVietQrUrl({
+                            amount: quotation.grandTotal,
+                            description: quotation.quotationNumber,
+                            template: 'compact2',
+                          })}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/payment-qr.png';
+                          }}
                           alt="Mã QR thanh toán VietQR Techcombank"
-                          className="w-[82px] h-[96px] object-contain"
+                          className="w-[84px] h-[98px] object-contain cursor-pointer transition-transform group-hover:scale-105"
+                          onClick={() => {
+                            window.open(
+                              generateVietQrUrl({
+                                amount: quotation.grandTotal,
+                                description: quotation.quotationNumber,
+                                template: 'print',
+                              }),
+                              '_blank'
+                            );
+                          }}
+                          title="Click để mở ảnh QR kích thước lớn"
                         />
                       </div>
-                      <div className="text-[10px] text-slate-600 leading-tight space-y-1">
-                        <div className="font-bold text-slate-800 text-[10.5px] uppercase tracking-wide flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#1B9550] inline-block"></span>
-                          Thông tin chuyển khoản
+                      <div className="text-[10px] text-slate-600 leading-tight space-y-1.5 flex-1">
+                        <div className="font-bold text-slate-800 text-[10.5px] uppercase tracking-wide flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#1B9550] inline-block"></span>
+                            VietQR Tự Động
+                          </span>
+                          <span className="text-[9px] font-normal text-slate-400">1-click scan</span>
                         </div>
-                        <div>STK: <strong className="text-slate-900 font-bold tracking-wider text-[11px]">19026197143010</strong></div>
+                        <div className="flex items-center justify-between">
+                          <span>STK: <strong className="text-slate-900 font-bold tracking-wider text-[11px]">19026197143010</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy('19026197143010', 'stk')}
+                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
+                            title="Sao chép STK"
+                          >
+                            {copiedField === 'stk' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
                         <div>Ngân hàng: <strong className="text-slate-900 font-semibold">Techcombank</strong></div>
                         <div>Chủ TK: <strong className="text-slate-900 font-semibold uppercase">Tran Thi Bich Dieu</strong></div>
+                        <div className="flex items-center justify-between pt-0.5 border-t border-slate-200">
+                          <span>Nội dung: <strong className="text-slate-900 font-bold font-mono">{quotation.quotationNumber}</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(quotation.quotationNumber, 'memo')}
+                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
+                            title="Sao chép Nội dung CK"
+                          >
+                            {copiedField === 'memo' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Số tiền: <strong className="text-[#1B9550] font-bold">{formatCurrency(quotation.grandTotal)}</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(String(Math.round(quotation.grandTotal)), 'amount')}
+                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
+                            title="Sao chép Số tiền"
+                          >
+                            {copiedField === 'amount' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </td>

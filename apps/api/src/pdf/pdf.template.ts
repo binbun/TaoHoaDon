@@ -1,10 +1,15 @@
-import { Quotation, formatCurrency, formatDate } from '@taohoadon/shared';
+import { Quotation, formatCurrency, formatDate, generateVietQrUrl } from '@taohoadon/shared';
 import { PAYMENT_QR_BASE64 } from './paymentQr';
 import { GROB_LOGO_BASE64 } from './grobLogo';
 
 export function renderQuotationHtml(quotation: Quotation): string {
   const customer = quotation.customer;
   const items = quotation.items || [];
+  const dynamicQrUrl = generateVietQrUrl({
+    amount: quotation.grandTotal,
+    description: quotation.quotationNumber,
+    template: 'compact2',
+  });
 
   return `<!DOCTYPE html>
 <html lang="vi">
@@ -533,13 +538,15 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <div class="bottom-section">
       <div class="qr-payment-box">
         <div class="qr-img-wrap">
-          <img src="${PAYMENT_QR_BASE64}" alt="VietQR Techcombank" class="qr-code-img" />
+          <img src="${dynamicQrUrl}" alt="VietQR Techcombank" class="qr-code-img" onerror="this.onerror=null;this.src='${PAYMENT_QR_BASE64}';" />
         </div>
         <div class="qr-details">
           <div class="qr-title">Thông tin chuyển khoản</div>
           <div class="qr-line">STK: <strong class="stk-val">19026197143010</strong></div>
           <div class="qr-line">Ngân hàng: <strong>Techcombank</strong></div>
           <div class="qr-line">Chủ TK: <strong style="text-transform: uppercase;">Tran Thi Bich Dieu</strong></div>
+          <div class="qr-line">Nội dung CK: <strong style="color: #0f172a;">${quotation.quotationNumber}</strong></div>
+          <div class="qr-line" style="margin-top: 2px;">Cần thanh toán: <strong style="color: #1B9550;">${formatCurrency(quotation.grandTotal)}</strong></div>
         </div>
       </div>
       <div class="summary-box">

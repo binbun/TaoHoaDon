@@ -190,3 +190,33 @@ export function useRecordPayment() {
     },
   });
 }
+
+export function useSimulatePaymentWebhook() {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: (data: {
+      quotationNumber: string;
+      amount: number;
+      note?: string;
+      gateway?: string;
+      referenceCode?: string;
+    }) =>
+      apiClient<any>('/payments/simulate', {
+        method: 'POST',
+        data,
+      }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      if (res.data?.quotationId) {
+        queryClient.invalidateQueries({ queryKey: quotationKeys.detail(res.data.quotationId) });
+      }
+      queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      success(res.message || 'Thanh toán đối soát tự động thành công!');
+    },
+    onError: (err: any) => {
+      error(err.message || 'Lỗi mô phỏng đối soát ngân hàng');
+    },
+  });
+}

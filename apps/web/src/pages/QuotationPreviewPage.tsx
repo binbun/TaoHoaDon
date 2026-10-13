@@ -6,8 +6,9 @@ import {
   useIssueQuotation,
   useVoidQuotation,
   useRecordPayment,
+  useSimulatePaymentWebhook,
 } from '../hooks';
-import { formatCurrency, formatDate } from '@taohoadon/shared';
+import { formatCurrency, formatDate, generateVietQrUrl } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
@@ -45,6 +46,10 @@ import {
   Lock,
   Receipt,
   FileDiff,
+  Zap,
+  QrCode,
+  Check,
+  ExternalLink,
 } from 'lucide-react';
 
 export const QuotationPreviewPage: React.FC = () => {
@@ -61,6 +66,7 @@ export const QuotationPreviewPage: React.FC = () => {
   const issueMutation = useIssueQuotation();
   const voidMutation = useVoidQuotation();
   const recordPaymentMutation = useRecordPayment();
+  const simulateWebhookMutation = useSimulatePaymentWebhook();
 
   // Lifecycle Modals State
   const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
@@ -70,6 +76,19 @@ export const QuotationPreviewPage: React.FC = () => {
   const [paymentGateway, setPaymentGateway] = useState('BANK_TRANSFER');
   const [paymentRef, setPaymentRef] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
+
+  // Webhook Simulator State
+  const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
+  const [simulateAmount, setSimulateAmount] = useState<number | string>('');
+  const [simulateNote, setSimulateNote] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    success(`Đã sao chép: ${text}`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const handleDuplicate = () => {
     if (id) {
@@ -261,6 +280,27 @@ export const QuotationPreviewPage: React.FC = () => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Ghi nhận thanh toán chuyển khoản hoặc tiền mặt</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Test / Simulate Webhook Button */}
+          {!isDraft && !isVoided && quotation.status !== 'PAID' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs px-2.5 py-1.5 flex-shrink-0 text-indigo-700 border-indigo-300 hover:bg-indigo-50"
+                  leftIcon={<Zap className="w-3.5 h-3.5 text-indigo-600" />}
+                  onClick={() => {
+                    setSimulateAmount(balanceDue);
+                    setIsSimulateModalOpen(true);
+                  }}
+                >
+                  Test Webhook VietQR
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Mô phỏng tiền về ngân hàng để kiểm tra đối soát tự động</TooltipContent>
             </Tooltip>
           )}
 
@@ -526,22 +566,63 @@ export const QuotationPreviewPage: React.FC = () => {
                     }
                     className="py-2.5 px-2 align-top text-left"
                   >
-                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 max-w-[360px] shadow-xs">
-                      <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs">
+                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 max-w-[390px] shadow-xs">
+                      <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs relative group">
                         <img
-                          src="/payment-qr.png"
+                          src={generateVietQrUrl({
+                            amount: balanceDue > 0 ? balanceDue : Number(quotation.grandTotal),
+                            description: quotation.quotationNumber,
+                            template: 'compact2',
+                          })}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/payment-qr.png';
+                          }}
                           alt="Mã QR thanh toán VietQR Techcombank"
-                          className="w-[82px] h-[96px] object-contain"
+                          className="w-[84px] h-[98px] object-contain cursor-pointer transition-transform group-hover:scale-105"
+                          onClick={() => {
+                            window.open(
+                              generateVietQrUrl({
+                                amount: balanceDue > 0 ? balanceDue : Number(quotation.grandTotal),
+                                description: quotation.quotationNumber,
+                                template: 'print',
+                              }),
+                              '_blank'
+                            );
+                          }}
                         />
                       </div>
-                      <div className="text-[10px] text-slate-600 leading-tight space-y-1">
-                        <div className="font-bold text-slate-800 text-[10.5px] uppercase tracking-wide flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#1B9550] inline-block"></span>
-                          Thông tin chuyển khoản
+                      <div className="text-[10px] text-slate-600 leading-tight space-y-1.5 flex-1">
+                        <div className="font-bold text-slate-800 text-[10.5px] uppercase tracking-wide flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#1B9550] inline-block"></span>
+                            VietQR Tự Động
+                          </span>
+                          <span className="text-[9px] font-normal text-slate-400">1-click scan</span>
                         </div>
-                        <div>STK: <strong className="text-slate-900 font-bold tracking-wider text-[11px]">19026197143010</strong></div>
+                        <div className="flex items-center justify-between">
+                          <span>STK: <strong className="text-slate-900 font-bold tracking-wider text-[11px]">19026197143010</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy('19026197143010', 'stk')}
+                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
+                            title="Sao chép STK"
+                          >
+                            {copiedField === 'stk' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
                         <div>Ngân hàng: <strong className="text-slate-900 font-semibold">Techcombank</strong></div>
                         <div>Chủ TK: <strong className="text-slate-900 font-semibold uppercase">Tran Thi Bich Dieu</strong></div>
+                        <div className="flex items-center justify-between pt-0.5 border-t border-slate-200">
+                          <span>Nội dung: <strong className="text-slate-900 font-bold font-mono">{quotation.quotationNumber}</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(quotation.quotationNumber, 'memo')}
+                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
+                            title="Sao chép Nội dung CK"
+                          >
+                            {copiedField === 'memo' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -927,6 +1008,102 @@ export const QuotationPreviewPage: React.FC = () => {
               isLoading={voidMutation.isPending}
             >
               Xác nhận hủy hóa đơn
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      {/* Webhook Simulator Modal */}
+      <Modal
+        isOpen={isSimulateModalOpen}
+        onClose={() => setIsSimulateModalOpen(false)}
+        title="Mô phỏng đối soát ngân hàng (VietQR Webhook)"
+        subtitle={`Kiểm tra tính năng đối soát tự động khi khách hàng chuyển khoản vào tài khoản Techcombank.`}
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900">
+            <div className="font-bold flex items-center gap-1.5 mb-1 text-indigo-800">
+              <Zap className="w-4 h-4 text-indigo-600" />
+              Mô phỏng luồng Webhook SePay / Casso / VietQR
+            </div>
+            Hệ thống sẽ giả lập một giao dịch ngân hàng gửi webhook vào API với mã đơn{' '}
+            <strong className="font-mono text-indigo-950">{quotation.quotationNumber}</strong>. Hóa đơn sẽ
+            tự động trừ công nợ và chuyển trạng thái sang <span className="font-semibold">ĐÃ THANH TOÁN</span> hoặc <span className="font-semibold">THANH TOÁN 1 PHẦN</span>.
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-xs flex-1"
+              onClick={() => setSimulateAmount(balanceDue)}
+            >
+              100% Còn lại ({formatCurrency(balanceDue)})
+            </Button>
+            {balanceDue > 100000 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-xs flex-1"
+                onClick={() => setSimulateAmount(Math.round(balanceDue / 2))}
+              >
+                50% Đặt cọc ({formatCurrency(Math.round(balanceDue / 2))})
+              </Button>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Số tiền chuyển khoản (VNĐ) *
+            </label>
+            <Input
+              type="number"
+              placeholder="Nhập số tiền khách thanh toán..."
+              value={simulateAmount}
+              onChange={(e) => setSimulateAmount(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Nội dung chuyển khoản (Tùy chọn)
+            </label>
+            <Input
+              placeholder={`VD: ${quotation.quotationNumber} Nguyen Van A thanh toan`}
+              value={simulateNote}
+              onChange={(e) => setSimulateNote(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button variant="outline" size="sm" onClick={() => setIsSimulateModalOpen(false)}>
+              Bỏ qua
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              leftIcon={<Zap className="w-3.5 h-3.5" />}
+              onClick={async () => {
+                const amt = Number(simulateAmount);
+                if (!amt || amt <= 0) {
+                  error('Vui lòng nhập số tiền hợp lệ (> 0)');
+                  return;
+                }
+                await simulateWebhookMutation.mutateAsync({
+                  quotationNumber: quotation.quotationNumber,
+                  amount: amt,
+                  note: simulateNote.trim() || undefined,
+                });
+                setIsSimulateModalOpen(false);
+                setSimulateAmount('');
+                setSimulateNote('');
+              }}
+              isLoading={simulateWebhookMutation.isPending}
+            >
+              Gửi Webhook Mô Phỏng
             </Button>
           </div>
         </div>

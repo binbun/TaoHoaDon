@@ -14,6 +14,7 @@ import customersRoutes from './customers/customers.routes';
 import quotationsRoutes from './quotations/quotations.routes';
 import dashboardRoutes from './dashboard/dashboard.routes';
 import auditRoutes from './audit/audit.routes';
+import paymentsRoutes from './payments/payments.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -116,6 +117,7 @@ app.use(['/api/customers', '/customers'], customersRoutes);
 app.use(['/api/quotations', '/quotations'], quotationsRoutes);
 app.use(['/api/dashboard', '/dashboard'], dashboardRoutes);
 app.use(['/api/audit-logs', '/audit-logs'], auditRoutes);
+app.use(['/api/payments', '/payments'], paymentsRoutes);
 
 // 404 Handler
 app.use('*', (req, res) => {

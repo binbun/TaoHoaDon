@@ -14,6 +14,7 @@ import customersRoutes from './customers/customers.routes';
 import quotationsRoutes from './quotations/quotations.routes';
 import dashboardRoutes from './dashboard/dashboard.routes';
 import auditRoutes from './audit/audit.routes';
+import publicRoutes from './public/public.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -32,8 +33,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
   : [
       process.env.FRONTEND_URL,
+      process.env.CATALOG_URL,
       'http://localhost:5173',
       'http://127.0.0.1:5173',
+      'http://localhost:5174',
       'http://localhost:3000',
       'http://localhost:4173',
       'http://localhost:4000',
@@ -95,6 +98,19 @@ const pdfLimiter = rateLimit({
 });
 app.use(['/api/quotations/:id/pdf', '/quotations/:id/pdf'], pdfLimiter);
 
+// Public catalog rate limiter (anonymous traffic from apps/catalog)
+const publicLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 120, // Max 120 catalog requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Tần suất gửi yêu cầu quá nhanh. Vui lòng thử lại sau.',
+  },
+});
+app.use(['/api/public', '/public'], publicLimiter);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -116,6 +132,7 @@ app.use(['/api/customers', '/customers'], customersRoutes);
 app.use(['/api/quotations', '/quotations'], quotationsRoutes);
 app.use(['/api/dashboard', '/dashboard'], dashboardRoutes);
 app.use(['/api/audit-logs', '/audit-logs'], auditRoutes);
+app.use(['/api/public', '/public'], publicRoutes);
 
 // 404 Handler
 app.use('*', (req, res) => {

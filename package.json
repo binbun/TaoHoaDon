@@ -10,6 +10,7 @@
     "dev": "npm run dev --workspaces --if-present",
     "dev:api": "npm run dev --workspace=@taohoadon/api",
     "dev:web": "npm run dev --workspace=@taohoadon/web",
+    "dev:catalog": "npm run dev --workspace=@taohoadon/catalog",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "db:generate": "npm run db:generate --workspace=@taohoadon/api",

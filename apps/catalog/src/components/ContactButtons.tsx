@@ -1,21 +1,17 @@
 import { MessageCircle, Phone } from 'lucide-react';
+import clsx from 'clsx';
+import { CONTACT_PHONE, CONTACT_ZALO } from '@/config';
 
-export const CONTACT_PHONE: string = import.meta.env.VITE_CONTACT_PHONE || '';
-const CONTACT_ZALO: string = import.meta.env.VITE_CONTACT_ZALO || '';
-
-export function ContactButtons() {
+export function ContactButtons({ className }: { className?: string }) {
   if (!CONTACT_PHONE && !CONTACT_ZALO) {
-    return <p className="text-sm text-slate-600">Vui lòng liên hệ để nhận báo giá.</p>;
+    return <p className="text-sm text-ink-soft">Vui lòng liên hệ cửa hàng để nhận báo giá.</p>;
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3">
+    <div className={clsx('grid gap-3 sm:grid-cols-2', className)}>
       {CONTACT_PHONE && (
-        <a
-          href={`tel:${CONTACT_PHONE}`}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          <Phone className="w-4 h-4" />
+        <a href={`tel:${CONTACT_PHONE}`} className="btn-primary">
+          <Phone className="h-4 w-4" />
           Gọi báo giá
         </a>
       )}
@@ -24,9 +20,9 @@ export function ContactButtons() {
           href={`https://zalo.me/${CONTACT_ZALO}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+          className="btn-outline"
         >
-          <MessageCircle className="w-4 h-4" />
+          <MessageCircle className="h-4 w-4" />
           Nhắn Zalo
         </a>
       )}

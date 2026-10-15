@@ -10,6 +10,14 @@ export interface PublicProduct {
   cabinetWidth: string | null;
   dimensions: string | null;
   unit: string;
+  // Display-only fields. Only the mock data provides these for now.
+  widths?: string[];
+  isNew?: boolean;
+  isBestSeller?: boolean;
+  material?: string;
+  origin?: string;
+  warranty?: string;
+  features?: string[];
 }
 
 export interface PublicBrand {
@@ -27,11 +35,17 @@ export interface Pagination {
   totalPages: number;
 }
 
+export type ProductSort = 'default' | 'name-asc' | 'name-desc' | 'newest';
+
 export interface ProductQuery {
   search?: string;
   brand?: string;
   category?: string;
+  width?: string;
+  tag?: 'new' | 'bestseller';
+  sort?: ProductSort;
   page?: number;
+  limit?: number;
 }
 
 async function get<T>(endpoint: string): Promise<T> {
@@ -48,6 +62,7 @@ export function fetchProducts(query: ProductQuery) {
   if (query.search) params.set('search', query.search);
   if (query.brand) params.set('brand', query.brand);
   if (query.category) params.set('category', query.category);
+  if (query.limit) params.set('limit', String(query.limit));
   params.set('page', String(query.page || 1));
   return get<{ data: PublicProduct[]; pagination: Pagination }>(`/products?${params}`);
 }
@@ -62,4 +77,9 @@ export async function fetchBrands() {
 
 export async function fetchCategories() {
   return (await get<{ data: string[] }>('/categories')).data;
+}
+
+export async function fetchRelatedProducts(product: PublicProduct, limit = 4) {
+  const { data } = await fetchProducts({ category: product.category, limit: limit + 1 });
+  return data.filter((p) => p.id !== product.id).slice(0, limit);
 }

@@ -875,7 +875,7 @@ export const QuotationBuilderPage: React.FC = () => {
               <div className="pt-4">
                 <div className="bg-emerald-50/80 p-4 rounded-xl border border-emerald-100 flex flex-col gap-1">
                   <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
-                    TỔNG CỘNG THANH TOÁN
+                    TỔNG CỘNG
                   </span>
                   <span className="text-2xl font-black text-[#1B9550]">
                     {formatCurrency(summary.grandTotal)}
@@ -977,11 +977,10 @@ export const QuotationBuilderPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setOnlyFavorites(!onlyFavorites)}
-                className={`w-full h-10 px-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                  onlyFavorites
+                className={`w-full h-10 px-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${onlyFavorites
                     ? 'bg-amber-500 border-amber-500 text-white shadow-xs'
                     : 'bg-white border-slate-200 text-slate-700 hover:border-amber-400 hover:text-amber-600'
-                }`}
+                  }`}
                 title="Lọc chỉ các sản phẩm được yêu thích"
               >
                 <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-white text-white' : 'fill-amber-400 text-amber-500'}`} />
@@ -1009,7 +1008,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         </span>
                       )}
                       <BrandBadge brand={p.brand} color={brandColorMap[p.brand]} />
-                      
+
                       {/* Biểu tượng ngôi sao vàng yêu thích */}
                       <button
                         type="button"

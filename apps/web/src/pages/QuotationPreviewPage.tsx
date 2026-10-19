@@ -456,7 +456,7 @@ export const QuotationPreviewPage: React.FC = () => {
                   </tr>
                 ) : null}
                 <tr className="border-t border-slate-300 text-slate-900 text-[14px] font-black bg-emerald-50/40">
-                  <td colSpan={2} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG THANH TOÁN:</td>
+                  <td colSpan={2} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG:</td>
                   <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[16px]">{formatCurrency(quotation.grandTotal)}</td>
                 </tr>
               </tfoot>

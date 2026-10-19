@@ -1,4 +1,4 @@
-import { Quotation, formatCurrency, formatDate, generateVietQrUrl } from '@taohoadon/shared';
+import { Quotation, formatCurrency, formatNumber, formatDate, generateVietQrUrl } from '@taohoadon/shared';
 import { PAYMENT_QR_BASE64 } from './paymentQr';
 import { GROB_LOGO_BASE64 } from './grobLogo';
 
@@ -6,9 +6,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
   const customer = quotation.customer;
   const items = quotation.items || [];
   const dynamicQrUrl = generateVietQrUrl({
-    amount: quotation.grandTotal,
-    description: quotation.quotationNumber,
-    template: 'compact2',
+    template: 'qr_only',
   });
 
   return `<!DOCTYPE html>
@@ -21,7 +19,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
 
     @page {
       size: A4 portrait;
-      margin: 10mm 12mm 12mm 12mm;
+      margin: 8mm 10mm 10mm 10mm;
     }
 
     * {
@@ -32,7 +30,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 11px;
+      font-size: 11.5px;
       line-height: 1.45;
       color: #1e293b;
       background: #ffffff;
@@ -50,8 +48,8 @@ export function renderQuotationHtml(quotation: Quotation): string {
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #1B9550;
-      padding-bottom: 12px;
-      margin-bottom: 14px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .brand-box {
@@ -61,13 +59,13 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .brand-logo-img {
-      height: 48px;
+      height: 50px;
       width: auto;
       object-fit: contain;
     }
 
     .company-title {
-      font-size: 11.5px;
+      font-size: 12.5px;
       font-weight: 800;
       color: #0f172a;
       text-transform: uppercase;
@@ -75,14 +73,14 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .company-sub {
-      font-size: 9.5px;
+      font-size: 10px;
       color: #475569;
       margin-top: 2px;
     }
 
     .distributor-box {
       text-align: right;
-      font-size: 9.5px;
+      font-size: 10px;
       color: #334155;
       line-height: 1.35;
       background: #f8fafc;
@@ -93,7 +91,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
 
     .distributor-box strong {
       color: #b91c1c;
-      font-size: 10.5px;
+      font-size: 11.5px;
     }
 
     /* TITLE & META */
@@ -101,11 +99,11 @@ export function renderQuotationHtml(quotation: Quotation): string {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .doc-title {
-      font-size: 17px;
+      font-size: 19px;
       font-weight: 800;
       color: #14733E;
       letter-spacing: -0.2px;
@@ -113,7 +111,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .doc-subtitle {
-      font-size: 10px;
+      font-size: 11px;
       color: #64748b;
       font-weight: 500;
       margin-top: 1px;
@@ -123,18 +121,18 @@ export function renderQuotationHtml(quotation: Quotation): string {
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
-      padding: 5px 10px;
+      padding: 6px 12px;
       text-align: right;
     }
 
     .doc-meta-item {
-      font-size: 10px;
+      font-size: 11px;
       color: #475569;
     }
 
     .doc-meta-item strong {
       color: #0f172a;
-      font-size: 10.5px;
+      font-size: 11.5px;
     }
 
     /* CUSTOMER INFO BOX */
@@ -142,12 +140,12 @@ export function renderQuotationHtml(quotation: Quotation): string {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
-      padding: 10px 14px;
-      margin-bottom: 14px;
+      padding: 9px 14px;
+      margin-bottom: 12px;
     }
 
     .info-card-title {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -160,19 +158,19 @@ export function renderQuotationHtml(quotation: Quotation): string {
     .customer-grid {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
-      column-gap: 16px;
-      row-gap: 3px;
+      column-gap: 20px;
+      row-gap: 4px;
     }
 
     .info-row {
-      font-size: 10.5px;
+      font-size: 11.5px;
       color: #334155;
     }
 
     .info-row span {
       color: #64748b;
       display: inline-block;
-      min-width: 85px;
+      min-width: 90px;
     }
 
     .info-row strong {
@@ -190,20 +188,20 @@ export function renderQuotationHtml(quotation: Quotation): string {
       background-color: #f1f5f9;
       color: #0f172a;
       font-weight: 700;
-      font-size: 10px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
-      padding: 7px 8px;
+      padding: 8px 8px;
       border-top: 1px solid #cbd5e1;
       border-bottom: 2px solid #94a3b8;
       text-align: left;
     }
 
     table.items-table td {
-      padding: 8px;
+      padding: 7px 8px;
       border-bottom: 1px solid #e2e8f0;
       vertical-align: top;
-      font-size: 10.5px;
+      font-size: 11.5px;
     }
 
     table.items-table tr:last-child td {
@@ -211,29 +209,29 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .col-stt { width: 5%; text-align: center; color: #64748b; }
-    .col-code { width: 14%; font-weight: 700; color: #0f172a; font-family: monospace; font-size: 10px; }
+    .col-code { width: 14%; font-weight: 700; color: #0f172a; font-family: monospace; font-size: 11px; }
     .col-product { width: 36%; }
     .col-unit { width: 8%; text-align: center; color: #475569; }
-    .col-qty { width: 7%; text-align: center; }
+    .col-qty { width: 7%; text-align: center; font-weight: 600; }
     .col-price { width: 14%; text-align: right; }
     .col-total { width: 16%; text-align: right; font-weight: 700; color: #0f172a; }
 
     .product-title {
       font-weight: 700;
       color: #0f172a;
-      font-size: 11px;
+      font-size: 12px;
       margin-bottom: 2px;
     }
 
     .product-desc {
-      font-size: 9.5px;
+      font-size: 10px;
       color: #64748b;
-      line-height: 1.3;
+      line-height: 1.35;
     }
 
     .discount-badge {
       display: inline-block;
-      font-size: 9px;
+      font-size: 9.5px;
       color: #b91c1c;
       background: #fef2f2;
       border-radius: 3px;
@@ -247,25 +245,26 @@ export function renderQuotationHtml(quotation: Quotation): string {
       justify-content: space-between;
       align-items: stretch;
       margin-top: 8px;
+      gap: 12px;
       page-break-inside: avoid;
     }
 
     .qr-payment-box {
-      width: 54%;
+      width: 53%;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .qr-img-wrap {
       background: #ffffff;
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      padding: 4px;
+      border-radius: 8px;
+      padding: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -273,55 +272,58 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .qr-code-img {
-      width: 82px;
-      height: 96px;
+      width: 120px;
+      height: 120px;
       object-fit: contain;
       display: block;
     }
 
     .qr-details {
-      font-size: 10px;
+      font-size: 11.5px;
       color: #475569;
-      line-height: 1.45;
+      line-height: 1.55;
+      flex: 1;
     }
 
     .qr-title {
-      font-size: 10.5px;
-      font-weight: 700;
+      font-size: 12.5px;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.4px;
       color: #0f172a;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
     }
 
     .qr-title::before {
       content: "";
       display: inline-block;
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background-color: #1B9550;
     }
 
     .qr-line {
-      margin-bottom: 2px;
+      margin-bottom: 4px;
+      font-size: 11.5px;
     }
 
     .qr-line strong {
       color: #0f172a;
+      font-size: 12px;
     }
 
     .qr-line strong.stk-val {
-      font-size: 11px;
+      font-size: 13.5px;
       font-weight: 800;
       letter-spacing: 0.5px;
     }
 
     .qr-hint {
-      font-size: 9px;
+      font-size: 9.5px;
       color: #64748b;
       margin-top: 3px;
       line-height: 1.3;
@@ -337,7 +339,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .notes-title {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       color: #334155;
       margin-bottom: 4px;
@@ -346,26 +348,29 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .notes-content {
-      font-size: 9.5px;
+      font-size: 10.5px;
       color: #475569;
       line-height: 1.4;
       white-space: pre-line;
     }
 
     .summary-box {
-      width: 43%;
+      width: 45%;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
       padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .summary-row {
       display: flex;
       justify-content: space-between;
-      font-size: 10.5px;
+      font-size: 11.5px;
       color: #475569;
-      padding: 2.5px 0;
+      padding: 3px 0;
     }
 
     .summary-row.discount {
@@ -375,7 +380,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     .summary-row.taxable {
       border-top: 1px dashed #cbd5e1;
       padding-top: 5px;
-      margin-top: 2px;
+      margin-top: 3px;
       color: #334155;
       font-weight: 600;
     }
@@ -384,21 +389,22 @@ export function renderQuotationHtml(quotation: Quotation): string {
       border-top: 2px solid #1B9550;
       margin-top: 6px;
       padding-top: 6px;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 800;
       color: #0f172a;
     }
 
     .grand-total .amount {
       color: #1B9550;
-      font-size: 13.5px;
+      font-size: 15px;
+      font-weight: 900;
     }
 
     /* SIGNATURE */
     .signature-section {
       display: flex;
       justify-content: space-between;
-      margin-top: 28px;
+      margin-top: 22px;
       page-break-inside: avoid;
     }
 
@@ -408,24 +414,24 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .sig-title {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       color: #0f172a;
       margin-bottom: 2px;
     }
 
     .sig-sub {
-      font-size: 9.5px;
+      font-size: 10.5px;
       color: #64748b;
       font-style: italic;
     }
 
     .sig-space {
-      height: 55px;
+      height: 48px;
     }
 
     .sig-name {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 700;
       color: #14733E;
     }
@@ -524,10 +530,10 @@ export function renderQuotationHtml(quotation: Quotation): string {
             <td class="col-unit">${item.unit || 'Bộ'}</td>
             <td class="col-qty">${item.quantity}</td>
             <td class="col-price">
-              <div>${formatCurrency(item.unitPrice)}</div>
-              ${item.discount > 0 ? `<div class="discount-badge" style="margin-top: 2px;">-${formatCurrency(item.discountAmount || (item.quantity * item.unitPrice * (item.discount / 100)))} (${item.discount}%)</div>` : ''}
+              <div>${formatNumber(item.unitPrice)}</div>
+              ${item.discount > 0 ? `<div class="discount-badge" style="margin-top: 2px;">-${formatNumber(item.discountAmount || (item.quantity * item.unitPrice * (item.discount / 100)))} (${item.discount}%)</div>` : ''}
             </td>
-            <td class="col-total">${formatCurrency(item.total)}</td>
+            <td class="col-total">${formatNumber(item.total)}</td>
           </tr>
         `;
   }).join('')}
@@ -545,8 +551,6 @@ export function renderQuotationHtml(quotation: Quotation): string {
           <div class="qr-line">STK: <strong class="stk-val">19026197143010</strong></div>
           <div class="qr-line">Ngân hàng: <strong>Techcombank</strong></div>
           <div class="qr-line">Chủ TK: <strong style="text-transform: uppercase;">Tran Thi Bich Dieu</strong></div>
-          <div class="qr-line">Nội dung CK: <strong style="color: #0f172a;">${quotation.quotationNumber}</strong></div>
-          <div class="qr-line" style="margin-top: 2px;">Cần thanh toán: <strong style="color: #1B9550;">${formatCurrency(quotation.grandTotal)}</strong></div>
         </div>
       </div>
       <div class="summary-box">
@@ -649,7 +653,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 11px;
+      font-size: 11.5px;
       line-height: 1.45;
       color: #0f172a;
       background: #ffffff;
@@ -679,7 +683,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
     }
 
     .distributor-sub {
-      font-size: 9px;
+      font-size: 10px;
       color: #475569;
       font-weight: 500;
       margin-top: 1px;
@@ -687,13 +691,14 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
 
     .distributor-contact {
       text-align: right;
-      font-size: 9.5px;
+      font-size: 10px;
       color: #334155;
       line-height: 1.35;
     }
 
     .distributor-contact strong {
       color: #b91c1c;
+      font-size: 11px;
     }
 
     /* TITLE SECTION */
@@ -703,7 +708,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
     }
 
     .main-title {
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -712,7 +717,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
     }
 
     .order-number {
-      font-size: 12px;
+      font-size: 12.5px;
       color: #334155;
       margin-bottom: 2px;
     }
@@ -723,7 +728,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
     }
 
     .order-date {
-      font-size: 11.5px;
+      font-size: 12px;
       font-style: italic;
       color: #475569;
     }
@@ -735,7 +740,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
       padding: 8px 12px;
       margin-bottom: 14px;
       background: #f8fafc;
-      font-size: 10.5px;
+      font-size: 11.5px;
     }
 
     .delivery-grid {
@@ -766,7 +771,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
     table.delivery-table td {
       border: 1px solid #334155;
       padding: 7px 8px;
-      font-size: 11px;
+      font-size: 11.5px;
       vertical-align: middle;
     }
 
@@ -775,7 +780,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
       font-weight: 800;
       text-align: center;
       text-transform: uppercase;
-      font-size: 10.5px;
+      font-size: 11px;
       letter-spacing: 0.3px;
       color: #0f172a;
       padding: 8px 6px;
@@ -793,7 +798,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
       text-align: center;
       font-family: monospace;
       font-weight: 700;
-      font-size: 10.5px;
+      font-size: 11px;
       color: #0f172a;
     }
 
@@ -813,7 +818,7 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
       width: 70px;
       text-align: center;
       font-weight: 800;
-      font-size: 11.5px;
+      font-size: 12px;
       color: #0f172a;
     }
 

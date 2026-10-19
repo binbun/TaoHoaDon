@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuotation, useDuplicateQuotation } from '../hooks';
-import { formatCurrency, formatDate, generateVietQrUrl } from '@taohoadon/shared';
+import { formatCurrency, formatNumber, formatDate, generateVietQrUrl } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
@@ -268,26 +268,26 @@ export const QuotationPreviewPage: React.FC = () => {
       <div className="a4-sheet-mobile-container">
         {activeTab === 'invoice' ? (
           /* ==================== TAB 1: CUSTOMER INVOICE (FULL PRICING & QR) ==================== */
-          <div className="a4-sheet font-sans text-slate-800 text-[11px] leading-relaxed select-text shadow-xl">
+          <div className="a4-sheet font-sans text-slate-800 text-[12px] leading-relaxed select-text shadow-xl">
             {/* Header */}
             <div className="flex justify-between items-center border-b-2 border-slate-800 pb-3 mb-4 gap-3">
               <div className="flex items-center gap-3">
                 <img
                   src="/grob-logo.png"
                   alt="Logo GROB"
-                  className="h-11 sm:h-12 w-auto object-contain shrink-0"
+                  className="h-12 sm:h-14 w-auto object-contain shrink-0"
                 />
                 <div>
-                  <div className="text-xs sm:text-[12.5px] font-black text-slate-900 uppercase tracking-tight leading-tight">
+                  <div className="text-[13px] sm:text-[14px] font-black text-slate-900 uppercase tracking-tight leading-tight">
                     CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
                   </div>
-                  <div className="text-[10px] text-slate-600 mt-1 font-medium">
+                  <div className="text-[10.5px] text-slate-600 mt-1 font-medium">
                     Phân phối chính hãng: GROB - EUPLUS - EUROKING - KINGENBLU - BLUM
                   </div>
                 </div>
               </div>
-              <div className="text-right text-[10px] text-slate-600 bg-slate-50 border border-slate-200 p-2 rounded-lg leading-tight shrink-0">
-                <div className="font-bold text-rose-600">NPP BÍCH ĐIỀU</div>
+              <div className="text-right text-[10.5px] text-slate-600 bg-slate-50 border border-slate-200 p-2.5 rounded-lg leading-tight shrink-0">
+                <div className="font-bold text-rose-600 text-[12px]">NPP BÍCH ĐIỀU</div>
                 <div>Hotline: 0917 418 989 - 0945 636 567</div>
                 <div>Zalo: 0348 932 347 - 0917 418 989</div>
                 <div>Địa chỉ: Số 147 phố Hát, Thôn Đông Thành, xã Hát Môn, Tp. Hà Nội</div>
@@ -297,14 +297,14 @@ export const QuotationPreviewPage: React.FC = () => {
             {/* Title & Metadata */}
             <div className="flex justify-between items-end mb-4">
               <div>
-                <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
                   {quotation.title || 'HÓA ĐƠN BÁN HÀNG'}
                 </h1>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs text-slate-500">
                   Đơn hàng phụ kiện tủ bếp thông minh chính hãng
                 </p>
               </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-right text-[11px] text-slate-600 space-y-0.5">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-right text-xs text-slate-600 space-y-0.5">
                 <div>Số đơn hàng: <strong className="text-slate-900">{quotation.quotationNumber}</strong></div>
                 <div>Ngày lập: <strong className="text-slate-900">{formatDate(quotation.quotationDate)}</strong></div>
               </div>
@@ -312,10 +312,10 @@ export const QuotationPreviewPage: React.FC = () => {
 
             {/* Customer Details Box */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4">
-              <div className="text-[10.5px] font-bold uppercase tracking-wider text-slate-800 border-b border-slate-200 pb-1 mb-2">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-200 pb-1 mb-2">
                 Thông tin khách hàng
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
                 <div>
                   <span className="text-slate-500 inline-block w-28">Khách hàng:</span>
                   <strong className="text-slate-900">{customer?.companyName || 'Khách hàng đại lý'}</strong>
@@ -338,47 +338,47 @@ export const QuotationPreviewPage: React.FC = () => {
             {/* Table of Items */}
             <table className="w-full border-collapse mb-4">
               <thead>
-                <tr className="bg-slate-100 text-slate-800 text-[10.5px] font-bold uppercase tracking-wider border-t border-slate-300 border-b-2 border-slate-400">
-                  <th className="py-2 px-2.5 text-center w-8">STT</th>
-                  <th className="py-2 px-2.5 text-left w-28">Mã sản phẩm</th>
-                  <th className="py-2 px-2.5 text-left">Tên sản phẩm</th>
-                  <th className="py-2 px-2.5 text-center w-14">ĐVT</th>
-                  <th className="py-2 px-2.5 text-center w-12">SL</th>
-                  <th className="py-2 px-2.5 text-right w-24">Đơn giá</th>
-                  <th className="py-2 px-2.5 text-right w-28">Thành tiền (đ)</th>
+                <tr className="bg-slate-100 text-slate-800 text-[11.5px] font-bold uppercase tracking-wider border-t border-slate-300 border-b-2 border-slate-400">
+                  <th className="py-2.5 px-2.5 text-center w-8">STT</th>
+                  <th className="py-2.5 px-2.5 text-left w-28">Mã sản phẩm</th>
+                  <th className="py-2.5 px-2.5 text-left">Tên sản phẩm</th>
+                  <th className="py-2.5 px-2.5 text-center w-14">ĐVT</th>
+                  <th className="py-2.5 px-2.5 text-center w-12">SL</th>
+                  <th className="py-2.5 px-2.5 text-right w-24">Đơn giá (đ)</th>
+                  <th className="py-2.5 px-2.5 text-right w-28">Thành tiền (đ)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-200 text-[12px]">
                 {items.map((item, index) => {
                   const productCode = item.productCodeSnapshot || (item as any).product?.code || '---';
                   return (
                     <tr key={item.id || index} className="align-top">
                       <td className="py-2.5 px-2.5 text-center text-slate-500">{index + 1}</td>
                       <td className="py-2.5 px-2.5">
-                        <span className="font-mono font-bold text-slate-800 text-[11px] bg-slate-100/90 px-1.5 py-0.5 rounded border border-slate-200 inline-block tracking-tight">
+                        <span className="font-mono font-bold text-slate-800 text-[11.5px] bg-slate-100/90 px-1.5 py-0.5 rounded border border-slate-200 inline-block tracking-tight">
                           {productCode}
                         </span>
                       </td>
                       <td className="py-2.5 px-2.5">
-                        <div className="font-bold text-slate-900 text-[11.5px]">{item.productNameSnapshot}</div>
+                        <div className="font-bold text-slate-900 text-[12.5px]">{item.productNameSnapshot}</div>
                       </td>
                       <td className="py-2.5 px-2.5 text-center text-slate-600">{item.unit || 'Bộ'}</td>
                       <td className="py-2.5 px-2.5 text-center font-medium">{item.quantity}</td>
                       <td className="py-2.5 px-2.5 text-right">
-                        <div className="text-slate-700">{formatCurrency(item.unitPrice)}</div>
+                        <div className="text-slate-700">{formatNumber(item.unitPrice)}</div>
                         {item.discount > 0 && (
-                          <div className="text-[9.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
-                            -{formatCurrency(item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100)))} ({item.discount}%)
+                          <div className="text-[10.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
+                            -{formatNumber(item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100)))} ({item.discount}%)
                           </div>
                         )}
                       </td>
-                      <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatCurrency(item.total)}</td>
+                      <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatNumber(item.total)}</td>
                     </tr>
                   );
                 })}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-slate-400 font-medium text-slate-700 text-[11px]">
+                <tr className="border-t-2 border-slate-400 font-medium text-slate-700 text-[12px]">
                   <td
                     colSpan={4}
                     rowSpan={
@@ -389,25 +389,21 @@ export const QuotationPreviewPage: React.FC = () => {
                     }
                     className="py-2.5 px-2 align-top text-left"
                   >
-                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 max-w-[390px] shadow-xs">
-                      <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs relative group">
+                    <div className="flex items-center gap-4 bg-slate-50 border border-slate-200/90 rounded-xl p-3.5 max-w-[420px] shadow-xs">
+                      <div className="bg-white p-1.5 rounded-lg border border-slate-200 shrink-0 shadow-xs relative group">
                         <img
                           src={generateVietQrUrl({
-                            amount: quotation.grandTotal,
-                            description: quotation.quotationNumber,
-                            template: 'compact2',
+                            template: 'qr_only',
                           })}
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/payment-qr.png';
                           }}
                           alt="Mã QR thanh toán VietQR Techcombank"
-                          className="w-[84px] h-[98px] object-contain cursor-pointer transition-transform group-hover:scale-105"
+                          className="w-[120px] h-[120px] object-contain cursor-pointer transition-transform group-hover:scale-105"
                           onClick={() => {
                             window.open(
                               generateVietQrUrl({
-                                amount: quotation.grandTotal,
-                                description: quotation.quotationNumber,
-                                template: 'print',
+                                template: 'qr_only',
                               }),
                               '_blank'
                             );
@@ -415,84 +411,61 @@ export const QuotationPreviewPage: React.FC = () => {
                           title="Click để mở ảnh QR kích thước lớn"
                         />
                       </div>
-                      <div className="text-[10px] text-slate-600 leading-tight space-y-1.5 flex-1">
-                        <div className="font-bold text-slate-800 text-[10.5px] uppercase tracking-wide flex items-center justify-between">
+                      <div className="text-[12px] text-slate-700 leading-relaxed space-y-2 flex-1">
+                        <div className="font-bold text-slate-900 text-[13px] uppercase tracking-wide flex items-center justify-between">
                           <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#1B9550] inline-block"></span>
-                            VietQR Tự Động
+                            <span className="w-2 h-2 rounded-full bg-[#1B9550] inline-block"></span>
+                            Thông tin chuyển khoản
                           </span>
-                          <span className="text-[9px] font-normal text-slate-400">1-click scan</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span>STK: <strong className="text-slate-900 font-bold tracking-wider text-[11px]">19026197143010</strong></span>
+                          <span>STK: <strong className="text-slate-900 font-extrabold tracking-wider text-[13.5px]">19026197143010</strong></span>
                           <button
                             type="button"
                             onClick={() => handleCopy('19026197143010', 'stk')}
                             className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
                             title="Sao chép STK"
                           >
-                            {copiedField === 'stk' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                            {copiedField === 'stk' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         </div>
-                        <div>Ngân hàng: <strong className="text-slate-900 font-semibold">Techcombank</strong></div>
-                        <div>Chủ TK: <strong className="text-slate-900 font-semibold uppercase">Tran Thi Bich Dieu</strong></div>
-                        <div className="flex items-center justify-between pt-0.5 border-t border-slate-200">
-                          <span>Nội dung: <strong className="text-slate-900 font-bold font-mono">{quotation.quotationNumber}</strong></span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(quotation.quotationNumber, 'memo')}
-                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
-                            title="Sao chép Nội dung CK"
-                          >
-                            {copiedField === 'memo' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          </button>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>Số tiền: <strong className="text-[#1B9550] font-bold">{formatCurrency(quotation.grandTotal)}</strong></span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(String(Math.round(quotation.grandTotal)), 'amount')}
-                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
-                            title="Sao chép Số tiền"
-                          >
-                            {copiedField === 'amount' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          </button>
-                        </div>
+                        <div>Ngân hàng: <strong className="text-slate-900 font-bold">Techcombank</strong></div>
+                        <div>Chủ TK: <strong className="text-slate-900 font-bold uppercase">Tran Thi Bich Dieu</strong></div>
                       </div>
                     </div>
                   </td>
-                  <td colSpan={2} className="py-2 px-2.5 text-right">Tạm tính:</td>
-                  <td className="py-2 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.subtotal)}</td>
+                  <td colSpan={2} className="py-2.5 px-2.5 text-right">Tạm tính:</td>
+                  <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.subtotal)}</td>
                 </tr>
                 {quotation.discountTotal > 0 && (
-                  <tr className="text-rose-600 text-[11px]">
+                  <tr className="text-rose-600 text-[12px]">
                     <td colSpan={2} className="py-1 px-2.5 text-right">Tổng chiết khấu:</td>
                     <td className="py-1 px-2.5 text-right font-bold">-{formatCurrency(quotation.discountTotal)}</td>
                   </tr>
                 )}
                 {quotation.vatTotal > 0 && (
-                  <tr className="text-slate-700 text-[11px]">
+                  <tr className="text-slate-700 text-[12px]">
                     <td colSpan={2} className="py-1 px-2.5 text-right">Thuế GTGT (VAT):</td>
                     <td className="py-1 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.vatTotal)}</td>
                   </tr>
                 )}
                 {quotation.previousDebt && quotation.previousDebt > 0 ? (
-                  <tr className="text-amber-800 bg-amber-50/60 font-semibold text-[11px]">
+                  <tr className="text-amber-800 bg-amber-50/60 font-semibold text-[12px]">
                     <td colSpan={2} className="py-1.5 px-2.5 text-right">Dư nợ cũ từ các đơn trước:</td>
                     <td className="py-1.5 px-2.5 text-right font-bold text-amber-700">+{formatCurrency(quotation.previousDebt)}</td>
                   </tr>
                 ) : null}
-                <tr className="border-t border-slate-300 text-slate-900 text-[13px] font-black bg-emerald-50/40">
+                <tr className="border-t border-slate-300 text-slate-900 text-[14px] font-black bg-emerald-50/40">
                   <td colSpan={2} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG THANH TOÁN:</td>
-                  <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[14px]">{formatCurrency(quotation.grandTotal)}</td>
+                  <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[16px]">{formatCurrency(quotation.grandTotal)}</td>
                 </tr>
               </tfoot>
             </table>
 
             {/* Notes & Warranty Terms */}
             {quotation.note && (
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-6 text-[10.5px]">
-                <div className="font-bold text-slate-800 uppercase tracking-wider mb-1.5 text-slate-800">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-6 text-[11.5px]">
+                <div className="font-bold text-slate-800 uppercase tracking-wider mb-1.5 text-slate-800 text-xs">
                   Ghi chú & Chính sách bảo hành:
                 </div>
                 <div className="text-slate-600 whitespace-pre-line leading-relaxed">
@@ -502,40 +475,40 @@ export const QuotationPreviewPage: React.FC = () => {
             )}
 
             {/* Signatures */}
-            <div className="grid grid-cols-2 gap-8 text-center pt-4 border-t border-slate-200 text-[11px]">
+            <div className="grid grid-cols-2 gap-8 text-center pt-4 border-t border-slate-200 text-[12px]">
               <div>
-                <div className="font-bold text-slate-800 uppercase">KHÁCH HÀNG</div>
-                <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
+                <div className="font-bold text-slate-800 uppercase text-[12.5px]">KHÁCH HÀNG</div>
+                <div className="text-[11px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
                 <div className="h-16"></div>
               </div>
               <div>
-                <div className="font-bold text-slate-900 uppercase">NGƯỜI BÁN HÀNG</div>
-                <div className="text-[10px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
+                <div className="font-bold text-slate-900 uppercase text-[12.5px]">NGƯỜI BÁN HÀNG</div>
+                <div className="text-[11px] text-slate-400 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
                 <div className="h-16"></div>
               </div>
             </div>
           </div>
         ) : (
           /* ==================== TAB 2: DELIVERY CHECK SLIP (MATCHING USER SAMPLE IMAGE) ==================== */
-          <div className="a4-sheet font-sans text-slate-900 text-[11px] leading-relaxed select-text shadow-xl">
+          <div className="a4-sheet font-sans text-slate-900 text-[12px] leading-relaxed select-text shadow-xl">
             {/* Top Distributor Bar */}
             <div className="flex justify-between items-center border-b-2 border-[#1B9550] pb-2.5 mb-3.5 gap-3">
               <div className="flex items-center gap-2.5">
                 <img
                   src="/grob-logo.png"
                   alt="Logo GROB"
-                  className="h-10 w-auto object-contain shrink-0"
+                  className="h-11 sm:h-12 w-auto object-contain shrink-0"
                 />
                 <div>
-                  <div className="text-xs font-black text-slate-900 uppercase tracking-tight leading-tight">
+                  <div className="text-[13px] sm:text-[14px] font-black text-slate-900 uppercase tracking-tight leading-tight">
                     CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
                   </div>
-                  <div className="text-[9.5px] text-slate-600 font-medium mt-0.5">
+                  <div className="text-[10.5px] text-slate-600 font-medium mt-0.5">
                     Phân phối chính hãng: GROB - EUPLUS - EUROKING - KINGENBLU - BLUM
                   </div>
                 </div>
               </div>
-              <div className="text-right text-[9.5px] text-slate-600 leading-tight">
+              <div className="text-right text-[10.5px] text-slate-600 leading-tight">
                 <div>Hotline: <strong className="text-rose-600">0917 418 989 - 0945 636 567</strong></div>
                 <div>ĐC: Số 147 phố Hát, Hát Môn, Hà Nội</div>
               </div>
@@ -549,17 +522,17 @@ export const QuotationPreviewPage: React.FC = () => {
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-wide">
                 HÓA ĐƠN BÁN HÀNG
               </h1>
-              <div className="text-xs text-slate-700 font-medium mt-1">
+              <div className="text-xs sm:text-[13px] text-slate-700 font-medium mt-1">
                 số: <strong className="font-bold text-slate-900 font-mono">{quotation.quotationNumber}</strong>
               </div>
-              <div className="text-[11.5px] text-slate-600 italic mt-0.5">
+              <div className="text-[12px] text-slate-600 italic mt-0.5">
                 Ngày {day} tháng {month} năm {year}
               </div>
             </div>
 
             {/* Customer & Delivery Address Card */}
-            <div className="bg-slate-50/80 border border-slate-300 rounded-lg p-3 mb-3.5 text-[11px]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+            <div className="bg-slate-50/80 border border-slate-300 rounded-lg p-3 mb-3.5 text-[12px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
                 <div>
                   <span className="text-slate-500 inline-block w-24">Khách hàng:</span>
                   <strong className="text-slate-900">{customer?.companyName || 'Khách hàng đại lý'}</strong>
@@ -578,7 +551,7 @@ export const QuotationPreviewPage: React.FC = () => {
             {/* Delivery Items Table (Bordered grid matching photo: Stt | Mã hàng | Tên sản phẩm | ĐVT | Số lượng) */}
             <table className="w-full border-collapse mb-3.5 border border-slate-800">
               <thead>
-                <tr className="bg-slate-100 text-slate-900 text-[11px] font-bold">
+                <tr className="bg-slate-100 text-slate-900 text-[12px] font-bold">
                   <th className="py-2 px-2 text-center w-12 border border-slate-800">Stt</th>
                   <th className="py-2 px-2.5 text-center w-36 border border-slate-800">Mã hàng</th>
                   <th className="py-2 px-3 text-center border border-slate-800">Tên sản phẩm</th>

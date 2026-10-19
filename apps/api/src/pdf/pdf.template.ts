@@ -549,7 +549,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
         <div class="qr-details">
           <div class="qr-title">Thông tin chuyển khoản</div>
           <div class="qr-line">STK: <strong class="stk-val">19026197143010</strong></div>
-          <div class="qr-line">Ngân hàng: <strong>Techcombank</strong></div>
+          <div class="qr-line">Ngân hàng: <strong>TECHCOMBANK</strong></div>
           <div class="qr-line">Chủ TK: <strong style="text-transform: uppercase;">Tran Thi Bich Dieu</strong></div>
         </div>
       </div>

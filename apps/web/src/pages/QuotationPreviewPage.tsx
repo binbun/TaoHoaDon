@@ -429,7 +429,7 @@ export const QuotationPreviewPage: React.FC = () => {
                             {copiedField === 'stk' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         </div>
-                        <div>Ngân hàng: <strong className="text-slate-900 font-bold">Techcombank</strong></div>
+                        <div>Ngân hàng: <strong className="text-slate-900 font-bold">TECHCOMBANK</strong></div>
                         <div>Chủ TK: <strong className="text-slate-900 font-bold uppercase">Tran Thi Bich Dieu</strong></div>
                       </div>
                     </div>

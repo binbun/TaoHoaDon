@@ -548,7 +548,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     <div class="bottom-section">
       <div class="qr-payment-box">
         <div class="qr-img-wrap">
-          <img src="${dynamicQrUrl}" alt="VietQR Techcombank" class="qr-code-img" onerror="this.onerror=null;this.src='${PAYMENT_QR_BASE64}';" />
+          <img src="${PAYMENT_QR_BASE64}" alt="VietQR Techcombank" class="qr-code-img" />
         </div>
         <div class="qr-details">
           <div class="qr-title">Thông tin chuyển khoản</div>

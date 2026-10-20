@@ -2195,6 +2195,11 @@ helmet@^7.1.0:
   resolved "https://registry.npmjs.org/helmet/-/helmet-7.2.0.tgz"
   integrity sha512-ZRiwvN089JfMXokizgqEPXsl2Guk094yExfoDXR0cBYWxtBbaSww/w+vT4WEJsBW2iTUi1GgZ6swmoug3Oy4Xw==
 
+html-to-image@^1.11.13:
+  version "1.11.13"
+  resolved "https://registry.npmjs.org/html-to-image/-/html-to-image-1.11.13.tgz"
+  integrity sha512-cuOPoI7WApyhBElTTb9oqsawRvZ0rHhaHwghRLlTuffoD1B2aDemlCruLeZrUIIdvG7gs9xeELEPm6PhuASqrg==
+
 http-errors@~2.0.0, http-errors@~2.0.1:
   version "2.0.1"
   resolved "https://registry.npmjs.org/http-errors/-/http-errors-2.0.1.tgz"

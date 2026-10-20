@@ -14,6 +14,9 @@ async function getBrowser(): Promise<Browser> {
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--font-render-hinting=none',
+        '--single-process',
+        '--no-zygote',
+        '--disable-features=IsolateOrigins,site-per-process',
       ],
     });
   }
@@ -30,9 +33,10 @@ export async function generateQuotationPdf(quotation: Quotation): Promise<Buffer
 
   try {
     await page.setContent(htmlContent, {
-      waitUntil: ['load', 'networkidle0'],
-      timeout: 30000,
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
     });
+    await page.evaluateHandle('document.fonts.ready').catch(() => {});
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -61,9 +65,10 @@ export async function generateDeliverySlipPdf(quotation: Quotation): Promise<Buf
 
   try {
     await page.setContent(htmlContent, {
-      waitUntil: ['load', 'networkidle0'],
-      timeout: 30000,
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
     });
+    await page.evaluateHandle('document.fonts.ready').catch(() => {});
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -99,9 +104,10 @@ export async function generateQuotationPng(quotation: Quotation): Promise<Buffer
     });
 
     await page.setContent(htmlContent, {
-      waitUntil: ['load', 'networkidle0'],
-      timeout: 30000,
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
     });
+    await page.evaluateHandle('document.fonts.ready').catch(() => {});
 
     await page.addStyleTag({
       content: `
@@ -140,9 +146,10 @@ export async function generateDeliverySlipPng(quotation: Quotation): Promise<Buf
     });
 
     await page.setContent(htmlContent, {
-      waitUntil: ['load', 'networkidle0'],
-      timeout: 30000,
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
     });
+    await page.evaluateHandle('document.fonts.ready').catch(() => {});
 
     await page.addStyleTag({
       content: `

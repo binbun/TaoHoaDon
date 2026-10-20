@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toPng, toBlob } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 import { useQuotation, useDuplicateQuotation } from '../hooks';
 import { formatCurrency, formatNumber, formatDate, generateVietQrUrl } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
@@ -26,7 +26,6 @@ import {
   Truck,
   CheckCircle2,
   Check,
-  FileImage,
   ClipboardCheck,
 } from 'lucide-react';
 
@@ -37,7 +36,6 @@ export const QuotationPreviewPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'invoice' | 'delivery'>('invoice');
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isDownloadingPng, setIsDownloadingPng] = useState(false);
   const [isCopyingPng, setIsCopyingPng] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -98,78 +96,6 @@ export const QuotationPreviewPage: React.FC = () => {
       error(err.message || 'Không thể xuất file PDF');
     } finally {
       setIsDownloading(false);
-    }
-  };
-
-  // Download High-Resolution Client-Side PNG Image (Instant & No Server Load)
-  const handleDownloadPng = async () => {
-    if (!quotation) return;
-    try {
-      setIsDownloadingPng(true);
-      const isDelivery = activeTab === 'delivery';
-      info(`Đang xuất ảnh PNG ${isDelivery ? 'Phiếu giao hàng' : 'Hóa đơn'}...`);
-
-      const targetEl = sheetRef.current;
-      if (!targetEl) {
-        throw new Error('Không tìm thấy khung hiển thị hóa đơn');
-      }
-
-      // Generate ultra-clear 2x resolution PNG directly in browser
-      const dataUrl = await toPng(targetEl, {
-        quality: 1,
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        style: {
-          boxShadow: 'none',
-          margin: '0',
-        },
-      });
-
-      const safeNum = quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = isDelivery ? `Phieu_Giao_Hang_${safeNum}.png` : `Don_Hang_${safeNum}.png`;
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      success(`Đã tải xuống ảnh: ${filename}`);
-    } catch (clientErr: any) {
-      console.warn('Xuất ảnh client gặp lỗi, chuyển sang tải từ máy chủ:', clientErr);
-      // Fallback: fetch from server if client rendering fails
-      try {
-        const isDelivery = activeTab === 'delivery';
-        const token = localStorage.getItem('auth_token');
-        const url = getFullApiUrl(`/quotations/${quotation.id}/image${isDelivery ? '?type=delivery' : ''}`);
-        const response = await fetch(url, {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Lỗi khi tải ảnh từ máy chủ');
-        }
-
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        const safeNum = quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const filename = isDelivery ? `Phieu_Giao_Hang_${safeNum}.png` : `Don_Hang_${safeNum}.png`;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(downloadUrl);
-
-        success(`Đã tải xuống ảnh: ${filename}`);
-      } catch (err: any) {
-        error(err.message || 'Không thể xuất file ảnh PNG');
-      }
-    } finally {
-      setIsDownloadingPng(false);
     }
   };
 
@@ -339,34 +265,12 @@ export const QuotationPreviewPage: React.FC = () => {
                   )
                 }
                 onClick={handleCopyPng}
-                disabled={isCopyingPng || isDownloadingPng}
+                disabled={isCopyingPng}
               >
                 Sao chép ảnh
               </Button>
             </TooltipTrigger>
             <TooltipContent>Sao chép ảnh vào bộ nhớ tạm để dán (Ctrl+V) ngay sang Zalo hoặc tin nhắn</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs px-2.5 py-1.5 flex-shrink-0 font-medium text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors shadow-2xs"
-                leftIcon={
-                  isDownloadingPng ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
-                  ) : (
-                    <FileImage className="w-3.5 h-3.5 text-emerald-600" />
-                  )
-                }
-                onClick={handleDownloadPng}
-                disabled={isDownloadingPng || isCopyingPng}
-              >
-                {activeTab === 'delivery' ? 'Tải ảnh PNG giao hàng' : 'Tải ảnh PNG'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Tải hóa đơn dạng ảnh PNG sắc nét (gửi Zalo / Khách hàng)</TooltipContent>
           </Tooltip>
 
           <Tooltip>

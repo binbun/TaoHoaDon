@@ -284,6 +284,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
       color: #475569;
       line-height: 1.55;
       flex: 1;
+      min-width: 0;
     }
 
     .qr-title {
@@ -296,6 +297,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
       display: flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
     }
 
     .qr-title::before {
@@ -310,6 +312,7 @@ export function renderQuotationHtml(quotation: Quotation): string {
     .qr-line {
       margin-bottom: 4px;
       font-size: 11.5px;
+      white-space: nowrap;
     }
 
     .qr-line strong {

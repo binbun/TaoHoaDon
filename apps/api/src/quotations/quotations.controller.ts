@@ -2,7 +2,12 @@ import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
 import { QuotationSchema, QuotationItemInput, CalculatedQuotationItem } from '@taohoadon/shared';
 import { generateQuotationNumber, calculateQuotationTotals } from './quotations.service';
-import { generateQuotationPdf, generateDeliverySlipPdf } from '../pdf/pdf.service';
+import {
+  generateQuotationPdf,
+  generateDeliverySlipPdf,
+  generateQuotationPng,
+  generateDeliverySlipPng,
+} from '../pdf/pdf.service';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { createAuditLog } from '../audit/audit.service';
 
@@ -592,4 +597,78 @@ export async function downloadQuotationPdf(req: AuthenticatedRequest, res: Respo
     next(error);
   }
 }
+
+export async function downloadQuotationImage(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const currentUser = req.user;
+    const { id } = req.params;
+
+    const quotation = await prisma.quotation.findUnique({
+      where: { id },
+      include: {
+        customer: true,
+        creator: {
+          select: { id: true, name: true, email: true },
+        },
+        items: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            product: {
+              select: { id: true, code: true, name: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!quotation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng để xuất ảnh PNG',
+      });
+    }
+
+    // Row-level permission check: USER can only download their own quotation image
+    if (currentUser && currentUser.role === 'USER' && quotation.createdBy !== currentUser.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền tải ảnh đơn hàng này',
+      });
+    }
+
+    const type = req.query.type as string;
+    const isDelivery = type === 'delivery';
+
+    const pngBuffer = isDelivery
+      ? await generateDeliverySlipPng(quotation as any)
+      : await generateQuotationPng(quotation as any);
+
+    const safeNumber = quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeFilename = isDelivery
+      ? `Phieu_Giao_Hang_${safeNumber}.png`
+      : `Don_Hang_${safeNumber}.png`;
+
+    if (currentUser) {
+      await createAuditLog({
+        req,
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userEmail: currentUser.email,
+        action: 'EXPORT_IMAGE',
+        resource: 'QUOTATION',
+        resourceId: quotation.id,
+        details: { quotationNumber: quotation.quotationNumber },
+      });
+    }
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pngBuffer.length);
+
+    return res.send(pngBuffer);
+  } catch (error) {
+    next(error);
+  }
+}
+
 

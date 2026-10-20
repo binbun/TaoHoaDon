@@ -164,4 +164,21 @@ describe('API Integration Endpoints', () => {
     expect(res.body.data.totalQuotations).toBeGreaterThanOrEqual(1);
     expect(Number(res.body.data.totalGrandTotal)).toBeGreaterThan(0);
   });
+
+  it('GET /api/quotations/:id/image should return PNG image buffer with image/png content type', async () => {
+    const res = await request(app)
+      .get(`/api/quotations/${createdQuotationId}/image`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.header['content-type']).toContain('image/png');
+    expect(res.header['content-disposition']).toContain('.png');
+    expect(res.body).toBeDefined();
+    // Verify PNG magic bytes: 89 50 4E 47
+    expect(res.body[0]).toBe(0x89);
+    expect(res.body[1]).toBe(0x50);
+    expect(res.body[2]).toBe(0x4e);
+    expect(res.body[3]).toBe(0x47);
+  }, 30000);
 });
+

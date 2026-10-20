@@ -25,6 +25,7 @@ import {
   Truck,
   CheckCircle2,
   Check,
+  FileImage,
 } from 'lucide-react';
 
 export const QuotationPreviewPage: React.FC = () => {
@@ -34,6 +35,7 @@ export const QuotationPreviewPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'invoice' | 'delivery'>('invoice');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingPng, setIsDownloadingPng] = useState(false);
 
   // Fetch Quotation Details & Duplicate Mutation from custom hooks
   const { data: quotation, isLoading, isError } = useQuotation(id);
@@ -92,6 +94,46 @@ export const QuotationPreviewPage: React.FC = () => {
       error(err.message || 'Không thể xuất file PDF');
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  // Download High-Resolution Server-Side PNG Image
+  const handleDownloadPng = async () => {
+    if (!quotation) return;
+    try {
+      setIsDownloadingPng(true);
+      const isDelivery = activeTab === 'delivery';
+      info(`Đang xuất ảnh PNG ${isDelivery ? 'Phiếu giao hàng' : 'Hóa đơn'} chất lượng cao...`);
+
+      const token = localStorage.getItem('auth_token');
+      const url = getFullApiUrl(`/quotations/${quotation.id}/image${isDelivery ? '?type=delivery' : ''}`);
+      const response = await fetch(url, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Lỗi khi tải ảnh PNG từ máy chủ');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      const safeNum = quotation.quotationNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = isDelivery ? `Phieu_Giao_Hang_${safeNum}.png` : `Don_Hang_${safeNum}.png`;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      success(`Đã tải xuống ảnh ${filename}`);
+    } catch (err: any) {
+      error(err.message || 'Không thể xuất file ảnh PNG');
+    } finally {
+      setIsDownloadingPng(false);
     }
   };
 
@@ -200,6 +242,28 @@ export const QuotationPreviewPage: React.FC = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>In trực tiếp từ trình duyệt mẫu đang xem</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs px-2.5 py-1.5 flex-shrink-0 font-medium text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors shadow-2xs"
+                leftIcon={
+                  isDownloadingPng ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                  ) : (
+                    <FileImage className="w-3.5 h-3.5 text-emerald-600" />
+                  )
+                }
+                onClick={handleDownloadPng}
+                disabled={isDownloadingPng}
+              >
+                {activeTab === 'delivery' ? 'Tải ảnh PNG giao hàng' : 'Tải ảnh PNG'}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Tải hóa đơn dạng ảnh PNG sắc nét (gửi Zalo / Khách hàng)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -340,12 +404,12 @@ export const QuotationPreviewPage: React.FC = () => {
               <thead>
                 <tr className="bg-slate-100 text-slate-800 text-[11px] font-bold uppercase tracking-normal border-t border-slate-300 border-b-2 border-slate-400">
                   <th className="py-2.5 px-2 text-center w-10 whitespace-nowrap">STT</th>
-                  <th className="py-2.5 px-2.5 text-left w-24 sm:w-28 whitespace-nowrap">Mã sản phẩm</th>
+                  <th className="py-2.5 px-2.5 text-left w-24 whitespace-nowrap">Mã sản phẩm</th>
                   <th className="py-2.5 px-3 text-left">Tên sản phẩm</th>
                   <th className="py-2.5 px-2 text-center w-12 whitespace-nowrap">ĐVT</th>
                   <th className="py-2.5 px-2 text-center w-12 whitespace-nowrap">SL</th>
-                  <th className="py-2.5 px-2.5 text-right w-32 sm:w-36 whitespace-nowrap">Đơn giá (đ)</th>
-                  <th className="py-2.5 px-2.5 text-right w-32 sm:w-36 whitespace-nowrap">Thành tiền (đ)</th>
+                  <th className="py-2.5 px-2 text-right w-28 whitespace-nowrap">Đơn giá (đ)</th>
+                  <th className="py-2.5 px-2.5 text-right w-32 whitespace-nowrap">Thành tiền (đ)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-[12px]">
@@ -364,7 +428,7 @@ export const QuotationPreviewPage: React.FC = () => {
                       </td>
                       <td className="py-2.5 px-2 text-center text-slate-600 whitespace-nowrap">{item.unit || 'Bộ'}</td>
                       <td className="py-2.5 px-2 text-center font-medium whitespace-nowrap">{item.quantity}</td>
-                      <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap">
                         <div className="text-slate-700 font-medium">{formatNumber(item.unitPrice)}</div>
                         {item.discount > 0 && (
                           <div className="text-[10.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
@@ -380,7 +444,7 @@ export const QuotationPreviewPage: React.FC = () => {
               <tfoot>
                 <tr className="border-t-2 border-slate-400 font-medium text-slate-700 text-[12px]">
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     rowSpan={
                       2 +
                       (quotation.discountTotal > 0 ? 1 : 0) +
@@ -389,8 +453,8 @@ export const QuotationPreviewPage: React.FC = () => {
                     }
                     className="py-2.5 px-2 align-top text-left"
                   >
-                    <div className="flex items-center gap-4 bg-slate-50 border border-slate-200/90 rounded-xl p-3.5 max-w-[420px] shadow-xs">
-                      <div className="bg-white p-1.5 rounded-lg border border-slate-200 shrink-0 shadow-xs relative group">
+                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-3 max-w-[420px] shadow-xs">
+                      <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs relative group">
                         <img
                           src={generateVietQrUrl({
                             template: 'qr_only',
@@ -399,7 +463,7 @@ export const QuotationPreviewPage: React.FC = () => {
                             (e.target as HTMLImageElement).src = '/payment-qr.png';
                           }}
                           alt="Mã QR thanh toán VietQR Techcombank"
-                          className="w-[120px] h-[120px] object-contain cursor-pointer transition-transform group-hover:scale-105"
+                          className="w-[105px] h-[105px] object-contain cursor-pointer transition-transform group-hover:scale-105"
                           onClick={() => {
                             window.open(
                               generateVietQrUrl({
@@ -411,52 +475,52 @@ export const QuotationPreviewPage: React.FC = () => {
                           title="Click để mở ảnh QR kích thước lớn"
                         />
                       </div>
-                      <div className="text-[12px] text-slate-700 leading-relaxed space-y-2 flex-1">
-                        <div className="font-bold text-slate-900 text-[13px] uppercase tracking-wide flex items-center justify-between">
+                      <div className="text-[12px] text-slate-700 leading-relaxed space-y-1.5 flex-1 min-w-0">
+                        <div className="font-bold text-slate-900 text-[12.5px] uppercase tracking-wide flex items-center justify-between whitespace-nowrap">
                           <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-[#1B9550] inline-block"></span>
+                            <span className="w-2 h-2 rounded-full bg-[#1B9550] inline-block shrink-0"></span>
                             Thông tin chuyển khoản
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span>STK: <strong className="text-slate-900 font-extrabold tracking-wider text-[13.5px]">19026197143010</strong></span>
+                        <div className="flex items-center justify-between whitespace-nowrap">
+                          <span>STK: <strong className="text-slate-900 font-extrabold tracking-wider text-[13px]">19026197143010</strong></span>
                           <button
                             type="button"
                             onClick={() => handleCopy('19026197143010', 'stk')}
-                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors"
+                            className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors shrink-0 ml-1"
                             title="Sao chép STK"
                           >
                             {copiedField === 'stk' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         </div>
-                        <div>Ngân hàng: <strong className="text-slate-900 font-bold">TECHCOMBANK</strong></div>
-                        <div>Chủ TK: <strong className="text-slate-900 font-bold uppercase">Tran Thi Bich Dieu</strong></div>
+                        <div className="whitespace-nowrap">Ngân hàng: <strong className="text-slate-900 font-bold">TECHCOMBANK</strong></div>
+                        <div className="whitespace-nowrap">Chủ TK: <strong className="text-slate-900 font-bold uppercase">Tran Thi Bich Dieu</strong></div>
                       </div>
                     </div>
                   </td>
-                  <td colSpan={2} className="py-2.5 px-2.5 text-right whitespace-nowrap">Tạm tính:</td>
+                  <td className="py-2.5 px-2.5 text-right whitespace-nowrap font-medium text-slate-600">Tạm tính:</td>
                   <td className="py-2.5 px-2.5 text-right font-bold text-slate-900 whitespace-nowrap">{formatCurrency(quotation.subtotal)}</td>
                 </tr>
                 {quotation.discountTotal > 0 && (
                   <tr className="text-rose-600 text-[12px]">
-                    <td colSpan={2} className="py-1 px-2.5 text-right whitespace-nowrap">Tổng chiết khấu:</td>
+                    <td className="py-1 px-2.5 text-right whitespace-nowrap">Tổng chiết khấu:</td>
                     <td className="py-1 px-2.5 text-right font-bold whitespace-nowrap">-{formatCurrency(quotation.discountTotal)}</td>
                   </tr>
                 )}
                 {quotation.vatTotal > 0 && (
                   <tr className="text-slate-700 text-[12px]">
-                    <td colSpan={2} className="py-1 px-2.5 text-right whitespace-nowrap">Thuế GTGT (VAT):</td>
+                    <td className="py-1 px-2.5 text-right whitespace-nowrap">Thuế GTGT (VAT):</td>
                     <td className="py-1 px-2.5 text-right font-bold text-slate-900 whitespace-nowrap">{formatCurrency(quotation.vatTotal)}</td>
                   </tr>
                 )}
                 {quotation.previousDebt && quotation.previousDebt > 0 ? (
                   <tr className="text-amber-800 bg-amber-50/60 font-semibold text-[12px]">
-                    <td colSpan={2} className="py-1.5 px-2.5 text-right whitespace-nowrap">Dư nợ cũ từ các đơn trước:</td>
+                    <td className="py-1.5 px-2.5 text-right whitespace-nowrap">Dư nợ cũ từ các đơn trước:</td>
                     <td className="py-1.5 px-2.5 text-right font-bold text-amber-700 whitespace-nowrap">+{formatCurrency(quotation.previousDebt)}</td>
                   </tr>
                 ) : null}
                 <tr className="border-t border-slate-300 text-slate-900 text-[14px] font-black bg-emerald-50/40">
-                  <td colSpan={2} className="py-2.5 px-2.5 text-right uppercase whitespace-nowrap">TỔNG CỘNG:</td>
+                  <td className="py-2.5 px-2.5 text-right uppercase whitespace-nowrap">TỔNG CỘNG:</td>
                   <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[16px] whitespace-nowrap">{formatCurrency(quotation.grandTotal)}</td>
                 </tr>
               </tfoot>

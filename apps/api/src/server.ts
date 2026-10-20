@@ -96,7 +96,14 @@ const pdfLimiter = rateLimit({
     message: 'Tần suất xuất PDF vượt quá giới hạn. Vui lòng chờ 1 phút trước khi xuất tiếp.',
   },
 });
-app.use(['/api/quotations/:id/pdf', '/quotations/:id/pdf'], pdfLimiter);
+app.use([
+  '/api/quotations/:id/pdf',
+  '/quotations/:id/pdf',
+  '/api/quotations/:id/image',
+  '/quotations/:id/image',
+  '/api/quotations/:id/png',
+  '/quotations/:id/png',
+], pdfLimiter);
 
 // Public catalog rate limiter (anonymous traffic from apps/catalog)
 const publicLimiter = rateLimit({

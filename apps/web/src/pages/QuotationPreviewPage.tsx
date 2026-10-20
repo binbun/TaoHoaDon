@@ -338,14 +338,14 @@ export const QuotationPreviewPage: React.FC = () => {
             {/* Table of Items */}
             <table className="w-full border-collapse mb-4">
               <thead>
-                <tr className="bg-slate-100 text-slate-800 text-[11.5px] font-bold uppercase tracking-wider border-t border-slate-300 border-b-2 border-slate-400">
-                  <th className="py-2.5 px-2.5 text-center w-8">STT</th>
-                  <th className="py-2.5 px-2.5 text-left w-28">Mã sản phẩm</th>
-                  <th className="py-2.5 px-2.5 text-left">Tên sản phẩm</th>
-                  <th className="py-2.5 px-2.5 text-center w-14">ĐVT</th>
-                  <th className="py-2.5 px-2.5 text-center w-12">SL</th>
-                  <th className="py-2.5 px-2.5 text-right w-24">Đơn giá (đ)</th>
-                  <th className="py-2.5 px-2.5 text-right w-28">Thành tiền (đ)</th>
+                <tr className="bg-slate-100 text-slate-800 text-[11px] font-bold uppercase tracking-normal border-t border-slate-300 border-b-2 border-slate-400">
+                  <th className="py-2.5 px-2 text-center w-10 whitespace-nowrap">STT</th>
+                  <th className="py-2.5 px-2.5 text-left w-24 sm:w-28 whitespace-nowrap">Mã sản phẩm</th>
+                  <th className="py-2.5 px-3 text-left">Tên sản phẩm</th>
+                  <th className="py-2.5 px-2 text-center w-12 whitespace-nowrap">ĐVT</th>
+                  <th className="py-2.5 px-2 text-center w-12 whitespace-nowrap">SL</th>
+                  <th className="py-2.5 px-2.5 text-right w-32 sm:w-36 whitespace-nowrap">Đơn giá (đ)</th>
+                  <th className="py-2.5 px-2.5 text-right w-32 sm:w-36 whitespace-nowrap">Thành tiền (đ)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-[12px]">
@@ -353,26 +353,26 @@ export const QuotationPreviewPage: React.FC = () => {
                   const productCode = item.productCodeSnapshot || (item as any).product?.code || '---';
                   return (
                     <tr key={item.id || index} className="align-top">
-                      <td className="py-2.5 px-2.5 text-center text-slate-500">{index + 1}</td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2.5 px-2 text-center text-slate-500 whitespace-nowrap">{index + 1}</td>
+                      <td className="py-2.5 px-2.5 whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-800 text-[11.5px] bg-slate-100/90 px-1.5 py-0.5 rounded border border-slate-200 inline-block tracking-tight">
                           {productCode}
                         </span>
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2.5 px-3">
                         <div className="font-bold text-slate-900 text-[12.5px]">{item.productNameSnapshot}</div>
                       </td>
-                      <td className="py-2.5 px-2.5 text-center text-slate-600">{item.unit || 'Bộ'}</td>
-                      <td className="py-2.5 px-2.5 text-center font-medium">{item.quantity}</td>
-                      <td className="py-2.5 px-2.5 text-right">
-                        <div className="text-slate-700">{formatNumber(item.unitPrice)}</div>
+                      <td className="py-2.5 px-2 text-center text-slate-600 whitespace-nowrap">{item.unit || 'Bộ'}</td>
+                      <td className="py-2.5 px-2 text-center font-medium whitespace-nowrap">{item.quantity}</td>
+                      <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
+                        <div className="text-slate-700 font-medium">{formatNumber(item.unitPrice)}</div>
                         {item.discount > 0 && (
                           <div className="text-[10.5px] text-rose-600 font-medium whitespace-nowrap mt-0.5">
                             -{formatNumber(item.discountAmount ?? (item.quantity * item.unitPrice * (item.discount / 100)))} ({item.discount}%)
                           </div>
                         )}
                       </td>
-                      <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatNumber(item.total)}</td>
+                      <td className="py-2.5 px-2.5 text-right font-bold text-slate-900 whitespace-nowrap">{formatNumber(item.total)}</td>
                     </tr>
                   );
                 })}
@@ -434,30 +434,30 @@ export const QuotationPreviewPage: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td colSpan={2} className="py-2.5 px-2.5 text-right">Tạm tính:</td>
-                  <td className="py-2.5 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.subtotal)}</td>
+                  <td colSpan={2} className="py-2.5 px-2.5 text-right whitespace-nowrap">Tạm tính:</td>
+                  <td className="py-2.5 px-2.5 text-right font-bold text-slate-900 whitespace-nowrap">{formatCurrency(quotation.subtotal)}</td>
                 </tr>
                 {quotation.discountTotal > 0 && (
                   <tr className="text-rose-600 text-[12px]">
-                    <td colSpan={2} className="py-1 px-2.5 text-right">Tổng chiết khấu:</td>
-                    <td className="py-1 px-2.5 text-right font-bold">-{formatCurrency(quotation.discountTotal)}</td>
+                    <td colSpan={2} className="py-1 px-2.5 text-right whitespace-nowrap">Tổng chiết khấu:</td>
+                    <td className="py-1 px-2.5 text-right font-bold whitespace-nowrap">-{formatCurrency(quotation.discountTotal)}</td>
                   </tr>
                 )}
                 {quotation.vatTotal > 0 && (
                   <tr className="text-slate-700 text-[12px]">
-                    <td colSpan={2} className="py-1 px-2.5 text-right">Thuế GTGT (VAT):</td>
-                    <td className="py-1 px-2.5 text-right font-bold text-slate-900">{formatCurrency(quotation.vatTotal)}</td>
+                    <td colSpan={2} className="py-1 px-2.5 text-right whitespace-nowrap">Thuế GTGT (VAT):</td>
+                    <td className="py-1 px-2.5 text-right font-bold text-slate-900 whitespace-nowrap">{formatCurrency(quotation.vatTotal)}</td>
                   </tr>
                 )}
                 {quotation.previousDebt && quotation.previousDebt > 0 ? (
                   <tr className="text-amber-800 bg-amber-50/60 font-semibold text-[12px]">
-                    <td colSpan={2} className="py-1.5 px-2.5 text-right">Dư nợ cũ từ các đơn trước:</td>
-                    <td className="py-1.5 px-2.5 text-right font-bold text-amber-700">+{formatCurrency(quotation.previousDebt)}</td>
+                    <td colSpan={2} className="py-1.5 px-2.5 text-right whitespace-nowrap">Dư nợ cũ từ các đơn trước:</td>
+                    <td className="py-1.5 px-2.5 text-right font-bold text-amber-700 whitespace-nowrap">+{formatCurrency(quotation.previousDebt)}</td>
                   </tr>
                 ) : null}
                 <tr className="border-t border-slate-300 text-slate-900 text-[14px] font-black bg-emerald-50/40">
-                  <td colSpan={2} className="py-2.5 px-2.5 text-right uppercase">TỔNG CỘNG:</td>
-                  <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[16px]">{formatCurrency(quotation.grandTotal)}</td>
+                  <td colSpan={2} className="py-2.5 px-2.5 text-right uppercase whitespace-nowrap">TỔNG CỘNG:</td>
+                  <td className="py-2.5 px-2.5 text-right text-[#1B9550] text-[16px] whitespace-nowrap">{formatCurrency(quotation.grandTotal)}</td>
                 </tr>
               </tfoot>
             </table>

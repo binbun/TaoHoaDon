@@ -190,11 +190,12 @@ export function renderQuotationHtml(quotation: Quotation): string {
       font-weight: 700;
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
       padding: 8px 8px;
       border-top: 1px solid #cbd5e1;
       border-bottom: 2px solid #94a3b8;
       text-align: left;
+      white-space: nowrap;
     }
 
     table.items-table td {
@@ -208,13 +209,13 @@ export function renderQuotationHtml(quotation: Quotation): string {
       border-bottom: 2px solid #cbd5e1;
     }
 
-    .col-stt { width: 5%; text-align: center; color: #64748b; }
-    .col-code { width: 14%; font-weight: 700; color: #0f172a; font-family: monospace; font-size: 11px; }
-    .col-product { width: 36%; }
-    .col-unit { width: 8%; text-align: center; color: #475569; }
-    .col-qty { width: 7%; text-align: center; font-weight: 600; }
-    .col-price { width: 14%; text-align: right; }
-    .col-total { width: 16%; text-align: right; font-weight: 700; color: #0f172a; }
+    .col-stt { width: 5%; text-align: center; color: #64748b; white-space: nowrap; }
+    .col-code { width: 13%; font-weight: 700; color: #0f172a; font-family: monospace; font-size: 11px; white-space: nowrap; }
+    .col-product { width: 35%; }
+    .col-unit { width: 7%; text-align: center; color: #475569; white-space: nowrap; }
+    .col-qty { width: 6%; text-align: center; font-weight: 600; white-space: nowrap; }
+    .col-price { width: 17%; text-align: right; white-space: nowrap; }
+    .col-total { width: 17%; text-align: right; font-weight: 700; color: #0f172a; white-space: nowrap; }
 
     .product-title {
       font-weight: 700;

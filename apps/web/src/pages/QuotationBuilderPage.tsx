@@ -341,6 +341,12 @@ export const QuotationBuilderPage: React.FC = () => {
         previousDebt: Number(previousDebt) || 0,
         note: note.trim() || undefined,
         customerId,
+        customer: {
+          companyName: companyName.trim(),
+          phone: phone.trim() || null,
+          address: address.trim() || null,
+          taxCode: taxCode.trim() || null,
+        },
         items: items.map((it, idx) => ({
           productId: it.productId || undefined,
           productCodeSnapshot: it.productCodeSnapshot?.trim() || undefined,
@@ -486,7 +492,7 @@ export const QuotationBuilderPage: React.FC = () => {
               </div>
 
               <Input
-                label="Địa chỉ giao hàng / giao hàng"
+                label="Địa chỉ giao hàng"
                 placeholder="VD: Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}

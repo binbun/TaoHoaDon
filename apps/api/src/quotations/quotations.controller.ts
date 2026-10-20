@@ -150,6 +150,20 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
 
     const quotationNumber = validatedData.quotationNumber?.trim() || (await generateQuotationNumber());
 
+    if (validatedData.customer) {
+      await prisma.customer.update({
+        where: { id: validatedData.customerId },
+        data: {
+          ...(validatedData.customer.companyName ? { companyName: validatedData.customer.companyName.trim() } : {}),
+          ...(validatedData.customer.contactName !== undefined ? { contactName: validatedData.customer.contactName?.trim() || null } : {}),
+          ...(validatedData.customer.email !== undefined ? { email: validatedData.customer.email?.trim() || null } : {}),
+          ...(validatedData.customer.phone !== undefined ? { phone: validatedData.customer.phone?.trim() || null } : {}),
+          ...(validatedData.customer.address !== undefined ? { address: validatedData.customer.address?.trim() || null } : {}),
+          ...(validatedData.customer.taxCode !== undefined ? { taxCode: validatedData.customer.taxCode?.trim() || null } : {}),
+        },
+      });
+    }
+
     const { calculatedItems, summary } = calculateQuotationTotals(
       validatedData.items as QuotationItemInput[],
       validatedData.previousDebt || 0
@@ -258,8 +272,22 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
       validatedData.previousDebt || 0
     );
 
-    // Run in transaction: delete old items, create new items, update quotation
+    // Run in transaction: update customer, delete old items, create new items, update quotation
     const updatedQuotation = await prisma.$transaction(async (tx) => {
+      if (validatedData.customer) {
+        await tx.customer.update({
+          where: { id: validatedData.customerId },
+          data: {
+            ...(validatedData.customer.companyName ? { companyName: validatedData.customer.companyName.trim() } : {}),
+            ...(validatedData.customer.contactName !== undefined ? { contactName: validatedData.customer.contactName?.trim() || null } : {}),
+            ...(validatedData.customer.email !== undefined ? { email: validatedData.customer.email?.trim() || null } : {}),
+            ...(validatedData.customer.phone !== undefined ? { phone: validatedData.customer.phone?.trim() || null } : {}),
+            ...(validatedData.customer.address !== undefined ? { address: validatedData.customer.address?.trim() || null } : {}),
+            ...(validatedData.customer.taxCode !== undefined ? { taxCode: validatedData.customer.taxCode?.trim() || null } : {}),
+          },
+        });
+      }
+
       await tx.quotationItem.deleteMany({
         where: { quotationId: id },
       });

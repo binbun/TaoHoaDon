@@ -84,7 +84,7 @@ describe('API Integration Endpoints', () => {
             quantity: 2,
             unitPrice: 5000000,
             discount: 10,
-            vatRate: 10,
+            vatRate: 8,
           },
         ],
       });
@@ -96,10 +96,50 @@ describe('API Integration Endpoints', () => {
 
     // Verify sequential auto-generation
     expect(q.quotationNumber).toMatch(/^DH-\d{4}-\d{4}$/);
-    expect(q.vatTotal).toBe(720000);
-    expect(q.grandTotal).toBe(9720000);
+    expect(Number(q.vatTotal)).toBe(720000);
+    expect(Number(q.grandTotal)).toBe(9720000);
     expect(q.quotationNumber).toMatch(/^DH-\d{4}-\d{4}$/);
     createdQuotationId = q.id;
+  });
+
+  it('PATCH /api/quotations/:id should update customer delivery address and persist on reload/GET', async () => {
+    const updatedAddress = 'Biệt thự BT2-16, KĐT Ngoại Giao Đoàn, Hà Nội';
+    const updateRes = await request(app)
+      .patch(`/api/quotations/${createdQuotationId}`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        customerId: createdCustomerId,
+        quotationDate: '2026-03-28',
+        title: 'ĐƠN HÀNG QUẢNG CÁO TRỰC TUYẾN 2026 (CẬP NHẬT)',
+        customer: {
+          companyName: 'Công ty TNHH Giải Pháp Phần Mềm Mới',
+          address: updatedAddress,
+        },
+        items: [
+          {
+            productId: createdProductId,
+            productNameSnapshot: 'Gói Banner Quảng Cáo Trang Chủ',
+            unit: 'Tháng',
+            quantity: 2,
+            unitPrice: 5000000,
+            discount: 10,
+            vatRate: 8,
+          },
+        ],
+      });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.success).toBe(true);
+    expect(updateRes.body.data.customer.address).toBe(updatedAddress);
+
+    // Simulate page reload: GET /api/quotations/:id
+    const reloadRes = await request(app)
+      .get(`/api/quotations/${createdQuotationId}`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(reloadRes.status).toBe(200);
+    expect(reloadRes.body.success).toBe(true);
+    expect(reloadRes.body.data.customer.address).toBe(updatedAddress);
   });
 
   it('POST /api/quotations/:id/duplicate should duplicate quotation with new number and draft status', async () => {
@@ -110,7 +150,7 @@ describe('API Integration Endpoints', () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.status).toBe('DRAFT');
-    expect(res.body.data.grandTotal).toBe(9720000);
+    expect(Number(res.body.data.grandTotal)).toBe(9720000);
     expect(res.body.data.quotationNumber).not.toBe(createdQuotationId);
   });
 
@@ -122,6 +162,6 @@ describe('API Integration Endpoints', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.totalQuotations).toBeGreaterThanOrEqual(1);
-    expect(res.body.data.totalGrandTotal).toBeGreaterThan(0);
+    expect(Number(res.body.data.totalGrandTotal)).toBeGreaterThan(0);
   });
 });

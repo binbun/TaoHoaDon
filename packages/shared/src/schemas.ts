@@ -75,6 +75,15 @@ export const QuotationItemSchema = z.object({
   sortOrder: z.number().int().default(0),
 });
 
+export const QuotationCustomerSchema = z.object({
+  companyName: z.string().min(1, 'Tên khách hàng không được để trống').optional(),
+  contactName: z.string().max(100).optional().nullable(),
+  email: z.string().optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  address: z.string().max(255).optional().nullable(),
+  taxCode: z.string().max(50).optional().nullable(),
+});
+
 export const QuotationSchema = z.object({
   quotationNumber: z.string().optional(),
   customerId: z.string().min(1, 'Vui lòng chọn hoặc tạo khách hàng'),
@@ -84,6 +93,7 @@ export const QuotationSchema = z.object({
   note: z.string().max(1000).optional().nullable(),
   status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
+  customer: QuotationCustomerSchema.optional(),
   items: z.array(QuotationItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm/dịch vụ'),
 });
 

@@ -112,6 +112,28 @@ export interface QuotationSummary {
   grandTotal: number;
 }
 
+export interface QuotationCustomerInput {
+  companyName?: string;
+  contactName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  taxCode?: string | null;
+}
+
+export interface QuotationInput {
+  quotationNumber?: string;
+  customerId: string;
+  quotationDate: string;
+  validUntil?: string;
+  title: string;
+  note?: string | null;
+  status?: QuotationStatus;
+  previousDebt?: number;
+  customer?: QuotationCustomerInput;
+  items: QuotationItemInput[];
+}
+
 export interface Quotation {
   id: string;
   quotationNumber: string;

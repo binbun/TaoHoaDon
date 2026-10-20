@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { Quotation, DashboardStats } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
+import { customerKeys } from './useCustomers';
 
 export const quotationKeys = {
   all: ['quotations'] as const,
@@ -49,8 +50,13 @@ export function useCreateQuotation() {
     mutationFn: (data: any) =>
       apiClient<Quotation>('/quotations', { method: 'POST', data }),
     onSuccess: (newQuote) => {
+      queryClient.setQueryData(quotationKeys.detail(newQuote.id), newQuote);
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
       queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      queryClient.invalidateQueries({ queryKey: customerKeys.all });
+      if (newQuote.customerId) {
+        queryClient.invalidateQueries({ queryKey: customerKeys.detail(newQuote.customerId) });
+      }
       success(`Tạo đơn hàng ${newQuote.quotationNumber} thành công!`);
     },
     onError: (err: any) => {
@@ -67,9 +73,14 @@ export function useUpdateQuotation() {
     mutationFn: ({ id, data }: { id: string; data: any }) =>
       apiClient<Quotation>(`/quotations/${id}`, { method: 'PATCH', data }),
     onSuccess: (updatedQuote) => {
+      queryClient.setQueryData(quotationKeys.detail(updatedQuote.id), updatedQuote);
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(updatedQuote.id) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      queryClient.invalidateQueries({ queryKey: customerKeys.all });
+      if (updatedQuote.customerId) {
+        queryClient.invalidateQueries({ queryKey: customerKeys.detail(updatedQuote.customerId) });
+      }
       success(`Cập nhật đơn hàng ${updatedQuote.quotationNumber} thành công!`);
     },
     onError: (err: any) => {

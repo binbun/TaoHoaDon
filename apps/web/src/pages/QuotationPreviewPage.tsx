@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toBlob } from 'html-to-image';
 import { useQuotation, useDuplicateQuotation } from '../hooks';
-import { formatCurrency, formatNumber, formatDate, generateVietQrUrl } from '@taohoadon/shared';
+import { formatCurrency, formatNumber, formatDate, generateEmvcoQrPayload } from '@taohoadon/shared';
+import { QRCodeSVG } from 'qrcode.react';
 import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
@@ -465,26 +466,13 @@ export const QuotationPreviewPage: React.FC = () => {
                     className="py-2.5 px-2 align-top text-left"
                   >
                     <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl p-3 max-w-[420px] shadow-xs">
-                      <div className="bg-white p-1 rounded-lg border border-slate-200 shrink-0 shadow-xs relative group">
-                        <img
-                          src={generateVietQrUrl({
-                            template: 'qr_only',
-                          })}
-                          crossOrigin="anonymous"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/payment-qr.png';
-                          }}
-                          alt="Mã QR thanh toán VietQR Techcombank"
-                          className="w-[105px] h-[105px] object-contain cursor-pointer transition-transform group-hover:scale-105"
-                          onClick={() => {
-                            window.open(
-                              generateVietQrUrl({
-                                template: 'qr_only',
-                              }),
-                              '_blank'
-                            );
-                          }}
-                          title="Click để mở ảnh QR kích thước lớn"
+                      <div className="bg-white p-1.5 rounded-lg border border-slate-200 shrink-0 shadow-xs">
+                        <QRCodeSVG
+                          value={generateEmvcoQrPayload({})}
+                          size={105}
+                          level="M"
+                          marginSize={0}
+                          title="Mã QR thanh toán"
                         />
                       </div>
                       <div className="text-[12px] text-slate-700 leading-relaxed space-y-1.5 flex-1 min-w-0">

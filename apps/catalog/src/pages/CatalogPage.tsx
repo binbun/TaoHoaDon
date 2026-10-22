@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Check, ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
@@ -6,6 +6,8 @@ import clsx from 'clsx';
 import { fetchBrands, fetchCategories, fetchProducts, ProductQuery, ProductSort } from '@/api';
 import { Breadcrumb, Crumb } from '@/components/Breadcrumb';
 import { ProductGrid, ProductGridSkeleton } from '@/components/ProductCard';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useDrawer } from '@/hooks/useDrawer';
 
 const PAGE_SIZE = 12;
 const WIDTHS = ['200', '250', '300', '350', '400', '450', '500', '600', '700', '800', '900'];
@@ -27,8 +29,12 @@ export default function CatalogPage() {
   const width = params.get('width') || '';
   const tagParam = params.get('tag');
   const tag = tagParam === 'new' || tagParam === 'bestseller' ? tagParam : undefined;
-  const sort = (params.get('sort') as ProductSort) || 'default';
+  const sortParam = params.get('sort');
+  const sort: ProductSort = SORTS.find((s) => s.value === sortParam)?.value ?? 'default';
   const page = Math.max(1, Number(params.get('page')) || 1);
+
+  const closeFilters = useCallback(() => setFiltersOpen(false), []);
+  useDrawer(filtersOpen, closeFilters);
 
   const updateParams = (changes: Record<string, string>) => {
     const next = new URLSearchParams(params);
@@ -41,18 +47,35 @@ export default function CatalogPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Xóa toàn bộ bộ lọc nhưng giữ cách sắp xếp
+  const clearFilters = () => {
+    setParams(sort !== 'default' ? new URLSearchParams({ sort }) : new URLSearchParams());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: fetchBrands });
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories });
   const query: ProductQuery = { search, brand, category, width, tag, sort, page, limit: PAGE_SIZE };
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isPlaceholderData } = useQuery({
     queryKey: ['products', query],
     queryFn: () => fetchProducts(query),
     placeholderData: keepPreviousData,
   });
 
+  // Trang vượt quá tổng số trang → chuyển về trang cuối
+  const totalPages = data?.pagination.totalPages ?? 0;
+  useEffect(() => {
+    if (isPlaceholderData || totalPages === 0 || page <= totalPages) return;
+    const next = new URLSearchParams(params);
+    if (totalPages > 1) next.set('page', String(totalPages));
+    else next.delete('page');
+    setParams(next, { replace: true });
+  }, [isPlaceholderData, totalPages, page, params, setParams]);
+
   const title = category || (brand && `Thương hiệu ${brand}`) || (tag && TAG_LABELS[tag]) || 'Tất cả sản phẩm';
   const crumbs: Crumb[] = [{ label: 'Trang chủ', to: '/' }, { label: 'Sản phẩm', to: '/san-pham' }];
   if (title !== 'Tất cả sản phẩm') crumbs.push({ label: title });
+  useDocumentTitle(title);
 
   const activeFilters = [
     search && { key: 'q', label: `"${search}"` },
@@ -114,10 +137,10 @@ export default function CatalogPage() {
       <div className="container-site py-8 lg:py-10">
         <h1 className="section-title mb-6">{title}</h1>
 
-        <div className="grid gap-10 lg:grid-cols-[240px_1fr]">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
           <aside className="hidden lg:block">{filters}</aside>
 
-          <div>
+          <div className="min-w-0">
             {/* Toolbar */}
             <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-line pb-4">
               <button
@@ -134,7 +157,7 @@ export default function CatalogPage() {
                 <select
                   value={sort}
                   onChange={(e) => updateParams({ sort: e.target.value === 'default' ? '' : e.target.value })}
-                  className="border border-line bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+                  className="border border-line bg-white px-3 py-2 text-base outline-none focus:border-primary lg:text-sm"
                 >
                   {SORTS.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -160,7 +183,7 @@ export default function CatalogPage() {
                 ))}
                 <button
                   type="button"
-                  onClick={() => setParams(new URLSearchParams())}
+                  onClick={clearFilters}
                   className="px-2 text-xs font-semibold text-primary hover:underline"
                 >
                   Xóa tất cả
@@ -192,7 +215,7 @@ export default function CatalogPage() {
       {/* Mobile filter drawer */}
       <div
         className={clsx('fixed inset-0 z-50 bg-black/40 transition lg:hidden', filtersOpen ? 'visible opacity-100' : 'invisible opacity-0')}
-        onClick={() => setFiltersOpen(false)}
+        onClick={closeFilters}
       />
       <aside
         className={clsx(
@@ -202,12 +225,12 @@ export default function CatalogPage() {
       >
         <div className="flex h-14 items-center justify-between border-b border-line px-4">
           <p className="font-bold uppercase">Bộ lọc</p>
-          <button type="button" aria-label="Đóng" onClick={() => setFiltersOpen(false)} className="p-1">
+          <button type="button" aria-label="Đóng" onClick={closeFilters} className="p-1">
             <X className="h-6 w-6" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">{filters}</div>
-        <button type="button" onClick={() => setFiltersOpen(false)} className="btn-primary m-4">
+        <button type="button" onClick={closeFilters} className="btn-primary m-4">
           Xem {data?.pagination.total ?? ''} sản phẩm
         </button>
       </aside>
@@ -252,10 +275,10 @@ function Pager({ page, totalPages, onChange }: { page: number; totalPages: numbe
     (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1
   );
 
-  const cell = 'flex h-10 min-w-10 items-center justify-center border px-2 text-sm transition';
+  const cell = 'flex h-9 min-w-9 items-center justify-center border px-2 text-sm transition sm:h-10 sm:min-w-10';
 
   return (
-    <nav className="mt-12 flex items-center justify-center gap-2">
+    <nav aria-label="Phân trang" className="mt-12 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
       <button
         type="button"
         aria-label="Trang trước"
@@ -266,11 +289,12 @@ function Pager({ page, totalPages, onChange }: { page: number; totalPages: numbe
         <ChevronLeft className="h-4 w-4" />
       </button>
       {pages.map((p, i) => (
-        <span key={p} className="flex items-center gap-2">
+        <span key={p} className="flex items-center gap-1.5 sm:gap-2">
           {i > 0 && p - pages[i - 1] > 1 && <span className="text-ink-muted">…</span>}
           <button
             type="button"
             onClick={() => onChange(p)}
+            aria-current={p === page ? 'page' : undefined}
             className={clsx(cell, p === page ? 'border-primary bg-primary font-semibold text-white' : 'border-line hover:border-ink')}
           >
             {p}

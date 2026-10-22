@@ -46,6 +46,14 @@
   background: #94a3b8;
 }
 
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* A4 Sheet Simulation for Preview */
 .a4-sheet {
   width: 210mm;
@@ -57,7 +65,7 @@
   border-radius: 4px;
 }
 
-@media screen and (max-width: 640px) {
+@media screen {
   .a4-sheet-mobile-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

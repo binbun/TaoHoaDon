@@ -26,9 +26,9 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent maxWidth={maxWidth} className="p-0 overflow-hidden">
+      <DialogContent maxWidth={maxWidth} className="p-0 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <DialogHeader className="p-4 sm:p-5 border-b border-slate-100 pr-12">
+        <DialogHeader className="p-4 sm:p-5 border-b border-slate-100 pr-12 shrink-0">
           <DialogTitle className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
             {title}
           </DialogTitle>
@@ -40,7 +40,7 @@ export const Modal: React.FC<ModalProps> = ({
         </DialogHeader>
 
         {/* Content Body */}
-        <div className="p-4 sm:p-6 max-h-[calc(90vh-100px)] overflow-y-auto">
+        <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto">
           {children}
         </div>
       </DialogContent>

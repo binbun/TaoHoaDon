@@ -252,7 +252,7 @@ export const ProductsPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar with Radix Selects */}
-      <Card className="p-3 sm:p-4">
+      <Card bodyClassName="p-3 sm:p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
           {/* Search Input */}
           <div className="sm:col-span-2 lg:col-span-5">
@@ -366,7 +366,8 @@ export const ProductsPage: React.FC = () => {
                           type="button"
                           onClick={() => toggleFavoriteMutation.mutate(prod.id)}
                           title={prod.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
-                          className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-all active:scale-125 focus:outline-hidden flex-shrink-0"
+                          aria-label={prod.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
+                          className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-all active:scale-125 focus:outline-none flex-shrink-0"
                         >
                           {prod.isFavorite ? (
                             <Star className="w-4 h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
@@ -402,6 +403,7 @@ export const ProductsPage: React.FC = () => {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
+                              aria-label="Chỉnh sửa sản phẩm"
                               onClick={() => openEditModal(prod)}
                               className="p-2 text-slate-500 hover:text-[#1B9550] hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
                             >
@@ -413,7 +415,7 @@ export const ProductsPage: React.FC = () => {
 
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
+                            <button aria-label="Thao tác khác" className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
                               <MoreVertical className="w-4 h-4" />
                             </button>
                           </DropdownMenuTrigger>
@@ -483,6 +485,7 @@ export const ProductsPage: React.FC = () => {
                   disabled={validPage <= 1}
                   className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   title="Trang đầu"
+                  aria-label="Trang đầu"
                 >
                   <ChevronsLeft className="w-4 h-4" />
                 </button>
@@ -491,6 +494,7 @@ export const ProductsPage: React.FC = () => {
                   disabled={validPage <= 1}
                   className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   title="Trang trước"
+                  aria-label="Trang trước"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -504,6 +508,7 @@ export const ProductsPage: React.FC = () => {
                   disabled={validPage >= totalPages}
                   className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   title="Trang sau"
+                  aria-label="Trang sau"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -512,6 +517,7 @@ export const ProductsPage: React.FC = () => {
                   disabled={validPage >= totalPages}
                   className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   title="Trang cuối"
+                  aria-label="Trang cuối"
                 >
                   <ChevronsRight className="w-4 h-4" />
                 </button>

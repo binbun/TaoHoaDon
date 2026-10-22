@@ -1,19 +1,20 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, Menu, MessageCircle, Phone, Search, X } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchBrands, fetchCategories } from '@/api';
 import { CONTACT_PHONE, CONTACT_ZALO, STORE_NAME } from '@/config';
+import { useDrawer } from '@/hooks/useDrawer';
 import { categoryIcon } from './ProductImage';
 
 export function Logo() {
   return (
-    <Link to="/" className="flex shrink-0 items-center gap-2">
-      <span className="flex h-9 w-9 items-center justify-center bg-primary text-lg font-extrabold text-white">
+    <Link to="/" className="flex min-w-0 items-center gap-2">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary text-lg font-extrabold text-white">
         {STORE_NAME.charAt(0)}
       </span>
-      <span className="text-base font-extrabold uppercase leading-none tracking-wide text-ink sm:text-lg">
+      <span className="truncate text-base font-extrabold uppercase leading-none tracking-wide text-ink sm:text-lg">
         {STORE_NAME}
       </span>
     </Link>
@@ -40,7 +41,7 @@ function SearchBox({ className }: { className?: string }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Tìm sản phẩm, mã sản phẩm..."
-        className="min-w-0 flex-1 border border-r-0 border-line bg-white px-4 py-2.5 text-sm outline-none focus:border-primary"
+        className="min-w-0 flex-1 border border-r-0 border-line bg-white px-4 py-2 text-base outline-none lg:py-2.5 lg:text-sm focus:border-primary"
       />
       <button type="submit" aria-label="Tìm kiếm" className="bg-primary px-4 text-white hover:bg-primary-dark">
         <Search className="h-4 w-4" />
@@ -61,12 +62,36 @@ export function Header() {
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories });
   const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: fetchBrands });
 
+  // Ẩn dropdown desktop sau khi chọn mục (đến khi rời chuột khỏi menu)
+  const [dropdownClosed, setDropdownClosed] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
   useEffect(() => setMenuOpen(false), [location]);
+  useDrawer(menuOpen, closeMenu);
+
+  const closeDropdown = () => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    setDropdownClosed(true);
+  };
+  const dropdownGroupProps = {
+    onMouseLeave: () => setDropdownClosed(false),
+    onFocus: () => setDropdownClosed(false),
+  };
+  const dropdownClass = clsx(
+    'invisible absolute top-full border-t border-line bg-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100',
+    dropdownClosed && '!invisible !opacity-0'
+  );
+
+  const goToContact = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMenuOpen(false);
+    setTimeout(() => document.getElementById('lien-he')?.scrollIntoView({ behavior: 'smooth' }), 0);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white shadow-[0_1px_0_#e7e7e7]">
-      {/* Top bar */}
-      <div className="bg-ink text-white">
+      {/* Top bar (chỉ desktop — hotline trên mobile có trong menu & nút nổi) */}
+      <div className="hidden bg-ink text-white lg:block">
         <div className="container-site flex h-9 items-center justify-between text-xs">
           <p className="truncate">Hàng chính hãng · Bảo hành đến 5 năm · Giao hàng & lắp đặt tận nơi</p>
           {CONTACT_PHONE && (
@@ -79,7 +104,7 @@ export function Header() {
       </div>
 
       {/* Logo row */}
-      <div className="container-site flex h-16 items-center gap-4 lg:h-20 lg:gap-10">
+      <div className="container-site flex h-14 items-center gap-4 lg:h-20 lg:gap-10">
         <button
           type="button"
           aria-label="Mở menu"
@@ -90,9 +115,9 @@ export function Header() {
         </button>
         <Logo />
         <SearchBox className="hidden flex-1 lg:flex" />
-        <div className="ml-auto flex items-center gap-4 lg:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-4 lg:ml-0">
           {CONTACT_PHONE && (
-            <a href={`tel:${CONTACT_PHONE}`} className="flex items-center gap-2">
+            <a href={`tel:${CONTACT_PHONE}`} aria-label={`Gọi tư vấn ${CONTACT_PHONE}`} className="flex items-center gap-2">
               <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line">
                 <Phone className="h-4 w-4 text-primary" />
               </span>
@@ -127,12 +152,12 @@ export function Header() {
             Trang chủ
           </NavLink>
 
-          <div className="group">
+          <div className="group" {...dropdownGroupProps}>
             <NavLink to="/san-pham" className={navLinkClass}>
               Sản phẩm <ChevronDown className="h-4 w-4" />
             </NavLink>
             {/* Mega menu */}
-            <div className="invisible absolute inset-x-0 top-full border-t border-line bg-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
+            <div className={clsx(dropdownClass, 'inset-x-0')}>
               <div className="container-site grid grid-cols-4 gap-x-8 gap-y-1 py-6">
                 {categories.map((c) => {
                   const Icon = categoryIcon(c);
@@ -140,6 +165,7 @@ export function Header() {
                     <Link
                       key={c}
                       to={`/san-pham?category=${encodeURIComponent(c)}`}
+                      onClick={closeDropdown}
                       className="flex items-center gap-3 py-2 text-sm text-ink hover:text-primary"
                     >
                       <Icon strokeWidth={1.5} className="h-5 w-5 text-ink-muted" />
@@ -149,6 +175,7 @@ export function Header() {
                 })}
                 <Link
                   to="/san-pham"
+                  onClick={closeDropdown}
                   className="col-span-4 mt-3 inline-flex items-center gap-1 border-t border-line pt-4 text-sm font-semibold text-primary"
                 >
                   Xem tất cả sản phẩm <ChevronRight className="h-4 w-4" />
@@ -157,15 +184,16 @@ export function Header() {
             </div>
           </div>
 
-          <div className="group relative">
-            <span className={navLinkClass({ isActive: false }) + ' cursor-default'}>
+          <div className="group relative" {...dropdownGroupProps}>
+            <button type="button" aria-haspopup="true" className={navLinkClass({ isActive: false }) + ' cursor-default'}>
               Thương hiệu <ChevronDown className="h-4 w-4" />
-            </span>
-            <div className="invisible absolute left-0 top-full min-w-56 border-t border-line bg-white py-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
+            </button>
+            <div className={clsx(dropdownClass, 'left-0 min-w-56 py-2')}>
               {brands.map((b) => (
                 <Link
                   key={b.id}
                   to={`/san-pham?brand=${encodeURIComponent(b.name)}`}
+                  onClick={closeDropdown}
                   className="flex items-center gap-3 px-5 py-2.5 text-sm hover:bg-surface hover:text-primary"
                 >
                   <span className="h-2.5 w-2.5" style={{ backgroundColor: b.color || '#999' }} />
@@ -222,6 +250,14 @@ export function Header() {
               </MobileLink>
             ))}
           </MobileSection>
+          <a
+            href="#lien-he"
+            onClick={goToContact}
+            className="flex items-center justify-between px-4 py-3.5 text-sm font-semibold text-ink active:bg-surface"
+          >
+            Liên hệ
+            <ChevronRight className="h-4 w-4 text-ink-muted" />
+          </a>
         </div>
         {CONTACT_PHONE && (
           <a href={`tel:${CONTACT_PHONE}`} className="btn-primary m-4">

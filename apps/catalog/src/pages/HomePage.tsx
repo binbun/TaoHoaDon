@@ -6,6 +6,7 @@ import { fetchBrands, fetchCategories, fetchProducts } from '@/api';
 import { HeroSlider } from '@/components/HeroSlider';
 import { ProductGrid, ProductGridSkeleton } from '@/components/ProductCard';
 import { categoryIcon } from '@/components/ProductImage';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 function SectionHeader({ title, to }: { title: string; to?: string }) {
   return (
@@ -64,6 +65,7 @@ const PROMOS = [
 export default function HomePage() {
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories });
   const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: fetchBrands });
+  useDocumentTitle();
 
   return (
     <>

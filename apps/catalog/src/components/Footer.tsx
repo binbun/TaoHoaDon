@@ -35,7 +35,7 @@ export function Footer() {
   const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: fetchBrands });
 
   return (
-    <footer id="lien-he">
+    <footer id="lien-he" className="scroll-mt-28 lg:scroll-mt-44">
       <BenefitsBar />
       <div className="container-site grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-4">
@@ -101,7 +101,8 @@ export function Footer() {
           )}
         </FooterColumn>
       </div>
-      <div className="bg-ink py-4 text-center text-xs text-white/70">
+      {/* Chừa chỗ cho nút nổi (góc phải dưới) và safe area trên mobile */}
+      <div className="bg-ink px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pr-20 pt-4 text-center text-xs text-white/70 lg:pr-4">
         © {new Date().getFullYear()} {STORE_NAME}. Giá sản phẩm vui lòng liên hệ để được báo giá chi tiết.
       </div>
     </footer>

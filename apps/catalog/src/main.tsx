@@ -6,6 +6,7 @@ import { Layout } from './components/Layout';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import NotFoundPage from './pages/NotFoundPage';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -23,7 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<HomePage />} />
             <Route path="/san-pham" element={<CatalogPage />} />
             <Route path="/san-pham/:id" element={<ProductDetailPage />} />
-            <Route path="*" element={<HomePage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

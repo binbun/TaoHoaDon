@@ -8,6 +8,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { ContactButtons } from '@/components/ContactButtons';
 import { ProductBadges, ProductGrid } from '@/components/ProductCard';
 import { ProductImage } from '@/components/ProductImage';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const GALLERY = [0, 1, 2, 3];
 
@@ -33,9 +34,11 @@ export default function ProductDetailPage() {
     setWidth(product?.widths?.[0] ?? '');
   }, [product]);
 
+  useDocumentTitle(product?.name ?? (isLoading ? undefined : 'Không tìm thấy sản phẩm'));
+
   if (isLoading) {
     return (
-      <div className="container-site grid animate-pulse gap-10 py-10 lg:grid-cols-2">
+      <div className="container-site grid animate-pulse grid-cols-1 gap-10 py-10 lg:grid-cols-2">
         <div className="aspect-square bg-surface" />
         <div className="space-y-4">
           <div className="h-4 w-24 bg-surface" />
@@ -80,9 +83,9 @@ export default function ProductDetailPage() {
         ]}
       />
 
-      <div className="container-site grid gap-8 py-8 lg:grid-cols-2 lg:gap-14 lg:py-12">
+      <div className="container-site grid grid-cols-1 gap-8 py-8 lg:grid-cols-2 lg:gap-14 lg:py-12">
         {/* Gallery */}
-        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+        <div className="flex min-w-0 flex-col-reverse gap-3 sm:flex-row">
           <div className="no-scrollbar flex gap-3 overflow-x-auto sm:w-20 sm:flex-col">
             {GALLERY.map((v) => (
               <button
@@ -98,7 +101,7 @@ export default function ProductDetailPage() {
               </button>
             ))}
           </div>
-          <div className="relative flex-1">
+          <div className="relative min-w-0 flex-1">
             <ProductBadges product={product} />
             <ProductImage product={product} variant={imageIndex} />
           </div>

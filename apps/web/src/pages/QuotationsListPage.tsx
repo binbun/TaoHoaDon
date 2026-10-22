@@ -149,7 +149,7 @@ export const QuotationsListPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar & Radix Tabs */}
-      <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+      <Card bodyClassName="p-3 sm:p-4 space-y-3 sm:space-y-4">
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
           <div className="w-full md:w-96">
             <Input
@@ -261,6 +261,7 @@ export const QuotationsListPage: React.FC = () => {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
+                            aria-label="Xem chi tiết"
                             onClick={() => navigate(`/quotations/${q.id}/preview`)}
                             className="p-2 text-slate-500 hover:text-[#1B9550] hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
                           >
@@ -273,6 +274,7 @@ export const QuotationsListPage: React.FC = () => {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
+                            aria-label="Tải file PDF"
                             onClick={() => handleDownloadPdf(q)}
                             disabled={downloadingId === q.id}
                             className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-40 active:scale-95"
@@ -290,7 +292,7 @@ export const QuotationsListPage: React.FC = () => {
                       {/* Radix DropdownMenu for Row Actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
+                          <button aria-label="Thao tác khác" className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
                             <MoreVertical className="w-4 h-4" />
                           </button>
                         </DropdownMenuTrigger>

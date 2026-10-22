@@ -141,7 +141,7 @@ export const CustomersPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <Card className="p-3 sm:p-4">
+      <Card bodyClassName="p-3 sm:p-4">
         <div className="w-full sm:w-96">
           <Input
             placeholder="Tìm theo tên công ty, số điện thoại, mã số thuế..."
@@ -209,6 +209,7 @@ export const CustomersPage: React.FC = () => {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
+                            aria-label="Chỉnh sửa"
                             onClick={() => openEditModal(c)}
                             className="p-2 text-slate-500 hover:text-[#1B9550] hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
                           >
@@ -220,7 +221,7 @@ export const CustomersPage: React.FC = () => {
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
+                          <button aria-label="Thao tác khác" className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
                             <MoreVertical className="w-4 h-4" />
                           </button>
                         </DropdownMenuTrigger>

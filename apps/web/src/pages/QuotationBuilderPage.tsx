@@ -23,6 +23,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
+import { Skeleton } from '../components/Skeleton';
 import { BrandBadge, getBrandStyle } from '../components/BrandBadge';
 import {
   Select,
@@ -57,6 +58,7 @@ import {
   ArrowLeft,
   FileSpreadsheet,
   Star,
+  FileQuestion,
 } from 'lucide-react';
 
 export const QuotationBuilderPage: React.FC = () => {
@@ -101,7 +103,9 @@ export const QuotationBuilderPage: React.FC = () => {
     if (Array.isArray(rawProducts)) return rawProducts;
     return rawProducts?.data || [];
   }, [rawProducts]);
-  const { data: existingQuote } = useQuotation(id);
+  const { data: existingQuote, isError: isQuoteError } = useQuotation(id);
+  // Edit mode: block the form until the existing quotation has populated the state
+  const [isQuoteHydrated, setIsQuoteHydrated] = useState(!isEditMode);
 
   const createQuotationMutation = useCreateQuotation();
   const updateQuotationMutation = useUpdateQuotation();
@@ -204,6 +208,7 @@ export const QuotationBuilderPage: React.FC = () => {
           sortOrder: item.sortOrder ?? index,
         }))
       );
+      setIsQuoteHydrated(true);
     }
   }, [existingQuote]);
 
@@ -383,6 +388,40 @@ export const QuotationBuilderPage: React.FC = () => {
     }
   };
 
+  if (isEditMode && isQuoteError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-white rounded-2xl border border-slate-200 my-8 max-w-lg mx-auto shadow-sm">
+        <div className="p-4 bg-rose-50 text-rose-600 rounded-full mb-4">
+          <FileQuestion className="w-10 h-10 sm:w-12 sm:h-12" />
+        </div>
+        <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Không tìm thấy đơn hàng</h2>
+        <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed">
+          Không thể tải dữ liệu đơn hàng để chỉnh sửa. Vui lòng kiểm tra lại đường dẫn hoặc thử lại sau.
+        </p>
+        <Button variant="primary" onClick={() => navigate('/quotations')}>
+          Quay lại danh sách đơn hàng
+        </Button>
+      </div>
+    );
+  }
+
+  if (isEditMode && (!existingQuote || !isQuoteHydrated)) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <Skeleton className="h-16 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+          <div className="lg:col-span-8 space-y-4 sm:space-y-6">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </div>
+          <div className="lg:col-span-4">
+            <Skeleton className="h-80 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Top Header Bar */}
@@ -447,14 +486,14 @@ export const QuotationBuilderPage: React.FC = () => {
             <div className="space-y-3 sm:space-y-4">
               {/* Quick Pick Existing Customer with Radix Select */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label htmlFor="quick-customer-select" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                   Chọn nhanh khách hàng đã lưu
                 </label>
                 <Select
                   value={selectedCustomerId || 'NEW'}
                   onValueChange={(val) => handleSelectCustomer(val === 'NEW' ? '' : val)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="quick-customer-select">
                     <SelectValue placeholder="-- Nhập thông tin khách hàng mới --" />
                   </SelectTrigger>
                   <SelectContent>
@@ -538,14 +577,14 @@ export const QuotationBuilderPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label htmlFor="quotation-status-select" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                     Trạng thái
                   </label>
                   <Select
                     value={status === 'ACCEPTED' ? 'PAID' : status}
                     onValueChange={setStatus}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="quotation-status-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -658,6 +697,7 @@ export const QuotationBuilderPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleMoveItem(index, 'up')}
+                                aria-label="Di chuyển lên"
                                 disabled={index === 0}
                                 className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95 rounded-md hover:bg-slate-200/60 transition-colors"
                               >
@@ -672,6 +712,7 @@ export const QuotationBuilderPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleMoveItem(index, 'down')}
+                                aria-label="Di chuyển xuống"
                                 disabled={index === items.length - 1}
                                 className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 active:scale-95 rounded-md hover:bg-slate-200/60 transition-colors"
                               >
@@ -686,6 +727,7 @@ export const QuotationBuilderPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDuplicateItem(index)}
+                                aria-label="Nhân bản dòng này"
                                 className="p-1.5 text-slate-400 hover:text-[#1B9550] active:scale-95 rounded-md hover:bg-emerald-50 transition-colors"
                               >
                                 <Copy className="w-4 h-4" />
@@ -699,6 +741,7 @@ export const QuotationBuilderPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteItem(index)}
+                                aria-label="Xóa dòng này"
                                 className="p-1.5 text-slate-400 hover:text-rose-600 active:scale-95 rounded-md hover:bg-rose-50 transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -714,6 +757,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         <div className="sm:col-span-3">
                           <Input
                             placeholder="Mã SP (ví dụ: C1E.70B)"
+                            aria-label={`Mã sản phẩm dòng ${index + 1}`}
                             value={item.productCodeSnapshot || ''}
                             onChange={(e) => handleItemChange(index, 'productCodeSnapshot', e.target.value)}
                             className="font-mono text-xs uppercase"
@@ -722,6 +766,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         <div className="sm:col-span-6">
                           <Input
                             placeholder="Tên phụ kiện / thiết bị tủ bếp *"
+                            aria-label={`Tên phụ kiện dòng ${index + 1}`}
                             value={item.productNameSnapshot}
                             onChange={(e) => handleItemChange(index, 'productNameSnapshot', e.target.value)}
                             required
@@ -730,6 +775,7 @@ export const QuotationBuilderPage: React.FC = () => {
                         <div className="sm:col-span-3">
                           <Input
                             placeholder="ĐVT (Bộ, Chiếc...)"
+                            aria-label={`Đơn vị tính dòng ${index + 1}`}
                             value={item.unit}
                             onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                           />
@@ -839,7 +885,7 @@ export const QuotationBuilderPage: React.FC = () => {
         </div>
 
         {/* Right 4 Columns: Summary Panel (Desktop sticky, Mobile inline) */}
-        <div className="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
+        <div className="lg:col-span-4 lg:sticky lg:top-20 lg:self-start space-y-4">
           <Card className="border-t-4 border-t-[#1B9550] shadow-md">
             <h3 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center justify-between">
               <span>Tổng Kết Đơn Hàng</span>
@@ -931,13 +977,13 @@ export const QuotationBuilderPage: React.FC = () => {
       <Modal
         isOpen={isProductPickerOpen}
         onClose={() => setIsProductPickerOpen(false)}
-        title="Chọn Sản Phẩm Từ Catalogue (GRÖB / EUPLUS / KINGENBLU / BLUM / EUROKING)"
+        title="Chọn Sản Phẩm Từ Catalogue"
         maxWidth="2xl"
       >
         <div className="space-y-3 sm:space-y-4">
           {/* Brand Tabs with Radix Tabs */}
           <Tabs value={pickerBrand} onValueChange={setPickerBrand} className="w-full">
-            <TabsList className="w-full sm:w-auto justify-start">
+            <TabsList className="w-full sm:w-auto justify-start overflow-x-auto">
               {availablePickerBrands.map((b) => {
                 const style = b === 'Tất cả' ? null : getBrandStyle(b, brandColorMap[b]);
                 return (
@@ -1023,7 +1069,7 @@ export const QuotationBuilderPage: React.FC = () => {
                           toggleFavoriteMutation.mutate(p.id);
                         }}
                         title={p.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
-                        className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-transform active:scale-125 focus:outline-hidden"
+                        className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-transform active:scale-125 focus:outline-none"
                       >
                         {p.isFavorite ? (
                           <Star className="w-4 h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />

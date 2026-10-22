@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { TouchEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpFromLine, ChevronLeft, ChevronRight, CookingPot, LucideIcon, RotateCw } from 'lucide-react';
 import clsx from 'clsx';
@@ -43,29 +43,64 @@ const SLIDES: Slide[] = [
   },
 ];
 
+const SWIPE_THRESHOLD = 40;
+
 export function HeroSlider() {
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
+    if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const timer = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 6000);
     return () => clearInterval(timer);
-  }, [index]);
+  }, [index, paused]);
 
   const go = (step: number) => setIndex((i) => (i + step + SLIDES.length) % SLIDES.length);
 
+  const onTouchStart = (e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) >= SWIPE_THRESHOLD) go(dx < 0 ? 1 : -1);
+  };
+
   return (
-    <section className="group relative overflow-hidden">
+    <section
+      aria-roledescription="carousel"
+      className="group relative overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPaused(false);
+      }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${index * 100}%)` }}>
-        {SLIDES.map((slide) => {
+        {SLIDES.map((slide, i) => {
           const Icon = slide.icon;
+          // Trang chủ chỉ có một h1: tiêu đề slide đầu tiên
+          const Heading = i === 0 ? 'h1' : 'h2';
+          const inactive = i !== index;
           return (
-            <div key={slide.title} className={clsx('w-full shrink-0', slide.bg)}>
+            <div
+              key={slide.title}
+              aria-hidden={inactive}
+              // React 18 chưa hỗ trợ prop `inert` boolean nên truyền thuộc tính chuỗi rỗng
+              {...(inactive ? { inert: '' } : {})}
+              className={clsx('w-full shrink-0', slide.bg)}
+            >
               <div className="container-site grid min-h-[340px] items-center gap-6 py-10 sm:min-h-[420px] md:grid-cols-2 lg:min-h-[480px]">
                 <div className="space-y-4">
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{slide.kicker}</p>
-                  <h2 className="whitespace-pre-line text-3xl font-extrabold uppercase leading-tight sm:text-4xl lg:text-5xl">
+                  <Heading className="whitespace-pre-line text-3xl font-extrabold uppercase leading-tight sm:text-4xl lg:text-5xl">
                     {slide.title}
-                  </h2>
+                  </Heading>
                   <p className="max-w-md text-sm text-ink-soft sm:text-base">{slide.text}</p>
                   <Link to={slide.to} className="btn-primary mt-2">
                     {slide.cta}
@@ -86,7 +121,7 @@ export function HeroSlider() {
         type="button"
         aria-label="Trước"
         onClick={() => go(-1)}
-        className="absolute left-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center bg-white/80 opacity-0 transition hover:bg-white group-hover:opacity-100 md:flex"
+        className="absolute left-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center bg-white/80 opacity-0 transition hover:bg-white focus-visible:opacity-100 group-hover:opacity-100 md:flex"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
@@ -94,20 +129,23 @@ export function HeroSlider() {
         type="button"
         aria-label="Sau"
         onClick={() => go(1)}
-        className="absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center bg-white/80 opacity-0 transition hover:bg-white group-hover:opacity-100 md:flex"
+        className="absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center bg-white/80 opacity-0 transition hover:bg-white focus-visible:opacity-100 group-hover:opacity-100 md:flex"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
 
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2">
         {SLIDES.map((slide, i) => (
           <button
             key={slide.title}
             type="button"
             aria-label={`Slide ${i + 1}`}
+            aria-current={i === index ? 'true' : undefined}
             onClick={() => setIndex(i)}
-            className={clsx('h-1.5 transition-all', i === index ? 'w-8 bg-primary' : 'w-4 bg-ink/25')}
-          />
+            className="flex min-h-6 items-center px-1 py-2.5"
+          >
+            <span className={clsx('block h-1.5 transition-all', i === index ? 'w-8 bg-primary' : 'w-4 bg-ink/25')} />
+          </button>
         ))}
       </div>
     </section>

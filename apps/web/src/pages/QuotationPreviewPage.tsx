@@ -102,22 +102,23 @@ export const QuotationPreviewPage: React.FC = () => {
   // Copy High-Resolution PNG directly to Clipboard (for instant Ctrl+V into Zalo / Chat)
   const handleCopyPng = async () => {
     if (!quotation) return;
+    const isDelivery = activeTab === 'delivery';
+    const targetEl = sheetRef.current;
+    if (!targetEl) {
+      error('Không tìm thấy khung hiển thị hóa đơn');
+      return;
+    }
+    if (typeof window.ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+      error('Trình duyệt không hỗ trợ sao chép ảnh trực tiếp');
+      return;
+    }
+
     try {
       setIsCopyingPng(true);
-      const isDelivery = activeTab === 'delivery';
-
-      if (!navigator.clipboard || !window.ClipboardItem) {
-        throw new Error('Trình duyệt không hỗ trợ tính năng sao chép ảnh trực tiếp. Vui lòng bấm nút Tải ảnh PNG.');
-      }
-
-      const targetEl = sheetRef.current;
-      if (!targetEl) {
-        throw new Error('Không tìm thấy khung hiển thị hóa đơn');
-      }
-
       info(`Đang tạo ảnh ${isDelivery ? 'Phiếu giao hàng' : 'Hóa đơn'} để sao chép...`);
 
-      const blob = await toBlob(targetEl, {
+      // Pass the promise synchronously to ClipboardItem so iOS Safari / Firefox keep the user gesture
+      const blobPromise = toBlob(targetEl, {
         quality: 1,
         pixelRatio: 2,
         backgroundColor: '#ffffff',
@@ -125,16 +126,16 @@ export const QuotationPreviewPage: React.FC = () => {
           boxShadow: 'none',
           margin: '0',
         },
+      }).then((blob) => {
+        if (!blob) {
+          throw new Error('Không thể tạo dữ liệu ảnh');
+        }
+        return blob;
       });
 
-      if (!blob) {
-        throw new Error('Không thể tạo dữ liệu ảnh');
-      }
-
       await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob }),
+        new ClipboardItem({ 'image/png': blobPromise }),
       ]);
-
       success('Đã sao chép ảnh vào bộ nhớ tạm! Bạn có thể dán (Ctrl + V) ngay vào Zalo.');
     } catch (err: any) {
       console.error('Lỗi khi sao chép ảnh:', err);
@@ -349,10 +350,10 @@ export const QuotationPreviewPage: React.FC = () => {
                 <img
                   src="/grob-logo.png"
                   alt="Logo GROB"
-                  className="h-12 sm:h-14 w-auto object-contain shrink-0"
+                  className="h-14 w-auto object-contain shrink-0"
                 />
                 <div>
-                  <div className="text-[13px] sm:text-[14px] font-black text-slate-900 uppercase tracking-tight leading-tight">
+                  <div className="text-[14px] font-black text-slate-900 uppercase tracking-tight leading-tight">
                     CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
                   </div>
                   <div className="text-[10.5px] text-slate-600 mt-1 font-medium">
@@ -371,7 +372,7 @@ export const QuotationPreviewPage: React.FC = () => {
             {/* Title & Metadata */}
             <div className="flex justify-between items-end mb-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">
+                <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
                   {quotation.title || 'HÓA ĐƠN BÁN HÀNG'}
                 </h1>
                 <p className="text-xs text-slate-500">
@@ -389,7 +390,7 @@ export const QuotationPreviewPage: React.FC = () => {
               <div className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-200 pb-1 mb-2">
                 Thông tin khách hàng
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[12px]">
                 <div>
                   <span className="text-slate-500 inline-block w-28">Khách hàng:</span>
                   <strong className="text-slate-900">{customer?.companyName || 'Khách hàng đại lý'}</strong>
@@ -500,6 +501,7 @@ export const QuotationPreviewPage: React.FC = () => {
                             onClick={() => handleCopy('19026197143010', 'stk')}
                             className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 transition-colors shrink-0 ml-1"
                             title="Sao chép STK"
+                            aria-label="Sao chép STK"
                           >
                             {copiedField === 'stk' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
@@ -575,10 +577,10 @@ export const QuotationPreviewPage: React.FC = () => {
                 <img
                   src="/grob-logo.png"
                   alt="Logo GROB"
-                  className="h-11 sm:h-12 w-auto object-contain shrink-0"
+                  className="h-12 w-auto object-contain shrink-0"
                 />
                 <div>
-                  <div className="text-[13px] sm:text-[14px] font-black text-slate-900 uppercase tracking-tight leading-tight">
+                  <div className="text-[14px] font-black text-slate-900 uppercase tracking-tight leading-tight">
                     CÔNG TY TNHH ĐẦU TƯ KIM KHÍ THÔNG MINH VIỆT ĐỨC
                   </div>
                   <div className="text-[10.5px] text-slate-600 font-medium mt-0.5">
@@ -597,10 +599,10 @@ export const QuotationPreviewPage: React.FC = () => {
                 số: ...
                 Ngày ... tháng ... năm 2026 */}
             <div className="text-center my-3">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-wide">
+              <h1 className="text-2xl font-black text-slate-900 uppercase tracking-wide">
                 HÓA ĐƠN BÁN HÀNG
               </h1>
-              <div className="text-xs sm:text-[13px] text-slate-700 font-medium mt-1">
+              <div className="text-[13px] text-slate-700 font-medium mt-1">
                 số: <strong className="font-bold text-slate-900 font-mono">{quotation.quotationNumber}</strong>
               </div>
               <div className="text-[12px] text-slate-600 italic mt-0.5">
@@ -610,7 +612,7 @@ export const QuotationPreviewPage: React.FC = () => {
 
             {/* Customer & Delivery Address Card */}
             <div className="bg-slate-50/80 border border-slate-300 rounded-lg p-3 mb-3.5 text-[12px]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                 <div>
                   <span className="text-slate-500 inline-block w-24">Khách hàng:</span>
                   <strong className="text-slate-900">{customer?.companyName || 'Khách hàng đại lý'}</strong>
@@ -619,7 +621,7 @@ export const QuotationPreviewPage: React.FC = () => {
                   <span className="text-slate-500 inline-block w-24">Điện thoại:</span>
                   <strong className="text-slate-900">{customer?.phone || '---'}</strong>
                 </div>
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <span className="text-slate-500 inline-block w-24">Địa chỉ giao:</span>
                   <span className="text-slate-800 font-medium">{customer?.address || '---'}</span>
                 </div>

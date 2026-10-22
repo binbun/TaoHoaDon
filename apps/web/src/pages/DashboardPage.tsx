@@ -56,7 +56,7 @@ export const DashboardPage: React.FC = () => {
 
       {/* 4 KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <Card className="border-l-4 border-l-[#1B9550] p-4 sm:p-6">
+        <Card className="border-l-4 border-l-[#1B9550]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Hàng</p>
@@ -74,7 +74,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-indigo-500 p-4 sm:p-6">
+        <Card className="border-l-4 border-l-indigo-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tháng Này</p>
@@ -92,7 +92,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-emerald-500 p-4 sm:p-6">
+        <Card className="border-l-4 border-l-emerald-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Doanh Số</p>
@@ -110,7 +110,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500 p-4 sm:p-6">
+        <Card className="border-l-4 border-l-amber-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đã Thanh Toán</p>

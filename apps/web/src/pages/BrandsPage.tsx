@@ -121,7 +121,7 @@ export const BrandsPage: React.FC = () => {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card className="p-4 bg-white border border-slate-200/80">
+        <Card className="bg-white border border-slate-200/80" bodyClassName="p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500">Tổng số thương hiệu</p>
@@ -133,7 +133,7 @@ export const BrandsPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-4 bg-white border border-slate-200/80">
+        <Card className="bg-white border border-slate-200/80" bodyClassName="p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-emerald-600">Đang hoạt động</p>
@@ -145,7 +145,7 @@ export const BrandsPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-4 bg-white border border-slate-200/80">
+        <Card className="bg-white border border-slate-200/80" bodyClassName="p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-blue-600">Sản phẩm liên kết</p>
@@ -159,7 +159,7 @@ export const BrandsPage: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <Card className="p-3 sm:p-4">
+      <Card bodyClassName="p-3 sm:p-4">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
@@ -282,6 +282,7 @@ export const BrandsPage: React.FC = () => {
                         onClick={() => openEditModal(b)}
                         className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                         title="Chỉnh sửa thương hiệu"
+                        aria-label="Chỉnh sửa thương hiệu"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -290,6 +291,7 @@ export const BrandsPage: React.FC = () => {
                         onClick={() => setDeletingBrand(b)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title="Xóa thương hiệu"
+                        aria-label="Xóa thương hiệu"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -30,6 +30,30 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const { user, logout } = useAuth();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const drawerRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const isChangePasswordOpenRef = useRef(isChangePasswordOpen);
+  isChangePasswordOpenRef.current = isChangePasswordOpen;
+
+  // Mobile drawer: Esc to close, lock body scroll, focus the close button on open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    drawerRef.current?.querySelector<HTMLButtonElement>('[data-drawer-close]')?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isChangePasswordOpenRef.current) onCloseRef.current?.();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
 
   const isManager = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
@@ -117,6 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         {onClose && (
           <button
             onClick={onClose}
+            data-drawer-close
             className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13221C] transition-colors"
             aria-label="Đóng menu"
           >
@@ -199,6 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setIsChangePasswordOpen(true)}
+                  aria-label="Đổi mật khẩu"
                   className="p-1.5 text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-colors"
                 >
                   <KeyRound className="w-4 h-4" />
@@ -214,6 +240,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                     if (onClose) onClose();
                     logout();
                   }}
+                  aria-label="Đăng xuất"
                   className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
@@ -244,7 +271,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           />
 
           {/* Drawer Sliding Panel */}
-          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 shadow-2xl border-r border-[#182C24]">
+          <aside
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu điều hướng"
+            className="fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 shadow-2xl border-r border-[#182C24]">
             {sidebarContent}
           </aside>
         </div>

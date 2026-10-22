@@ -55,7 +55,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ toast: addToast, success, error, info }}>
       {children}
       {/* Toast Render Portal */}
-      <div className="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none px-4 sm:px-0">
+      <div className="fixed top-4 left-4 right-4 sm:top-5 sm:left-auto sm:right-5 sm:w-full sm:max-w-md z-[100] flex flex-col gap-2.5 pointer-events-none">
         {toasts.map((t) => {
           let Icon = CheckCircle2;
           let borderColor = 'border-emerald-500';
@@ -91,6 +91,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               </div>
               <button
                 onClick={() => removeToast(t.id)}
+                aria-label="Đóng thông báo"
                 className="text-slate-400 hover:text-slate-600 p-1 transition-colors"
               >
                 <X className="w-4 h-4" />

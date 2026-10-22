@@ -13,7 +13,7 @@ export function FloatingButtons() {
   }, []);
 
   return (
-    <div className="fixed bottom-5 right-4 z-30 flex flex-col items-center gap-3">
+    <div className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-4 z-30 flex flex-col items-center gap-3">
       {CONTACT_ZALO && (
         <a
           href={`https://zalo.me/${CONTACT_ZALO}`}

@@ -170,7 +170,7 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       {/* Filter Section with Radix Selects */}
-      <Card className="p-4 sm:p-5">
+      <Card bodyClassName="p-4 sm:p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
           {/* Search */}
           <div className="sm:col-span-2 lg:col-span-4">
@@ -393,7 +393,7 @@ export const AuditLogsPage: React.FC = () => {
             </DialogHeader>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm">
                 <div>
                   <span className="text-slate-500 font-medium">Hành động:</span>
                   <div className="mt-1">{getActionBadge(selectedLog.action)}</div>
@@ -404,16 +404,16 @@ export const AuditLogsPage: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-slate-500 font-medium">Người thực hiện:</span>
-                  <p className="font-semibold text-slate-800 mt-1">{selectedLog.userName || 'Hệ thống'} ({selectedLog.userEmail || 'N/A'})</p>
+                  <p className="font-semibold text-slate-800 mt-1 break-all">{selectedLog.userName || 'Hệ thống'} ({selectedLog.userEmail || 'N/A'})</p>
                 </div>
                 <div>
                   <span className="text-slate-500 font-medium">IP Address:</span>
-                  <p className="font-mono text-slate-800 mt-1">{selectedLog.ipAddress || '—'}</p>
+                  <p className="font-mono text-slate-800 mt-1 break-all">{selectedLog.ipAddress || '—'}</p>
                 </div>
                 {selectedLog.resourceId && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <span className="text-slate-500 font-medium">Resource ID:</span>
-                    <p className="font-mono text-slate-800 mt-1">{selectedLog.resourceId}</p>
+                    <p className="font-mono text-slate-800 mt-1 break-all">{selectedLog.resourceId}</p>
                   </div>
                 )}
               </div>

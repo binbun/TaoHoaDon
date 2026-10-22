@@ -1,3 +1,5 @@
+import tailwindcssAnimate from 'tailwindcss-animate'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -28,8 +30,17 @@ export default {
         'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
         'card': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
         'sheet': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+        // Tailwind v4 scale names used across the codebase
+        '2xs': '0 1px rgb(0 0 0 / 0.05)',
+        'xs': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      },
+      backdropBlur: {
+        xs: '4px',
+      },
+      dropShadow: {
+        xs: '0 1px 1px rgb(0 0 0 / 0.05)',
       },
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate],
 }

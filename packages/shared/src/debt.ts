@@ -118,3 +118,102 @@ export function allocatePayment(
 
   return allocations;
 }
+
+// ---------------------------------------------------------------------------
+// Debt report for a date range (e.g. a lunar month)
+// ---------------------------------------------------------------------------
+
+export interface DebtReportInput {
+  customers: { id: string; companyName: string; phone?: string | null; openingDebt: number }[];
+  orders: (DebtOrderInput & { customerId: string; quotationNumber: string; quotationDay: string; settledDay: string })[];
+  payments: { customerId: string; quotationId?: string | null; batchId: string; amount: number; paidDay: string; note?: string | null }[];
+  fromDay: string; // YYYY-MM-DD, inclusive
+  toDay: string; // YYYY-MM-DD, inclusive
+}
+
+export interface DebtReportRow {
+  customerId: string;
+  companyName: string;
+  phone?: string | null;
+  openingBalance: number; // debt at the start of the period
+  billed: number; // new orders in the period
+  paid: number; // payments (and orders marked paid) in the period
+  closingBalance: number; // debt at the end of the period
+  currentDebt: number; // debt today
+}
+
+export interface DebtReportEntry {
+  day: string;
+  customerId: string;
+  companyName: string;
+  kind: 'ORDER' | 'PAYMENT' | 'MARKED_PAID';
+  quotationNumbers: string[];
+  billed: number;
+  paid: number;
+  note?: string | null;
+}
+
+/**
+ * Builds a dated ledger per customer and sums it over the period:
+ *   + opening debt (before everything), + each order's own amount on its date,
+ *   − each payment on its date, − the unpaid part of orders marked "Đã thanh toán" on the day they were marked.
+ * The ledger total always equals calculateCustomerDebt's currentDebt.
+ */
+export function buildDebtReport(input: DebtReportInput): { rows: DebtReportRow[]; entries: DebtReportEntry[] } {
+  const { fromDay, toDay } = input;
+  const rows: DebtReportRow[] = [];
+  const entries: DebtReportEntry[] = [];
+
+  for (const c of input.customers) {
+    const orders = input.orders.filter((o) => o.customerId === c.id);
+    const payments = input.payments.filter((p) => p.customerId === c.id);
+    const ledger: Omit<DebtReportEntry, 'customerId' | 'companyName'>[] = [];
+
+    for (const o of orders) {
+      const state = getOrderDebtState(o, payments);
+      ledger.push({ day: o.quotationDay, kind: 'ORDER', quotationNumbers: [o.quotationNumber], billed: state.amount, paid: 0 });
+      const settledWithoutPayment = isSettledStatus(o.status) ? Math.max(0, state.amount - state.paid) : 0;
+      if (settledWithoutPayment > 0) {
+        ledger.push({ day: o.settledDay, kind: 'MARKED_PAID', quotationNumbers: [o.quotationNumber], billed: 0, paid: settledWithoutPayment });
+      }
+    }
+
+    // One entry per payment, even when it was split across several orders
+    const batches = new Map<string, Omit<DebtReportEntry, 'customerId' | 'companyName'>>();
+    for (const p of payments) {
+      const batch = batches.get(p.batchId) ?? { day: p.paidDay, kind: 'PAYMENT' as const, quotationNumbers: [], billed: 0, paid: 0, note: p.note };
+      batch.paid += p.amount;
+      const number = orders.find((o) => o.id === p.quotationId)?.quotationNumber;
+      if (number && !batch.quotationNumbers.includes(number)) batch.quotationNumbers.push(number);
+      batches.set(p.batchId, batch);
+    }
+    ledger.push(...batches.values());
+
+    const opening = round(c.openingDebt || 0);
+    const net = (e: { billed: number; paid: number }) => e.billed - e.paid;
+    const before = ledger.filter((e) => e.day < fromDay).reduce((sum, e) => sum + net(e), 0);
+    const inPeriod = ledger.filter((e) => e.day >= fromDay && e.day <= toDay);
+    const billed = round(inPeriod.reduce((sum, e) => sum + e.billed, 0));
+    const paid = round(inPeriod.reduce((sum, e) => sum + e.paid, 0));
+    const openingBalance = round(opening + before);
+
+    const row: DebtReportRow = {
+      customerId: c.id,
+      companyName: c.companyName,
+      phone: c.phone,
+      openingBalance,
+      billed,
+      paid,
+      closingBalance: openingBalance + billed - paid,
+      currentDebt: round(opening + ledger.reduce((sum, e) => sum + net(e), 0)),
+    };
+    if (row.openingBalance || row.billed || row.paid || row.closingBalance || row.currentDebt) {
+      rows.push(row);
+      entries.push(...inPeriod.map((e) => ({ ...e, customerId: c.id, companyName: c.companyName })));
+    }
+  }
+
+  rows.sort((a, b) => a.companyName.localeCompare(b.companyName, 'vi'));
+  entries.sort((a, b) => a.day.localeCompare(b.day) || a.companyName.localeCompare(b.companyName, 'vi'));
+  return { rows, entries };
+}

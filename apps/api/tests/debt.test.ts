@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { allocatePayment, calculateCustomerDebt, DebtOrderInput } from '@taohoadon/shared';
+import { allocatePayment, buildDebtReport, calculateCustomerDebt, DebtOrderInput } from '@taohoadon/shared';
 
 const order = (id: string, grandTotal: number, opts: Partial<DebtOrderInput> = {}): DebtOrderInput => ({
   id,
@@ -89,4 +89,33 @@ describe('Customer debt ledger', () => {
     expect(debt.openingDebt).toBe(0);
     expect(debt.currentDebt).toBe(3000000);
   });
+
+  it('monthly report: opening, billed, paid, closing and current debt', () => {
+    const customers = [{ id: 'C', companyName: 'Khách', openingDebt: 1000000 }];
+    const orders = [
+      { ...order('Q1', 3000000), customerId: 'C', quotationNumber: 'DH-1', quotationDay: '2026-09-05', settledDay: '2026-09-05' },
+      { ...order('Q2', 2000000), customerId: 'C', quotationNumber: 'DH-2', quotationDay: '2026-10-12', settledDay: '2026-10-12' },
+      { ...order('Q3', 5000000, { status: 'PAID' }), customerId: 'C', quotationNumber: 'DH-3', quotationDay: '2026-10-20', settledDay: '2026-11-15' },
+    ];
+    const payments = [
+      { customerId: 'C', quotationId: 'Q1', batchId: 'B1', amount: 1000000, paidDay: '2026-10-15' },
+      { customerId: 'C', quotationId: 'Q2', batchId: 'B1', amount: 500000, paidDay: '2026-10-15' },
+    ];
+
+    // Lunar month 9/2026 = 10/10/2026 → 08/11/2026
+    const { rows, entries } = buildDebtReport({ customers, orders, payments, fromDay: '2026-10-10', toDay: '2026-11-08' });
+    expect(rows[0]).toMatchObject({
+      openingBalance: 4000000, // 1,000,000 opening + Q1
+      billed: 7000000, // Q2 + Q3
+      paid: 1500000, // one payment split across Q1 and Q2
+      closingBalance: 9500000,
+      currentDebt: 4500000, // Q3 was marked paid later, on 15/11
+    });
+    expect(entries.filter((e) => e.kind === 'PAYMENT')).toEqual([
+      expect.objectContaining({ paid: 1500000, quotationNumbers: ['DH-1', 'DH-2'] }),
+    ]);
+    // Same total as everywhere else in the app
+    expect(rows[0].currentDebt).toBe(calculateCustomerDebt(1000000, orders, payments).currentDebt);
+  });
 });
+

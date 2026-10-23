@@ -15,6 +15,7 @@ import quotationsRoutes from './quotations/quotations.routes';
 import dashboardRoutes from './dashboard/dashboard.routes';
 import auditRoutes from './audit/audit.routes';
 import publicRoutes from './public/public.routes';
+import reportsRoutes from './reports/reports.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -139,6 +140,7 @@ app.use(['/api/customers', '/customers'], customersRoutes);
 app.use(['/api/quotations', '/quotations'], quotationsRoutes);
 app.use(['/api/dashboard', '/dashboard'], dashboardRoutes);
 app.use(['/api/audit-logs', '/audit-logs'], auditRoutes);
+app.use(['/api/reports', '/reports'], reportsRoutes);
 app.use(['/api/public', '/public'], publicRoutes);
 
 // 404 Handler

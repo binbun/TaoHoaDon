@@ -172,5 +172,60 @@ describe('Customer debt & payments', () => {
     const days = res.body.data.map((q: any) => q.quotationDate.slice(0, 10)).sort();
     expect(days).toEqual(['2026-10-01', '2026-10-15', '2026-10-31']);
   });
+
+  it('changing "Nợ đầu kỳ" later shifts "Dư nợ cũ" on unpaid quotations only', async () => {
+    const cust = await request(app)
+      .post('/api/customers')
+      .set(auth())
+      .send({ companyName: `Khách test sửa nợ đầu kỳ ${Date.now()}` });
+    const id = cust.body.data.id;
+
+    const unpaid = await createFor(id, 30000000, '2026-10-01');
+    expect(unpaid.body.data.previousDebt).toBe(0);
+    const paid = await createFor(id, 2000000, '2026-10-02');
+    await request(app)
+      .post(`/api/customers/${id}/payments`)
+      .set(auth())
+      .send({ amount: paid.body.data.grandTotal - paid.body.data.previousDebt, paidAt: '2026-10-03', quotationId: paid.body.data.id });
+
+    const res = await request(app).patch(`/api/customers/${id}`).set(auth()).send({ openingDebt: 1000000 });
+    expect(res.body.data.adjustedQuotations).toBe(1);
+
+    const after = await request(app).get(`/api/quotations/${unpaid.body.data.id}`).set(auth());
+    expect(after.body.data.previousDebt).toBe(1000000);
+    expect(after.body.data.grandTotal).toBe(31000000);
+    expect(after.body.data.customerDebt).toBe(31000000);
+
+    const paidAfter = await request(app).get(`/api/quotations/${paid.body.data.id}`).set(auth());
+    expect(paidAfter.body.data.status).toBe('PAID');
+    expect(paidAfter.body.data.previousDebt).toBe(paid.body.data.previousDebt);
+  });
+
+  it('GET /api/reports/debt returns the period summary per customer', async () => {
+    const cust = await request(app)
+      .post('/api/customers')
+      .set(auth())
+      .send({ companyName: `Khách test báo cáo ${Date.now()}`, openingDebt: 1000000 });
+    const id = cust.body.data.id;
+    const before = await createFor(id, 3000000, '2026-09-05');
+    await createFor(id, 2000000, '2026-10-12');
+    await request(app)
+      .post(`/api/customers/${id}/payments`)
+      .set(auth())
+      .send({ amount: 1000000, paidAt: '2026-10-15', quotationId: before.body.data.id });
+
+    const res = await request(app).get('/api/reports/debt?fromDate=2026-10-10&toDate=2026-11-08').set(auth());
+    expect(res.status).toBe(200);
+    const row = res.body.data.rows.find((r: any) => r.customerId === id);
+    expect(row).toMatchObject({ openingBalance: 4000000, billed: 2000000, paid: 1000000, closingBalance: 5000000, currentDebt: 5000000 });
+
+    const orders = res.body.data.orders.filter((o: any) => o.companyName === cust.body.data.companyName);
+    expect(orders).toEqual([
+      expect.objectContaining({ quotationDate: '2026-10-12', orderAmount: 2000000, previousDebt: 4000000, grandTotal: 6000000 }),
+    ]);
+
+    const bad = await request(app).get('/api/reports/debt?fromDate=2026-11-08&toDate=2026-10-10').set(auth());
+    expect(bad.status).toBe(400);
+  });
 });
 

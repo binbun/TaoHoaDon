@@ -50,10 +50,16 @@ export function useUpdateCustomer() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Customer> }) =>
-      apiClient<Customer>(`/customers/${id}`, { method: 'PATCH', data }),
+      apiClient<Customer & { adjustedQuotations?: number }>(`/customers/${id}`, { method: 'PATCH', data }),
     onSuccess: (updatedCust) => {
       queryClient.invalidateQueries({ queryKey: customerKeys.all });
-      success(`Đã cập nhật thông tin khách hàng "${updatedCust.companyName}" thành công`);
+      // Changing "Nợ đầu kỳ" also updates "Dư nợ cũ" on the customer's unpaid quotations
+      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      success(
+        updatedCust.adjustedQuotations
+          ? `Đã cập nhật khách hàng "${updatedCust.companyName}" và Dư nợ cũ của ${updatedCust.adjustedQuotations} đơn hàng`
+          : `Đã cập nhật thông tin khách hàng "${updatedCust.companyName}" thành công`
+      );
     },
     onError: (err: any) => {
       error(err.message || 'Không thể cập nhật khách hàng');

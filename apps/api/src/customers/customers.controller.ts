@@ -111,23 +111,51 @@ export async function updateCustomer(req: Request, res: Response, next: NextFunc
       });
     }
 
-    const updated = await prisma.customer.update({
-      where: { id },
-      data: {
-        ...(validatedData.companyName ? { companyName: validatedData.companyName.trim() } : {}),
-        ...(validatedData.contactName !== undefined ? { contactName: validatedData.contactName?.trim() || null } : {}),
-        ...(validatedData.email !== undefined ? { email: validatedData.email?.trim() || null } : {}),
-        ...(validatedData.phone !== undefined ? { phone: validatedData.phone?.trim() || null } : {}),
-        ...(validatedData.address !== undefined ? { address: validatedData.address?.trim() || null } : {}),
-        ...(validatedData.taxCode !== undefined ? { taxCode: validatedData.taxCode?.trim() || null } : {}),
-        ...(validatedData.openingDebt !== undefined ? { openingDebt: validatedData.openingDebt } : {}),
-      },
+    // "Dư nợ cũ" on every order already includes the opening debt, so shift unpaid orders by the change
+    const openingDelta =
+      validatedData.openingDebt !== undefined ? Math.round(validatedData.openingDebt - existing.openingDebt) : 0;
+
+    const { updated, adjustedQuotations } = await prisma.$transaction(async (tx) => {
+      const updated = await tx.customer.update({
+        where: { id },
+        data: {
+          ...(validatedData.companyName ? { companyName: validatedData.companyName.trim() } : {}),
+          ...(validatedData.contactName !== undefined ? { contactName: validatedData.contactName?.trim() || null } : {}),
+          ...(validatedData.email !== undefined ? { email: validatedData.email?.trim() || null } : {}),
+          ...(validatedData.phone !== undefined ? { phone: validatedData.phone?.trim() || null } : {}),
+          ...(validatedData.address !== undefined ? { address: validatedData.address?.trim() || null } : {}),
+          ...(validatedData.taxCode !== undefined ? { taxCode: validatedData.taxCode?.trim() || null } : {}),
+          ...(validatedData.openingDebt !== undefined ? { openingDebt: validatedData.openingDebt } : {}),
+        },
+      });
+
+      let adjustedQuotations = 0;
+      if (openingDelta !== 0) {
+        const orders = await tx.quotation.findMany({
+          where: { customerId: id, status: { notIn: ['PAID', 'ACCEPTED'] } },
+          select: { id: true, previousDebt: true, grandTotal: true },
+        });
+        for (const order of orders) {
+          const previousDebt = Math.max(0, order.previousDebt + openingDelta);
+          if (previousDebt === order.previousDebt) continue;
+          await tx.quotation.update({
+            where: { id: order.id },
+            data: { previousDebt, grandTotal: order.grandTotal - order.previousDebt + previousDebt },
+          });
+          adjustedQuotations++;
+        }
+      }
+
+      return { updated, adjustedQuotations };
     });
 
     return res.json({
       success: true,
-      message: 'Cập nhật thông tin khách hàng thành công',
-      data: updated,
+      message:
+        adjustedQuotations > 0
+          ? `Cập nhật thông tin khách hàng thành công, đã cập nhật Dư nợ cũ cho ${adjustedQuotations} đơn hàng`
+          : 'Cập nhật thông tin khách hàng thành công',
+      data: { ...updated, adjustedQuotations },
     });
   } catch (error) {
     next(error);

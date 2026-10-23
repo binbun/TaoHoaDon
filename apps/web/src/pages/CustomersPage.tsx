@@ -14,6 +14,7 @@ import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { CustomerDebtModal } from '../components/CustomerDebtModal';
+import { DebtReportExportModal } from '../components/DebtReportExportModal';
 import {
   Table,
   TableBody,
@@ -53,6 +54,7 @@ import {
   MapPin,
   Wallet,
   ArrowUpDown,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 type CustomerSort = 'newest' | 'name-asc' | 'name-desc' | 'debt-desc' | 'debt-asc';
@@ -74,6 +76,7 @@ export const CustomersPage: React.FC = () => {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const [debtCustomer, setDebtCustomer] = useState<Customer | null>(null);
+  const [isDebtExportOpen, setIsDebtExportOpen] = useState(false);
 
   // Form State
   const [companyName, setCompanyName] = useState('');
@@ -177,14 +180,24 @@ export const CustomersPage: React.FC = () => {
             Quản lý thông tin công ty, liên hệ đại lý
           </p>
         </div>
-        <Button
-          variant="primary"
-          className="self-stretch sm:self-auto justify-center"
-          leftIcon={<Plus className="w-4 h-4" />}
-          onClick={openCreateModal}
-        >
-          Thêm khách hàng
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            className="justify-center"
+            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+            onClick={() => setIsDebtExportOpen(true)}
+          >
+            Xuất công nợ
+          </Button>
+          <Button
+            variant="primary"
+            className="justify-center"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={openCreateModal}
+          >
+            Thêm khách hàng
+          </Button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}
@@ -412,6 +425,8 @@ export const CustomersPage: React.FC = () => {
       </Modal>
 
       <CustomerDebtModal customer={debtCustomer} onClose={() => setDebtCustomer(null)} />
+
+      <DebtReportExportModal isOpen={isDebtExportOpen} onClose={() => setIsDebtExportOpen(false)} />
 
       {/* Delete Confirmation */}
       <ConfirmDialog

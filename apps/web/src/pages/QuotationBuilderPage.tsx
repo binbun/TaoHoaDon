@@ -59,6 +59,7 @@ import {
   FileSpreadsheet,
   Star,
   FileQuestion,
+  Loader2,
 } from 'lucide-react';
 
 export const QuotationBuilderPage: React.FC = () => {
@@ -1074,10 +1075,13 @@ export const QuotationBuilderPage: React.FC = () => {
                           e.stopPropagation();
                           toggleFavoriteMutation.mutate(p.id);
                         }}
+                        disabled={toggleFavoriteMutation.isPending && toggleFavoriteMutation.variables === p.id}
                         title={p.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
                         className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-transform active:scale-125 focus:outline-none"
                       >
-                        {p.isFavorite ? (
+                        {toggleFavoriteMutation.isPending && toggleFavoriteMutation.variables === p.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                        ) : p.isFavorite ? (
                           <Star className="w-4 h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
                         ) : (
                           <Star className="w-4 h-4 text-slate-300 hover:text-amber-400 hover:fill-amber-100 transition-colors" />

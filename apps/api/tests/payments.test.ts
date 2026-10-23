@@ -91,4 +91,28 @@ describe('Customer debt & payments', () => {
     const first = await request(app).get(`/api/quotations/${firstOrderId}`).set(auth());
     expect(first.body.data.status).toBe('SENT');
   });
+
+  it('pre-fill value for the next order = typed old debt + previous draft bill', async () => {
+    const cust = await request(app)
+      .post('/api/customers')
+      .set(auth())
+      .send({ companyName: `Khách test nợ nháp ${Date.now()}` });
+    const id = cust.body.data.id;
+
+    const first = await request(app)
+      .post('/api/quotations')
+      .set(auth())
+      .send({
+        customerId: id,
+        quotationDate: '2026-10-23',
+        title: 'HÓA ĐƠN BÁN HÀNG',
+        previousDebt: 1000000,
+        items: [{ productNameSnapshot: 'Phụ kiện test', unit: 'Bộ', quantity: 1, unitPrice: 3000000, discount: 0, vatRate: 0, sortOrder: 0 }],
+      });
+    expect(first.body.data.status).toBe('DRAFT');
+
+    const list = await request(app).get('/api/customers').set(auth());
+    expect(list.body.data.find((c: any) => c.id === id).currentDebt).toBe(4000000);
+  });
 });
+

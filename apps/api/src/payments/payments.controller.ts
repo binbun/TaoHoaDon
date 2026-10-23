@@ -39,11 +39,6 @@ export async function createPayment(req: AuthenticatedRequest, res: Response, ne
       if (validatedData.quotationId) {
         const order = orders.find((o) => o.id === validatedData.quotationId);
         if (!order) return { error: 'Đơn hàng không thuộc khách hàng này' };
-        // Receiving money for a draft means it was actually delivered
-        if (order.status === 'DRAFT') {
-          await tx.quotation.update({ where: { id: order.id }, data: { status: 'SENT' } });
-          order.status = 'SENT';
-        }
         preferredId = order.id;
       }
 

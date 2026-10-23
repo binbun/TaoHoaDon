@@ -11,6 +11,7 @@ import {
   AlertCircle,
   ExternalLink,
   Package,
+  Loader2,
 } from 'lucide-react';
 import { Brand } from '@taohoadon/shared';
 import { useBrands, useUpdateBrand, useDeleteBrand } from '../hooks/useBrands';
@@ -265,6 +266,9 @@ export const BrandsPage: React.FC = () => {
                         onCheckedChange={() => handleToggleActive(b)}
                         disabled={updateMutation.isPending}
                       />
+                      {updateMutation.isPending && updateMutation.variables?.id === b.id && (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                      )}
                       <span
                         className={`text-[11px] font-semibold ${
                           b.active ? 'text-emerald-700' : 'text-slate-400'
@@ -314,7 +318,7 @@ export const BrandsPage: React.FC = () => {
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog
         open={!!deletingBrand}
-        onOpenChange={(open) => !open && setDeletingBrand(null)}
+        onOpenChange={(open) => !open && !deleteMutation.isPending && setDeletingBrand(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -329,7 +333,7 @@ export const BrandsPage: React.FC = () => {
             <AlertDialogCancel disabled={deleteMutation.isPending}>Hủy</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={deleteMutation.isPending}
+              isLoading={deleteMutation.isPending}
               onClick={handleDelete}
             >
               {deleteMutation.isPending ? 'Đang xóa...' : 'Xác nhận xóa'}

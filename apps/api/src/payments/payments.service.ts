@@ -44,7 +44,6 @@ export async function getCustomerDebtDetail(customerId: string) {
     currentDebt: debt.currentDebt,
     orders: orders
       .map((o, i) => ({ ...debt.orders[i], quotationNumber: o.quotationNumber, quotationDate: o.quotationDate, status: o.status }))
-      .filter((o) => o.status !== 'DRAFT')
       .reverse(),
     payments,
   };

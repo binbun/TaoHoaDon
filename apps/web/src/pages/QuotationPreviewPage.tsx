@@ -373,12 +373,6 @@ export const QuotationPreviewPage: React.FC = () => {
           </div>
         </div>
 
-        {quotation.status === 'DRAFT' && (
-          <p className="text-[11px] text-slate-500">
-            Đơn nháp chưa được tính vào công nợ. Khi ghi nhận thanh toán, đơn sẽ tự chuyển sang "Đã gửi".
-          </p>
-        )}
-
         <PaymentHistory
           customerId={quotation.customerId}
           payments={quotation.payments ?? []}
@@ -393,9 +387,7 @@ export const QuotationPreviewPage: React.FC = () => {
         customerName={quotation.customer?.companyName}
         quotationId={quotation.id}
         quotationNumber={quotation.quotationNumber}
-        suggestedAmount={
-          quotation.status === 'DRAFT' ? quotation.orderAmount ?? 0 : quotation.remainingAmount ?? 0
-        }
+        suggestedAmount={quotation.remainingAmount ?? 0}
       />
 
       {/* Mobile Tip for A4 Sheet Viewing */}

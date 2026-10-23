@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
+import { Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const AlertDialog = AlertDialogPrimitive.Root;
@@ -98,19 +99,32 @@ const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> & {
     variant?: 'primary' | 'destructive';
+    /**
+     * For actions that call the API. When set, the dialog stays open after the click
+     * (the caller closes it on success) and a spinner shows while true.
+     */
+    isLoading?: boolean;
   }
->(({ className, variant = 'primary', ...props }, ref) => (
+>(({ className, variant = 'primary', isLoading, onClick, disabled, children, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
+    disabled={disabled || isLoading}
+    onClick={(e) => {
+      if (isLoading !== undefined) e.preventDefault();
+      onClick?.(e);
+    }}
     className={cn(
-      'inline-flex h-9 sm:h-10 items-center justify-center rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+      'inline-flex h-9 sm:h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
       variant === 'destructive'
         ? 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-500 shadow-sm shadow-rose-600/20'
         : 'bg-[#1B9550] hover:bg-[#14733E] focus:ring-[#1B9550] shadow-sm shadow-[#1B9550]/20',
       className
     )}
     {...props}
-  />
+  >
+    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+    {children}
+  </AlertDialogPrimitive.Action>
 ));
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 

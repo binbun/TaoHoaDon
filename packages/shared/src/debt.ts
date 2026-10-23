@@ -2,7 +2,7 @@
  * Customer debt ledger.
  *
  * Debt is always derived from records, never stored:
- *   currentDebt = openingDebt + Σ remaining of each SENT order − Σ payments not tied to an order
+ *   currentDebt = openingDebt + Σ remaining of each unpaid order − Σ payments not tied to an order
  *                 − Σ amounts paid beyond an order's own amount
  *
  * An order's own amount excludes its "Dư nợ cũ" line (grandTotal − previousDebt),
@@ -30,7 +30,7 @@ export interface OrderDebtState {
   id: string;
   amount: number; // order's own amount (without carried-over debt)
   paid: number; // payments recorded against this order
-  remaining: number; // still owed on this order (0 for DRAFT / PAID)
+  remaining: number; // still owed on this order (0 once marked PAID)
 }
 
 export interface PaymentAllocation {
@@ -53,9 +53,9 @@ export function getOrderDebtState(order: DebtOrderInput, payments: DebtPaymentIn
   const paid = round(
     payments.filter((p) => p.quotationId === order.id).reduce((sum, p) => sum + p.amount, 0)
   );
-  // Drafts are not owed yet; orders marked paid are settled even without payment records
-  const counts = order.status !== 'DRAFT' && !isSettledStatus(order.status);
-  return { id: order.id, amount, paid, remaining: counts ? Math.max(0, amount - paid) : 0 };
+  // Every order is owed (drafts included); orders marked paid are settled even without payment records
+  const remaining = isSettledStatus(order.status) ? 0 : Math.max(0, amount - paid);
+  return { id: order.id, amount, paid, remaining };
 }
 
 export function getEffectiveOpeningDebt(

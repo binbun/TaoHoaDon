@@ -292,8 +292,16 @@ export const QuotationsListPage: React.FC = () => {
                       {/* Radix DropdownMenu for Row Actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button aria-label="Thao tác khác" className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95">
-                            <MoreVertical className="w-4 h-4" />
+                          <button
+                            aria-label="Thao tác khác"
+                            disabled={duplicateMutation.isPending && duplicateMutation.variables === q.id}
+                            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95 disabled:cursor-wait"
+                          >
+                            {duplicateMutation.isPending && duplicateMutation.variables === q.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                            ) : (
+                              <MoreVertical className="w-4 h-4" />
+                            )}
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -336,7 +344,7 @@ export const QuotationsListPage: React.FC = () => {
       </Card>
 
       {/* Delete Confirmation with Radix AlertDialog */}
-      <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && !deleteMutation.isPending && setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa đơn hàng</AlertDialogTitle>
@@ -348,7 +356,7 @@ export const QuotationsListPage: React.FC = () => {
             <AlertDialogCancel disabled={deleteMutation.isPending}>Hủy</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={deleteMutation.isPending}
+              isLoading={deleteMutation.isPending}
               onClick={() => deletingId && deleteMutation.mutate(deletingId, { onSuccess: () => setDeletingId(null) })}
             >
               {deleteMutation.isPending ? 'Đang xóa...' : 'Xác nhận xóa'}

@@ -27,13 +27,19 @@ describe('Customer debt ledger', () => {
     expect(debt.currentDebt).toBe(4000000);
   });
 
-  it('ignores drafts and treats orders marked paid as settled', () => {
+  it('counts drafts as owed and treats orders marked paid as settled', () => {
     const debt = calculateCustomerDebt(
       0,
       [order('A', 1000000, { status: 'DRAFT' }), order('B', 2000000, { status: 'PAID' })],
       []
     );
-    expect(debt.currentDebt).toBe(0);
+    expect(debt.currentDebt).toBe(1000000);
+  });
+
+  it('carries opening debt plus the previous bill onto the next order', () => {
+    // First order: 1,000,000 typed as "Dư nợ cũ" + its own 3,000,000 bill, left as draft
+    const debt = calculateCustomerDebt(0, [order('FIRST', 4000000, { previousDebt: 1000000, status: 'DRAFT' })], []);
+    expect(debt.currentDebt).toBe(4000000);
   });
 
   it('adds opening debt and subtracts unallocated payments', () => {
@@ -92,8 +98,8 @@ describe('Customer debt ledger', () => {
     expect(debt.currentDebt).toBe(7000000);
   });
 
-  it('counts opening debt from an oldest order that is still a draft', () => {
+  it('counts opening debt and the bill of an oldest order that is still a draft', () => {
     const debt = calculateCustomerDebt(0, [order('FIRST', 31595000, { previousDebt: 10061000, status: 'DRAFT' })], []);
-    expect(debt.currentDebt).toBe(10061000);
+    expect(debt.currentDebt).toBe(31595000);
   });
 });

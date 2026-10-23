@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   Tag,
   Star,
+  Loader2,
 } from 'lucide-react';
 import { Product, formatCurrency } from '@taohoadon/shared';
 import { useProducts, useDeleteProduct, useProductCategories, useToggleFavoriteProduct } from '../hooks/useProducts';
@@ -365,11 +366,14 @@ export const ProductsPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => toggleFavoriteMutation.mutate(prod.id)}
+                          disabled={toggleFavoriteMutation.isPending && toggleFavoriteMutation.variables === prod.id}
                           title={prod.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
                           aria-label={prod.isFavorite ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu sản phẩm yêu thích'}
                           className="p-1 -my-1 rounded-full hover:bg-amber-100/80 transition-all active:scale-125 focus:outline-none flex-shrink-0"
                         >
-                          {prod.isFavorite ? (
+                          {toggleFavoriteMutation.isPending && toggleFavoriteMutation.variables === prod.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                          ) : prod.isFavorite ? (
                             <Star className="w-4 h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
                           ) : (
                             <Star className="w-4 h-4 text-slate-300 hover:text-amber-400 hover:fill-amber-100 transition-colors" />
@@ -552,7 +556,7 @@ export const ProductsPage: React.FC = () => {
       />
 
       {/* Delete Confirmation with Radix AlertDialog */}
-      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => !open && setDeletingProductId(null)}>
+      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => !open && !deleteMutation.isPending && setDeletingProductId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa sản phẩm</AlertDialogTitle>
@@ -564,7 +568,7 @@ export const ProductsPage: React.FC = () => {
             <AlertDialogCancel disabled={deleteMutation.isPending}>Hủy</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={deleteMutation.isPending}
+              isLoading={deleteMutation.isPending}
               onClick={handleDelete}
             >
               {deleteMutation.isPending ? 'Đang xóa...' : 'Xác nhận xóa'}

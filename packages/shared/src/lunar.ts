@@ -194,3 +194,11 @@ export function formatLunarMonth(m: Pick<LunarMonth, 'month' | 'year' | 'leap'>)
 export function formatLunarDate(d: LunarDate): string {
   return `${d.day}/${d.month}${d.leap ? ' nhuận' : ''}/${d.year}`;
 }
+
+const CAN = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý'];
+const CHI = ['Tý', 'Sửu', 'Dần', 'Mão', 'Thìn', 'Tỵ', 'Ngọ', 'Mùi', 'Thân', 'Dậu', 'Tuất', 'Hợi'];
+
+/** Can Chi name of a lunar year, e.g. 2026 → "Bính Ngọ". */
+export function getCanChiYear(lunarYear: number): string {
+  return `${CAN[(lunarYear + 6) % 10]} ${CHI[(lunarYear + 8) % 12]}`;
+}

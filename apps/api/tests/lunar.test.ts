@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { solarToLunar, getLunarMonthsOfYear } from '@taohoadon/shared';
+import { solarToLunar, getLunarMonthsOfYear, getCanChiYear } from '@taohoadon/shared';
 
 describe('Vietnamese lunar calendar', () => {
   it.each([
@@ -33,4 +33,14 @@ describe('Vietnamese lunar calendar', () => {
       expect(prevEnd.toISOString().slice(0, 10)).toBe(months[i].start);
     }
   });
+
+  it.each([
+    [2024, 'Giáp Thìn'],
+    [2025, 'Ất Tỵ'],
+    [2026, 'Bính Ngọ'],
+    [2027, 'Đinh Mùi'],
+  ])('year %i is %s', (year, name) => {
+    expect(getCanChiYear(year)).toBe(name);
+  });
 });
+

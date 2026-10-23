@@ -5,7 +5,7 @@ import {
   useUpdateCustomer,
   useDeleteCustomer,
 } from '../hooks';
-import { Customer, formatCurrency, formatThousands, parseThousands } from '@taohoadon/shared';
+import { Customer, formatCurrency, formatThousands, getCanChiYear, parseThousands, solarToLunar } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -55,6 +55,7 @@ import {
   Wallet,
   ArrowUpDown,
   FileSpreadsheet,
+  CalendarDays,
 } from 'lucide-react';
 
 type CustomerSort = 'newest' | 'name-asc' | 'name-desc' | 'debt-desc' | 'debt-asc';
@@ -90,6 +91,13 @@ export const CustomersPage: React.FC = () => {
   const createMutation = useCreateCustomer();
   const updateMutation = useUpdateCustomer();
   const deleteMutation = useDeleteCustomer();
+
+  // Today's date in the lunar calendar, shown next to the search box
+  const todayLunar = useMemo(() => {
+    const d = new Date();
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return { solar: day.split('-').reverse().join('/'), lunar: solarToLunar(day) };
+  }, []);
 
   // API returns newest first; other orders are applied client-side
   const sortedCustomers = useMemo(() => {
@@ -202,31 +210,46 @@ export const CustomersPage: React.FC = () => {
 
       {/* Filter Toolbar */}
       <Card bodyClassName="p-3 sm:p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="w-full sm:w-96">
-            <Input
-              placeholder="Tìm theo tên công ty, số điện thoại, mã số thuế..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              leftElement={<Search className="w-4 h-4 text-slate-400" />}
-            />
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          {/* Left: search + sort */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="w-full sm:w-96">
+              <Input
+                placeholder="Tìm theo tên công ty, số điện thoại, mã số thuế..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                leftElement={<Search className="w-4 h-4 text-slate-400" />}
+              />
+            </div>
+            <div className="w-full sm:w-56">
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as CustomerSort)}>
+                <SelectTrigger aria-label="Sắp xếp khách hàng">
+                  <div className="flex items-center gap-2 truncate">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <SelectValue placeholder="Sắp xếp" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="w-full sm:w-56">
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as CustomerSort)}>
-              <SelectTrigger aria-label="Sắp xếp khách hàng">
-                <div className="flex items-center gap-2 truncate">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                  <SelectValue placeholder="Sắp xếp" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {SORT_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+          {/* Right: today in the lunar calendar */}
+          <div className="self-start lg:self-auto flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-1.5 text-xs text-amber-900">
+            <CalendarDays className="w-4 h-4 text-amber-600 shrink-0" />
+            <div className="leading-tight">
+              <div className="font-bold">
+                {todayLunar.lunar.day}/{todayLunar.lunar.month}
+                {todayLunar.lunar.leap ? ' nhuận' : ''} âm lịch · năm {getCanChiYear(todayLunar.lunar.year)}
+              </div>
+              <div className="text-[11px] text-amber-700">Hôm nay {todayLunar.solar}</div>
+            </div>
           </div>
         </div>
       </Card>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   useCustomers,
   useCreateCustomer,
@@ -35,6 +35,13 @@ import {
   TooltipTrigger,
 } from '../components/ui/tooltip';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
   Users,
   Plus,
   Search,
@@ -45,12 +52,24 @@ import {
   MoreVertical,
   MapPin,
   Wallet,
+  ArrowUpDown,
 } from 'lucide-react';
+
+type CustomerSort = 'newest' | 'name-asc' | 'name-desc' | 'debt-desc' | 'debt-asc';
+
+const SORT_OPTIONS: { value: CustomerSort; label: string }[] = [
+  { value: 'newest', label: 'Mới thêm gần đây' },
+  { value: 'name-asc', label: 'Tên A → Z' },
+  { value: 'name-desc', label: 'Tên Z → A' },
+  { value: 'debt-desc', label: 'Dư nợ cao → thấp' },
+  { value: 'debt-asc', label: 'Dư nợ thấp → cao' },
+];
 
 export const CustomersPage: React.FC = () => {
   const { error } = useToast();
 
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<CustomerSort>('newest');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
@@ -68,6 +87,25 @@ export const CustomersPage: React.FC = () => {
   const createMutation = useCreateCustomer();
   const updateMutation = useUpdateCustomer();
   const deleteMutation = useDeleteCustomer();
+
+  // API returns newest first; other orders are applied client-side
+  const sortedCustomers = useMemo(() => {
+    const list = [...(customers as Customer[])];
+    const debt = (c: Customer) => c.currentDebt ?? 0;
+    const byName = (a: Customer, b: Customer) => a.companyName.localeCompare(b.companyName, 'vi', { sensitivity: 'base' });
+    switch (sortBy) {
+      case 'name-asc':
+        return list.sort(byName);
+      case 'name-desc':
+        return list.sort((a, b) => byName(b, a));
+      case 'debt-desc':
+        return list.sort((a, b) => debt(b) - debt(a) || byName(a, b));
+      case 'debt-asc':
+        return list.sort((a, b) => debt(a) - debt(b) || byName(a, b));
+      default:
+        return list;
+    }
+  }, [customers, sortBy]);
 
   const openCreateModal = () => {
     setEditingCustomer(null);
@@ -149,13 +187,32 @@ export const CustomersPage: React.FC = () => {
 
       {/* Filter Toolbar */}
       <Card bodyClassName="p-3 sm:p-4">
-        <div className="w-full sm:w-96">
-          <Input
-            placeholder="Tìm theo tên công ty, số điện thoại, mã số thuế..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            leftElement={<Search className="w-4 h-4 text-slate-400" />}
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="w-full sm:w-96">
+            <Input
+              placeholder="Tìm theo tên công ty, số điện thoại, mã số thuế..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              leftElement={<Search className="w-4 h-4 text-slate-400" />}
+            />
+          </div>
+          <div className="w-full sm:w-56">
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as CustomerSort)}>
+              <SelectTrigger aria-label="Sắp xếp khách hàng">
+                <div className="flex items-center gap-2 truncate">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <SelectValue placeholder="Sắp xếp" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </Card>
 
@@ -179,7 +236,7 @@ export const CustomersPage: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {customers.map((c: Customer) => (
+              {sortedCustomers.map((c: Customer) => (
                 <TableRow key={c.id}>
                   <TableCell>
                     <div className="font-semibold text-slate-900 flex items-center gap-2">

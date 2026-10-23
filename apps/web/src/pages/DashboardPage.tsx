@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardStats } from '../hooks';
-import { formatCurrency, formatDate } from '@taohoadon/shared';
+import { formatCurrency, formatDate, getOrderAmount } from '@taohoadon/shared';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
@@ -193,7 +193,7 @@ export const DashboardPage: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell className="text-right font-bold text-slate-900 whitespace-nowrap">
-                    {formatCurrency(q.grandTotal)}
+                    {formatCurrency(getOrderAmount(q))}
                   </TableCell>
                   <TableCell className="text-slate-500 whitespace-nowrap">
                     {formatDate(q.quotationDate)}

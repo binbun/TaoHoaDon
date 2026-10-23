@@ -5,7 +5,7 @@ import {
   useDeleteQuotation,
   useDuplicateQuotation,
 } from '../hooks';
-import { Quotation, formatCurrency, formatDate } from '@taohoadon/shared';
+import { Quotation, formatCurrency, formatDate, getOrderAmount } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
@@ -239,7 +239,7 @@ export const QuotationsListPage: React.FC = () => {
                   </TableCell>
 
                   <TableCell className="text-right font-bold text-slate-900 whitespace-nowrap text-sm">
-                    {formatCurrency(q.grandTotal)}
+                    {formatCurrency(getOrderAmount(q))}
                     <div className="text-[11px] text-slate-400 font-normal">
                       {q.items?.length || 0} sản phẩm
                     </div>

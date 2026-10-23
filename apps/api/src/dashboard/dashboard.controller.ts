@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
+import { getOrderAmount } from '@taohoadon/shared';
 import { AuthenticatedRequest } from '../middleware/auth';
 
 export async function getDashboardStats(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -33,6 +34,7 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
         select: {
           status: true,
           grandTotal: true,
+          previousDebt: true,
         },
       }),
       prisma.quotation.findMany({
@@ -58,9 +60,11 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
     };
 
     allQuotations.forEach((q) => {
-      totalGrandTotal += q.grandTotal;
+      // Sales value only: "Dư nợ cũ" carried onto an invoice was already counted on earlier orders
+      const amount = getOrderAmount(q);
+      totalGrandTotal += amount;
       if (q.status === 'PAID' || q.status === 'ACCEPTED') {
-        acceptedGrandTotal += q.grandTotal;
+        acceptedGrandTotal += amount;
         statusDistribution.PAID = (statusDistribution.PAID || 0) + 1;
       } else if (statusDistribution[q.status] !== undefined) {
         statusDistribution[q.status]++;

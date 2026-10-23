@@ -150,7 +150,9 @@ describe('API Integration Endpoints', () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.status).toBe('DRAFT');
-    expect(Number(res.body.data.grandTotal)).toBe(9720000);
+    // Same bill as the source; the source's unpaid bill is carried as "Dư nợ cũ"
+    expect(Number(res.body.data.grandTotal) - Number(res.body.data.previousDebt)).toBe(9720000);
+    expect(Number(res.body.data.previousDebt)).toBe(9720000);
     expect(res.body.data.quotationNumber).not.toBe(createdQuotationId);
   });
 

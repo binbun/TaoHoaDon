@@ -222,11 +222,13 @@ export const QuotationBuilderPage: React.FC = () => {
       setPhone(found.phone || '');
       setAddress(found.address || '');
       setTaxCode(found.taxCode || '');
-      // New orders carry the customer's outstanding balance; edits keep the saved value
-      if (!isEditMode) {
+      // Mirrors the API: edits keep the saved value unless the order moves to another customer
+      if (isEditMode && existingQuote && cId === existingQuote.customerId) {
+        setPreviousDebt(existingQuote.previousDebt ?? 0);
+      } else {
         setPreviousDebt(Math.max(0, found.currentDebt ?? 0));
       }
-    } else if (!isEditMode) {
+    } else {
       setPreviousDebt(0);
     }
   };
@@ -350,7 +352,6 @@ export const QuotationBuilderPage: React.FC = () => {
         title: title.trim(),
         quotationDate,
         status: status as any,
-        previousDebt: Number(previousDebt) || 0,
         note: note.trim() || undefined,
         customerId,
         customer: {
@@ -605,15 +606,16 @@ export const QuotationBuilderPage: React.FC = () => {
 
               {/* Previous Debt Field */}
               <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-1">
-                <Input
-                  label="Dư nợ cũ từ các đơn trước (đ)"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatThousands(previousDebt)}
-                  onChange={(e) => setPreviousDebt(parseThousands(e.target.value))}
-                  helperText="Tự động lấy dư nợ hiện tại của khách khi chọn khách hàng; có thể sửa tay. Số này được cộng vào Tổng cộng thanh toán."
-                />
+                <div className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Dư nợ cũ từ các đơn trước
+                </div>
+                <div className="text-lg font-bold text-amber-700">{formatCurrency(Number(previousDebt) || 0)}</div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {isEditMode
+                    ? 'Giữ nguyên số đã lưu khi tạo đơn.'
+                    : 'Tự động lấy dư nợ hiện tại của khách khi tạo đơn.'}{' '}
+                  Muốn điều chỉnh, hãy sửa "Nợ đầu kỳ" hoặc ghi nhận thanh toán ở mục Khách hàng.
+                </p>
               </div>
             </div>
           </Card>

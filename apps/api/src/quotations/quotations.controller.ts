@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
-import { QuotationSchema, QuotationItemInput, CalculatedQuotationItem } from '@taohoadon/shared';
+import { QuotationSchema, QuotationItemInput, CalculatedQuotationItem, getOrderAmount } from '@taohoadon/shared';
 import { generateQuotationNumber, calculateQuotationTotals } from './quotations.service';
 import {
   generateQuotationPdf,
@@ -10,7 +10,7 @@ import {
 } from '../pdf/pdf.service';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { createAuditLog } from '../audit/audit.service';
-import { getCustomerDebtDetail } from '../payments/payments.service';
+import { getCarriedDebt, getCustomerDebtDetail } from '../payments/payments.service';
 
 export async function getQuotations(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
@@ -180,9 +180,11 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
       });
     }
 
+    // "Dư nợ cũ" is the customer's debt before this order, not a typed value
+    const previousDebt = await getCarriedDebt(prisma, validatedData.customerId);
     const { calculatedItems, summary } = calculateQuotationTotals(
       validatedData.items as QuotationItemInput[],
-      validatedData.previousDebt || 0
+      previousDebt
     );
 
     const newQuotation = await prisma.quotation.create({
@@ -283,9 +285,14 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
       });
     }
 
+    // Keep the saved "Dư nợ cũ"; recompute only when the order moves to another customer
+    const previousDebt =
+      validatedData.customerId === existing.customerId
+        ? existing.previousDebt
+        : await getCarriedDebt(prisma, validatedData.customerId, id);
     const { calculatedItems, summary } = calculateQuotationTotals(
       validatedData.items as QuotationItemInput[],
-      validatedData.previousDebt || 0
+      previousDebt
     );
 
     // Run in transaction: update customer, delete old items, create new items, update quotation
@@ -461,6 +468,7 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
     }
 
     const newQuotationNumber = await generateQuotationNumber();
+    const previousDebt = await getCarriedDebt(prisma, source.customerId);
     const newDate = new Date();
     const newValidUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
 
@@ -477,7 +485,8 @@ export async function duplicateQuotation(req: AuthenticatedRequest, res: Respons
         discountTotal: source.discountTotal,
         taxableTotal: source.taxableTotal,
         vatTotal: source.vatTotal,
-        grandTotal: source.grandTotal,
+        previousDebt,
+        grandTotal: getOrderAmount(source) + previousDebt,
         createdBy: currentUser.id,
         items: {
           create: source.items.map((item) => ({

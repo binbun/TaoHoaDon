@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Customer, Payment, formatCurrency, formatDate } from '@taohoadon/shared';
-import { Plus, Trash2, Wallet } from 'lucide-react';
+import { Customer, Payment, formatCurrency, formatDate, formatThousands, parseThousands } from '@taohoadon/shared';
+import { Check, Pencil, Plus, Trash2, Wallet, X } from 'lucide-react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Skeleton } from './Skeleton';
 import { PaymentFormModal } from './PaymentFormModal';
-import { useCustomerDebt, useDeletePayment } from '../hooks';
+import { useCustomerDebt, useDeletePayment, useUpdateCustomer } from '../hooks';
 
 // Rows from one payment share a batchId; show them as a single entry
 function groupPayments(payments: Payment[]) {
@@ -98,7 +98,17 @@ interface CustomerDebtModalProps {
 
 export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, onClose }) => {
   const { data: debt, isLoading } = useCustomerDebt(customer?.id);
+  const updateCustomerMutation = useUpdateCustomer();
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [openingDraft, setOpeningDraft] = useState<number | string | null>(null);
+
+  const saveOpeningDebt = () => {
+    if (!customer || openingDraft === null) return;
+    updateCustomerMutation.mutate(
+      { id: customer.id, data: { openingDebt: Number(openingDraft) || 0 } },
+      { onSuccess: () => setOpeningDraft(null) }
+    );
+  };
 
   const unpaidOrders = debt?.orders.filter((o) => o.remaining > 0) ?? [];
   const currentDebt = debt?.currentDebt ?? 0;
@@ -107,7 +117,10 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
     <>
       <Modal
         isOpen={!!customer}
-        onClose={onClose}
+        onClose={() => {
+          setOpeningDraft(null);
+          onClose();
+        }}
         title="Công Nợ Khách Hàng"
         subtitle={customer?.companyName}
         maxWidth="2xl"
@@ -127,14 +140,64 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
                 <div className="text-xl font-black text-amber-700 mt-1">{formatCurrency(Math.abs(currentDebt))}</div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-600 space-y-1">
-                <div className="flex justify-between gap-2">
-                  <span>Nợ đầu kỳ:</span>
-                  <strong className="text-slate-900">{formatCurrency(debt.openingDebt)}</strong>
-                </div>
-                {debt.openingFromQuotation && (
-                  <div className="text-[11px] text-slate-400 -mt-0.5">
-                    Lấy từ "Dư nợ cũ" của đơn đầu tiên {debt.openingFromQuotation.quotationNumber}
+                {openingDraft === null ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Nợ đầu kỳ:</span>
+                    <span className="flex items-center gap-1">
+                      <strong className="text-slate-900">{formatCurrency(debt.openingDebt)}</strong>
+                      <button
+                        type="button"
+                        aria-label="Sửa nợ đầu kỳ"
+                        title="Sửa nợ đầu kỳ"
+                        onClick={() => setOpeningDraft(debt.openingDebt)}
+                        className="p-1 text-slate-400 hover:text-[#1B9550] hover:bg-emerald-50 rounded"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
                   </div>
+                ) : (
+                  <form
+                    className="space-y-1"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      saveOpeningDebt();
+                    }}
+                  >
+                    <label htmlFor="opening-debt-input" className="block">
+                      Nợ đầu kỳ (trước khi dùng phần mềm):
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        id="opening-debt-input"
+                        type="text"
+                        inputMode="numeric"
+                        autoFocus
+                        value={formatThousands(openingDraft)}
+                        onChange={(e) => setOpeningDraft(parseThousands(e.target.value))}
+                        className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-base sm:text-xs text-slate-900 focus:border-[#1B9550] focus:outline-none"
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="primary"
+                        className="px-2 py-1"
+                        aria-label="Lưu nợ đầu kỳ"
+                        isLoading={updateCustomerMutation.isPending}
+                      >
+                        {!updateCustomerMutation.isPending && <Check className="w-3.5 h-3.5" />}
+                      </Button>
+                      <button
+                        type="button"
+                        aria-label="Hủy"
+                        onClick={() => setOpeningDraft(null)}
+                        disabled={updateCustomerMutation.isPending}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 rounded"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </form>
                 )}
                 <div className="flex justify-between gap-2">
                   <span>Nợ đầu kỳ còn lại:</span>

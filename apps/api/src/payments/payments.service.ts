@@ -37,9 +37,6 @@ export async function getCustomerDebtDetail(customerId: string) {
   return {
     customerId,
     openingDebt: debt.openingDebt,
-    openingFromQuotation: orders
-      .filter((o) => o.id === debt.openingFromQuotationId)
-      .map((o) => ({ id: o.id, quotationNumber: o.quotationNumber }))[0] ?? null,
     openingRemaining: debt.openingRemaining,
     currentDebt: debt.currentDebt,
     orders: orders
@@ -47,6 +44,18 @@ export async function getCustomerDebtDetail(customerId: string) {
       .reverse(),
     payments,
   };
+}
+
+/**
+ * The customer's debt right now, used as an order's "Dư nợ cũ" (never negative on an invoice).
+ * Pass excludeQuotationId to leave an order out (e.g. the order being moved to this customer).
+ */
+export async function getCarriedDebt(db: Db, customerId: string, excludeQuotationId?: string) {
+  const { customer, orders, payments } = await loadCustomerLedger(db, customerId);
+  if (!customer) return 0;
+  const kept = orders.filter((o) => o.id !== excludeQuotationId);
+  const keptPayments = payments.filter((p) => p.quotationId !== excludeQuotationId);
+  return Math.max(0, calculateCustomerDebt(customer.openingDebt, kept, keptPayments).currentDebt);
 }
 
 /** Current debt for many customers at once (customer list). */

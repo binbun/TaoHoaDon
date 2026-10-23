@@ -100,6 +100,7 @@ export const QuotationSchema = z.object({
   title: z.string().min(1, 'Tiêu đề đơn hàng không được để trống').default('HÓA ĐƠN BÁN HÀNG'),
   note: z.string().max(1000).optional().nullable(),
   status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
+  // Ignored by the API: "Dư nợ cũ" is computed from the customer's debt
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
   customer: QuotationCustomerSchema.optional(),
   items: z.array(QuotationItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm/dịch vụ'),

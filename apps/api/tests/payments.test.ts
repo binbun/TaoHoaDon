@@ -92,27 +92,67 @@ describe('Customer debt & payments', () => {
     expect(first.body.data.status).toBe('SENT');
   });
 
-  it('pre-fill value for the next order = typed old debt + previous draft bill', async () => {
-    const cust = await request(app)
-      .post('/api/customers')
-      .set(auth())
-      .send({ companyName: `Khách test nợ nháp ${Date.now()}` });
-    const id = cust.body.data.id;
-
-    const first = await request(app)
+  const createFor = (custId: string, unitPrice: number, quotationDate: string, previousDebt = 0) =>
+    request(app)
       .post('/api/quotations')
       .set(auth())
       .send({
-        customerId: id,
-        quotationDate: '2026-10-23',
+        customerId: custId,
+        quotationDate,
         title: 'HÓA ĐƠN BÁN HÀNG',
-        previousDebt: 1000000,
-        items: [{ productNameSnapshot: 'Phụ kiện test', unit: 'Bộ', quantity: 1, unitPrice: 3000000, discount: 0, vatRate: 0, sortOrder: 0 }],
+        previousDebt,
+        items: [{ productNameSnapshot: 'Phụ kiện test', unit: 'Bộ', quantity: 1, unitPrice, discount: 0, vatRate: 0, sortOrder: 0 }],
       });
-    expect(first.body.data.status).toBe('DRAFT');
 
-    const list = await request(app).get('/api/customers').set(auth());
-    expect(list.body.data.find((c: any) => c.id === id).currentDebt).toBe(4000000);
+  it('computes "Dư nợ cũ" on the server and ignores a typed value', async () => {
+    const cust = await request(app)
+      .post('/api/customers')
+      .set(auth())
+      .send({ companyName: `Khách test nợ nháp ${Date.now()}`, openingDebt: 1000000 });
+    const id = cust.body.data.id;
+
+    // Typed 999 must be ignored: first order carries the opening debt
+    const first = await createFor(id, 3000000, '2026-10-23', 999);
+    expect(first.body.data.status).toBe('DRAFT');
+    expect(first.body.data.previousDebt).toBe(1000000);
+    expect(first.body.data.grandTotal).toBe(4000000);
+
+    // Second order carries opening debt + first (draft) bill
+    const second = await createFor(id, 2000000, '2026-10-24');
+    expect(second.body.data.previousDebt).toBe(4000000);
+
+    // Editing keeps the saved value even if another is sent
+    const edit = await request(app)
+      .patch(`/api/quotations/${second.body.data.id}`)
+      .set(auth())
+      .send({
+        customerId: id,
+        quotationDate: '2026-10-24',
+        title: 'HÓA ĐƠN BÁN HÀNG',
+        previousDebt: 5,
+        items: [{ productNameSnapshot: 'Phụ kiện test', unit: 'Bộ', quantity: 1, unitPrice: 2500000, discount: 0, vatRate: 0, sortOrder: 0 }],
+      });
+    expect(edit.body.data.previousDebt).toBe(4000000);
+    expect(edit.body.data.grandTotal).toBe(6500000);
+  });
+
+  it('deleting any order removes exactly its bill', async () => {
+    const cust = await request(app)
+      .post('/api/customers')
+      .set(auth())
+      .send({ companyName: `Khách test xóa đơn ${Date.now()}`, openingDebt: 1000000 });
+    const id = cust.body.data.id;
+
+    const q1 = await createFor(id, 3000000, '2026-10-01');
+    await createFor(id, 2000000, '2026-10-02');
+    const q3 = await createFor(id, 5000000, '2026-10-03');
+    await createFor(id, 1500000, '2026-10-04');
+
+    await request(app).delete(`/api/quotations/${q1.body.data.id}`).set(auth());
+    await request(app).delete(`/api/quotations/${q3.body.data.id}`).set(auth());
+
+    const debt = await request(app).get(`/api/customers/${id}/debt`).set(auth());
+    expect(debt.body.data.openingDebt).toBe(1000000);
+    expect(debt.body.data.currentDebt).toBe(4500000);
   });
 });
-

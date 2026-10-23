@@ -48,6 +48,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '../components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import {
   FileText,
   Plus,
@@ -105,6 +106,7 @@ export const QuotationsListPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -120,6 +122,21 @@ export const QuotationsListPage: React.FC = () => {
     const [from, to] = p.range();
     return from === fromDate && to === toDate;
   })?.key;
+
+  // dd/mm/yyyy for the filter button label
+  const showDay = (day: string) => day.split('-').reverse().join('/');
+  const dateFilterLabel =
+    DATE_PRESETS.find((p) => p.key === activePreset)?.label ??
+    (fromDate && toDate
+      ? fromDate === toDate
+        ? showDay(fromDate)
+        : `${showDay(fromDate)} – ${showDay(toDate)}`
+      : fromDate
+        ? `Từ ${showDay(fromDate)}`
+        : toDate
+          ? `Đến ${showDay(toDate)}`
+          : 'Lọc theo ngày');
+  const hasDateFilter = !!(fromDate || toDate);
 
   const deleteMutation = useDeleteQuotation();
   const duplicateMutation = useDuplicateQuotation();
@@ -194,13 +211,98 @@ export const QuotationsListPage: React.FC = () => {
       {/* Filter Toolbar & Radix Tabs */}
       <Card bodyClassName="p-3 sm:p-4 space-y-3 sm:space-y-4">
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
-          <div className="w-full md:w-96">
-            <Input
-              placeholder="Tìm theo số đơn hàng, tên khách hàng..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              leftElement={<Search className="w-4 h-4 text-slate-400" />}
-            />
+          <div className="flex w-full md:w-auto items-center gap-2">
+            <div className="flex-1 min-w-0 md:w-96 md:flex-none">
+              <Input
+                placeholder="Tìm theo số đơn hàng, tên khách hàng..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                leftElement={<Search className="w-4 h-4 text-slate-400" />}
+              />
+            </div>
+
+            {/* Date Filter (opens a popover) */}
+            <Popover open={isDateFilterOpen} onOpenChange={setIsDateFilterOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={hasDateFilter ? `Lọc ngày: ${dateFilterLabel}` : 'Lọc theo ngày'}
+                  className={`h-10 shrink-0 inline-flex items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors ${
+                    hasDateFilter
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span className={hasDateFilter ? 'whitespace-nowrap' : 'hidden sm:inline whitespace-nowrap'}>
+                    {dateFilterLabel}
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-[min(20rem,calc(100vw-2rem))] space-y-3">
+                <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Ngày đơn hàng</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {DATE_PRESETS.map((p) => (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => {
+                        const [from, to] = p.range();
+                        setFromDate(from);
+                        setToDate(to);
+                        setIsDateFilterOpen(false);
+                      }}
+                      className={`h-8 px-2.5 rounded-lg border text-xs font-medium transition-colors ${
+                        activePreset === p.key
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex flex-col gap-1 text-xs text-slate-500">
+                    <span>Từ ngày</span>
+                    <input
+                      type="date"
+                      value={fromDate}
+                      max={toDate || undefined}
+                      onChange={(e) => setFromDate(e.target.value)}
+                      className="h-9 w-full min-w-0 rounded-lg border border-slate-200 px-2 text-base sm:text-sm text-slate-800 focus:border-[#1B9550] focus:outline-none focus:ring-2 focus:ring-[#1B9550]/20"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs text-slate-500">
+                    <span>Đến ngày</span>
+                    <input
+                      type="date"
+                      value={toDate}
+                      min={fromDate || undefined}
+                      onChange={(e) => setToDate(e.target.value)}
+                      className="h-9 w-full min-w-0 rounded-lg border border-slate-200 px-2 text-base sm:text-sm text-slate-800 focus:border-[#1B9550] focus:outline-none focus:ring-2 focus:ring-[#1B9550]/20"
+                    />
+                  </label>
+                </div>
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    disabled={!hasDateFilter}
+                    onClick={() => {
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className="h-8 px-2 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 flex items-center gap-1 disabled:opacity-40 disabled:hover:bg-transparent"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Bỏ lọc ngày
+                  </button>
+                  <Button size="sm" variant="primary" className="text-xs" onClick={() => setIsDateFilterOpen(false)}>
+                    Xong
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Radix Tabs */}
@@ -213,69 +315,6 @@ export const QuotationsListPage: React.FC = () => {
               ))}
             </TabsList>
           </Tabs>
-        </div>
-
-        {/* Date Range Filter */}
-        <div className="flex flex-col lg:flex-row lg:items-center gap-2.5 sm:gap-3 pt-3 border-t border-slate-100">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wider shrink-0">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            Ngày đơn hàng
-          </div>
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
-            <label className="flex flex-col sm:flex-row sm:items-center gap-1 text-xs text-slate-500">
-              <span>Từ</span>
-              <input
-                type="date"
-                value={fromDate}
-                max={toDate || undefined}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 px-2 text-base sm:text-sm text-slate-800 focus:border-[#1B9550] focus:outline-none focus:ring-2 focus:ring-[#1B9550]/20"
-              />
-            </label>
-            <label className="flex flex-col sm:flex-row sm:items-center gap-1 text-xs text-slate-500">
-              <span>Đến</span>
-              <input
-                type="date"
-                value={toDate}
-                min={fromDate || undefined}
-                onChange={(e) => setToDate(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 px-2 text-base sm:text-sm text-slate-800 focus:border-[#1B9550] focus:outline-none focus:ring-2 focus:ring-[#1B9550]/20"
-              />
-            </label>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {DATE_PRESETS.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => {
-                  const [from, to] = p.range();
-                  setFromDate(from);
-                  setToDate(to);
-                }}
-                className={`h-8 px-2.5 rounded-lg border text-xs font-medium transition-colors ${
-                  activePreset === p.key
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-            {(fromDate || toDate) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setFromDate('');
-                  setToDate('');
-                }}
-                className="h-8 px-2 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 flex items-center gap-1"
-              >
-                <X className="w-3.5 h-3.5" />
-                Bỏ lọc ngày
-              </button>
-            )}
-          </div>
         </div>
       </Card>
 

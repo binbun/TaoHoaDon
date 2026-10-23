@@ -114,6 +114,8 @@ model Payment {
   quotationId String?
   quotation   Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
   batchId     String
+  // Invoice the payment was recorded on (null for lump sums from the customer screen); same for every row of a batch
+  recordedOnQuotationId String?
   amount      Float
   paidAt      DateTime   @default(now())
   note        String?
@@ -124,6 +126,7 @@ model Payment {
   @@index([customerId])
   @@index([quotationId])
   @@index([batchId])
+  @@index([recordedOnQuotationId])
   @@map("CustomerPayment") // an unrelated legacy "Payment" table may still exist in older databases
 }
 

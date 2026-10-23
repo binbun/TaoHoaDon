@@ -227,5 +227,28 @@ describe('Customer debt & payments', () => {
     const bad = await request(app).get('/api/reports/debt?fromDate=2026-11-08&toDate=2026-10-10').set(auth());
     expect(bad.status).toBe(400);
   });
+
+  it('report shows money recorded on each invoice (Đã TT) and what is left (Còn lại)', async () => {
+    const cust = await request(app)
+      .post('/api/customers')
+      .set(auth())
+      .send({ companyName: `Khách test đã TT ${Date.now()}`, openingDebt: 4000000 });
+    const id = cust.body.data.id;
+    const q = await createFor(id, 2000000, '2026-10-20'); // 2,000,000 + 4,000,000 old debt = 6,000,000
+
+    const pay = (amount: number) =>
+      request(app).post(`/api/customers/${id}/payments`).set(auth()).send({ amount, paidAt: '2026-10-21', quotationId: q.body.data.id });
+    const row = async () =>
+      (await request(app).get('/api/reports/debt?fromDate=2026-10-10&toDate=2026-11-08').set(auth())).body.data.orders.find(
+        (o: any) => o.id === q.body.data.id
+      );
+
+    await pay(2000000);
+    expect(await row()).toMatchObject({ grandTotal: 6000000, paid: 2000000, remaining: 4000000 });
+
+    // Paying more than the goods also counts on this invoice, even though it clears the old debt
+    await pay(4000000);
+    expect(await row()).toMatchObject({ paid: 6000000, remaining: 0 });
+  });
 });
 

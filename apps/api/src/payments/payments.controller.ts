@@ -51,6 +51,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response, ne
           customerId,
           quotationId: a.quotationId,
           batchId,
+          recordedOnQuotationId: preferredId,
           amount: a.amount,
           paidAt,
           note: validatedData.note?.trim() || null,

@@ -129,7 +129,7 @@ export const DebtReportExportModal: React.FC<DebtReportExportModalProps> = ({ is
 
         <p className="text-[11px] text-slate-500 leading-relaxed">
           File Excel liệt kê các đơn hàng tạo trong tháng (Ngày tạo, Số đơn hàng, Tên KH, Tổng tiền hàng, Nợ cũ, Tổng
-          thanh toán): trang <strong>Tất cả</strong> gồm mọi khách hàng, sau đó mỗi khách hàng một trang riêng.
+          thanh toán, Đã TT, Còn lại): trang <strong>Tất cả</strong> gồm mọi khách hàng, sau đó mỗi khách hàng một trang riêng.
         </p>
 
         <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">

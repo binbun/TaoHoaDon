@@ -12,6 +12,8 @@ export interface DebtReportOrder {
   orderAmount: number;
   previousDebt: number;
   grandTotal: number;
+  paid: number; // money recorded on this invoice
+  remaining: number; // grandTotal − paid (0 once marked paid)
 }
 
 export interface DebtReportResponse {
@@ -22,7 +24,7 @@ export interface DebtReportResponse {
 
 const MONEY_FORMAT = '#,##0';
 
-const HEADER = ['Ngày tạo', 'Số đơn hàng', 'Tên KH', 'Tổng tiền hàng', 'Nợ cũ', 'Tổng thanh toán'];
+const HEADER = ['Ngày tạo', 'Số đơn hàng', 'Tên KH', 'Tổng tiền hàng', 'Nợ cũ', 'Tổng thanh toán', 'Đã TT', 'Còn lại'];
 
 const lunarDay = (day: string) => {
   const l = solarToLunar(day);
@@ -42,15 +44,25 @@ function buildOrdersSheet(title: string, orders: DebtReportOrder[], month: Lunar
       o.orderAmount,
       o.previousDebt,
       o.grandTotal,
+      o.paid,
+      o.remaining,
     ]),
-    // "Nợ cũ" / "Tổng thanh toán" are not summed: the same old debt repeats on each later invoice
-    ['', '', `TỔNG ${orders.length} ĐƠN`, orders.reduce((sum, o) => sum + o.orderAmount, 0)],
+    // "Nợ cũ" / "Tổng thanh toán" / "Còn lại" are not summed: the same old debt repeats on each later invoice
+    [
+      '',
+      '',
+      `TỔNG ${orders.length} ĐƠN`,
+      orders.reduce((sum, o) => sum + o.orderAmount, 0),
+      '',
+      '',
+      orders.reduce((sum, o) => sum + o.paid, 0),
+    ],
   ]);
   sheet['!merges'] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: HEADER.length - 1 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: HEADER.length - 1 } },
   ];
-  sheet['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 34 }, { wch: 16 }, { wch: 16 }, { wch: 18 }];
+  sheet['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 34 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 16 }];
 
   // Thousands separators for the money columns
   for (const [ref, cell] of Object.entries(sheet)) {

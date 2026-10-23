@@ -9,6 +9,8 @@ import { useToast } from '../context/ToastContext';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { Skeleton } from '../components/Skeleton';
+import { PaymentFormModal } from '../components/PaymentFormModal';
+import { PaymentHistory } from '../components/CustomerDebtModal';
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +30,8 @@ import {
   CheckCircle2,
   Check,
   ClipboardCheck,
+  Wallet,
+  Plus,
 } from 'lucide-react';
 
 export const QuotationPreviewPage: React.FC = () => {
@@ -38,6 +42,7 @@ export const QuotationPreviewPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'invoice' | 'delivery'>('invoice');
   const [isDownloading, setIsDownloading] = useState(false);
   const [isCopyingPng, setIsCopyingPng] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
 
   // Fetch Quotation Details & Duplicate Mutation from custom hooks
@@ -330,6 +335,68 @@ export const QuotationPreviewPage: React.FC = () => {
           </span>
         </div>
       </div>
+
+      {/* Payment Tracking (Hidden in Print) */}
+      <div className="no-print bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <Wallet className="w-4 h-4 text-amber-600" />
+            Thanh toán đơn hàng
+          </h2>
+          <Button
+            variant="primary"
+            size="sm"
+            className="text-xs justify-center"
+            leftIcon={<Plus className="w-3.5 h-3.5" />}
+            onClick={() => setIsPaymentOpen(true)}
+          >
+            Ghi nhận thanh toán
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5">
+            <div className="text-slate-500">Tiền đơn này</div>
+            <div className="font-bold text-slate-900 text-sm mt-0.5">{formatCurrency(quotation.orderAmount ?? 0)}</div>
+          </div>
+          <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5">
+            <div className="text-emerald-700">Đã trả</div>
+            <div className="font-bold text-emerald-700 text-sm mt-0.5">{formatCurrency(quotation.paidAmount ?? 0)}</div>
+          </div>
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5">
+            <div className="text-amber-800">Đơn này còn nợ</div>
+            <div className="font-bold text-amber-700 text-sm mt-0.5">{formatCurrency(quotation.remainingAmount ?? 0)}</div>
+          </div>
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5">
+            <div className="text-amber-800">{(quotation.customerDebt ?? 0) < 0 ? 'Khách trả dư' : 'Tổng nợ của khách'}</div>
+            <div className="font-bold text-amber-700 text-sm mt-0.5">{formatCurrency(Math.abs(quotation.customerDebt ?? 0))}</div>
+          </div>
+        </div>
+
+        {quotation.status === 'DRAFT' && (
+          <p className="text-[11px] text-slate-500">
+            Đơn nháp chưa được tính vào công nợ. Khi ghi nhận thanh toán, đơn sẽ tự chuyển sang "Đã gửi".
+          </p>
+        )}
+
+        <PaymentHistory
+          customerId={quotation.customerId}
+          payments={quotation.payments ?? []}
+          emptyText="Chưa có khoản thanh toán nào cho đơn này"
+        />
+      </div>
+
+      <PaymentFormModal
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        customerId={quotation.customerId}
+        customerName={quotation.customer?.companyName}
+        quotationId={quotation.id}
+        quotationNumber={quotation.quotationNumber}
+        suggestedAmount={
+          quotation.status === 'DRAFT' ? quotation.orderAmount ?? 0 : quotation.remainingAmount ?? 0
+        }
+      />
 
       {/* Mobile Tip for A4 Sheet Viewing */}
       <div className="sm:hidden flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-2 rounded-xl no-print">

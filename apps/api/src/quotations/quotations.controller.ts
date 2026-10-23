@@ -10,6 +10,7 @@ import {
 } from '../pdf/pdf.service';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { createAuditLog } from '../audit/audit.service';
+import { getCustomerDebtDetail } from '../payments/payments.service';
 
 export async function getQuotations(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
@@ -128,9 +129,19 @@ export async function getQuotationById(req: AuthenticatedRequest, res: Response,
       });
     }
 
+    const debt = await getCustomerDebtDetail(quotation.customerId);
+    const orderDebt = debt?.orders.find((o) => o.id === quotation.id);
+
     return res.json({
       success: true,
-      data: quotation,
+      data: {
+        ...quotation,
+        orderAmount: orderDebt?.amount ?? Math.max(0, Math.round(quotation.grandTotal - quotation.previousDebt)),
+        paidAmount: orderDebt?.paid ?? 0,
+        remainingAmount: orderDebt?.remaining ?? 0,
+        customerDebt: debt?.currentDebt ?? 0,
+        payments: debt?.payments.filter((p) => p.quotationId === quotation.id) ?? [],
+      },
     });
   } catch (error) {
     next(error);

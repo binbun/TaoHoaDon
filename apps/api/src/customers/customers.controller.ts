@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
 import { CustomerSchema } from '@taohoadon/shared';
+import { getCustomerDebtMap } from '../payments/payments.service';
 
 export async function getCustomers(req: Request, res: Response, next: NextFunction) {
   try {
@@ -28,9 +29,11 @@ export async function getCustomers(req: Request, res: Response, next: NextFuncti
       },
     });
 
+    const debtMap = await getCustomerDebtMap(customers);
+
     return res.json({
       success: true,
-      data: customers,
+      data: customers.map((c) => ({ ...c, currentDebt: debtMap.get(c.id) ?? 0 })),
     });
   } catch (error) {
     next(error);
@@ -78,6 +81,7 @@ export async function createCustomer(req: Request, res: Response, next: NextFunc
         phone: validatedData.phone?.trim() || null,
         address: validatedData.address?.trim() || null,
         taxCode: validatedData.taxCode?.trim() || null,
+        openingDebt: validatedData.openingDebt ?? 0,
       },
     });
 
@@ -116,6 +120,7 @@ export async function updateCustomer(req: Request, res: Response, next: NextFunc
         ...(validatedData.phone !== undefined ? { phone: validatedData.phone?.trim() || null } : {}),
         ...(validatedData.address !== undefined ? { address: validatedData.address?.trim() || null } : {}),
         ...(validatedData.taxCode !== undefined ? { taxCode: validatedData.taxCode?.trim() || null } : {}),
+        ...(validatedData.openingDebt !== undefined ? { openingDebt: validatedData.openingDebt } : {}),
       },
     });
 
@@ -141,6 +146,17 @@ export async function deleteCustomer(req: Request, res: Response, next: NextFunc
       return res.status(400).json({
         success: false,
         message: `Không thể xóa khách hàng này vì đang có ${count} đơn hàng liên kết`,
+      });
+    }
+
+    const paymentCount = await prisma.payment.count({
+      where: { customerId: id },
+    });
+
+    if (paymentCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Không thể xóa khách hàng này vì đã có lịch sử thanh toán',
       });
     }
 

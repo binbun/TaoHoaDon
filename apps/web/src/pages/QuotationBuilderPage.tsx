@@ -221,6 +221,12 @@ export const QuotationBuilderPage: React.FC = () => {
       setPhone(found.phone || '');
       setAddress(found.address || '');
       setTaxCode(found.taxCode || '');
+      // New orders carry the customer's outstanding balance; edits keep the saved value
+      if (!isEditMode) {
+        setPreviousDebt(Math.max(0, found.currentDebt ?? 0));
+      }
+    } else if (!isEditMode) {
+      setPreviousDebt(0);
     }
   };
 
@@ -605,7 +611,7 @@ export const QuotationBuilderPage: React.FC = () => {
                   placeholder="0"
                   value={formatThousands(previousDebt)}
                   onChange={(e) => setPreviousDebt(parseThousands(e.target.value))}
-                  helperText="Số tiền khách hàng/đại lý còn nợ từ các đơn trước (nếu có, sẽ tự động cộng vào Tổng cộng thanh toán)"
+                  helperText="Tự động lấy dư nợ hiện tại của khách khi chọn khách hàng; có thể sửa tay. Số này được cộng vào Tổng cộng thanh toán."
                 />
               </div>
             </div>

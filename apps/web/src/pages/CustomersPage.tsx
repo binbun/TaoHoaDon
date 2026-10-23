@@ -5,7 +5,7 @@ import {
   useUpdateCustomer,
   useDeleteCustomer,
 } from '../hooks';
-import { Customer } from '@taohoadon/shared';
+import { Customer, formatCurrency, formatThousands, parseThousands } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -13,6 +13,7 @@ import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
+import { CustomerDebtModal } from '../components/CustomerDebtModal';
 import {
   Table,
   TableBody,
@@ -43,6 +44,7 @@ import {
   Phone,
   MoreVertical,
   MapPin,
+  Wallet,
 } from 'lucide-react';
 
 export const CustomersPage: React.FC = () => {
@@ -52,12 +54,14 @@ export const CustomersPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
+  const [debtCustomer, setDebtCustomer] = useState<Customer | null>(null);
 
   // Form State
   const [companyName, setCompanyName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [taxCode, setTaxCode] = useState('');
+  const [openingDebt, setOpeningDebt] = useState<number | string>(0);
 
   // Hooks
   const { data: customers = [], isLoading } = useCustomers(search) as any;
@@ -71,6 +75,7 @@ export const CustomersPage: React.FC = () => {
     setPhone('');
     setAddress('');
     setTaxCode('');
+    setOpeningDebt(0);
     setIsModalOpen(true);
   };
 
@@ -80,6 +85,7 @@ export const CustomersPage: React.FC = () => {
     setPhone(c.phone || '');
     setAddress(c.address || '');
     setTaxCode(c.taxCode || '');
+    setOpeningDebt(c.openingDebt ?? 0);
     setIsModalOpen(true);
   };
 
@@ -95,6 +101,7 @@ export const CustomersPage: React.FC = () => {
       phone: phone.trim() || null,
       address: address.trim() || null,
       taxCode: taxCode.trim() || null,
+      openingDebt: Number(openingDebt) || 0,
     };
 
     if (editingCustomer) {
@@ -167,6 +174,7 @@ export const CustomersPage: React.FC = () => {
                 <TableHead>Khách hàng / Công ty</TableHead>
                 <TableHead>Số điện thoại</TableHead>
                 <TableHead>Địa chỉ</TableHead>
+                <TableHead className="text-right">Dư nợ hiện tại</TableHead>
                 <TableHead className="text-right">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
@@ -205,6 +213,22 @@ export const CustomersPage: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => setDebtCustomer(c)}
+                      className="text-xs font-bold hover:underline"
+                      title="Xem công nợ & thanh toán"
+                    >
+                      {(c.currentDebt ?? 0) > 0 ? (
+                        <span className="text-amber-700">{formatCurrency(c.currentDebt!)}</span>
+                      ) : (c.currentDebt ?? 0) < 0 ? (
+                        <span className="text-emerald-700">Dư {formatCurrency(-c.currentDebt!)}</span>
+                      ) : (
+                        <span className="text-slate-400 font-medium">0 ₫</span>
+                      )}
+                    </button>
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -226,6 +250,10 @@ export const CustomersPage: React.FC = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setDebtCustomer(c)}>
+                            <Wallet className="w-4 h-4 text-amber-600 mr-2" />
+                            <span>Công nợ & thanh toán</span>
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openEditModal(c)}>
                             <Edit2 className="w-4 h-4 text-[#1B9550] mr-2" />
                             <span>Sửa thông tin</span>
@@ -295,6 +323,16 @@ export const CustomersPage: React.FC = () => {
             onChange={(e) => setAddress(e.target.value)}
           />
 
+          <Input
+            label="Nợ đầu kỳ (đ)"
+            type="text"
+            inputMode="numeric"
+            placeholder="0"
+            value={formatThousands(openingDebt)}
+            onChange={(e) => setOpeningDebt(parseThousands(e.target.value))}
+            helperText="Số tiền khách còn nợ từ trước khi dùng phần mềm. Nợ của các đơn hàng và các khoản thanh toán sẽ được tự động cộng/trừ."
+          />
+
           <div className="mt-6 flex justify-end gap-2.5 pt-4 border-t border-slate-100">
             <Button
               type="button"
@@ -313,6 +351,8 @@ export const CustomersPage: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      <CustomerDebtModal customer={debtCustomer} onClose={() => setDebtCustomer(null)} />
 
       {/* Delete Confirmation */}
       <ConfirmDialog

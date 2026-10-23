@@ -53,8 +53,43 @@ export interface Customer {
   phone?: string | null;
   address?: string | null;
   taxCode?: string | null;
+  openingDebt?: number;
+  currentDebt?: number; // derived by the API from orders and payments
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Payment {
+  id: string;
+  customerId: string;
+  quotationId?: string | null;
+  quotation?: { id: string; quotationNumber: string } | null;
+  batchId: string;
+  amount: number;
+  paidAt: string;
+  note?: string | null;
+  createdBy?: string | null;
+  creator?: { id: string; name: string } | null;
+  createdAt: string;
+}
+
+export interface CustomerDebtOrder {
+  id: string;
+  quotationNumber: string;
+  quotationDate: string;
+  status: QuotationStatus;
+  amount: number;
+  paid: number;
+  remaining: number;
+}
+
+export interface CustomerDebtDetail {
+  customerId: string;
+  openingDebt: number;
+  openingRemaining: number;
+  currentDebt: number;
+  orders: CustomerDebtOrder[];
+  payments: Payment[];
 }
 
 export interface Product {
@@ -151,6 +186,12 @@ export interface Quotation {
   previousDebt?: number;
   grandTotal: number;
   items: CalculatedQuotationItem[];
+  // Payment tracking (returned by GET /quotations/:id)
+  orderAmount?: number;
+  paidAmount?: number;
+  remainingAmount?: number;
+  customerDebt?: number;
+  payments?: Payment[];
   createdBy?: string | null;
   creator?: { id: string; name: string; email: string } | null;
   createdAt: string;

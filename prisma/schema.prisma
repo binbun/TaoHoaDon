@@ -19,6 +19,7 @@ model User {
   updatedAt    DateTime    @updatedAt
   quotations   Quotation[]
   auditLogs    AuditLog[]
+  payments     Payment[]
 }
 
 model Customer {
@@ -29,9 +30,11 @@ model Customer {
   phone       String?
   address     String?
   taxCode     String?
+  openingDebt Float       @default(0) // debt owed before using the app
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   quotations  Quotation[]
+  payments    Payment[]
 }
 
 model Product {
@@ -77,6 +80,7 @@ model Quotation {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   items           QuotationItem[]
+  payments        Payment[]
 }
 
 model QuotationItem {
@@ -100,6 +104,27 @@ model QuotationItem {
   sortOrder           Int        @default(0)
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
+}
+
+// One customer payment may be split across several orders; rows from the same payment share batchId
+model Payment {
+  id          String     @id @default(uuid())
+  customerId  String
+  customer    Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quotationId String?
+  quotation   Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  batchId     String
+  amount      Float
+  paidAt      DateTime   @default(now())
+  note        String?
+  createdBy   String?
+  creator     User?      @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+
+  @@index([customerId])
+  @@index([quotationId])
+  @@index([batchId])
+  @@map("CustomerPayment") // an unrelated legacy "Payment" table may still exist in older databases
 }
 
 model AuditLog {

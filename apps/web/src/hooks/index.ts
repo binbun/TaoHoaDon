@@ -4,3 +4,4 @@ export * from './useQuotations';
 export * from './useUsers';
 export * from './useBrands';
 
+export * from './usePayments';

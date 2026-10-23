@@ -59,6 +59,14 @@ export const CustomerSchema = z.object({
   phone: z.string().max(20).optional().nullable(),
   address: z.string().max(255).optional().nullable(),
   taxCode: z.string().max(50).optional().nullable(),
+  openingDebt: z.coerce.number().min(0, 'Nợ đầu kỳ không được âm').optional(),
+});
+
+export const PaymentSchema = z.object({
+  amount: z.coerce.number().int('Số tiền phải là số nguyên').positive('Số tiền thanh toán phải lớn hơn 0'),
+  paidAt: z.string().min(1, 'Ngày thanh toán không được để trống'),
+  note: z.string().max(500).optional().nullable(),
+  quotationId: z.string().optional().nullable(),
 });
 
 export const QuotationItemSchema = z.object({

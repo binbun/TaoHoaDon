@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Customer, Payment, formatCurrency, formatDate } from '@taohoadon/shared';
 import { Plus, Trash2, Wallet } from 'lucide-react';
 import { Modal } from './Modal';
@@ -98,7 +97,6 @@ interface CustomerDebtModalProps {
 }
 
 export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, onClose }) => {
-  const navigate = useNavigate();
   const { data: debt, isLoading } = useCustomerDebt(customer?.id);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
@@ -166,12 +164,11 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
                 <ul className="divide-y divide-slate-100 border border-slate-200 rounded-lg">
                   {unpaidOrders.map((o) => (
                     <li key={o.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onClose();
-                          navigate(`/quotations/${o.id}/preview`);
-                        }}
+                      <a
+                        href={`/quotations/${o.id}/preview`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Mở đơn hàng trong tab mới"
                         className="w-full flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2.5 text-left text-xs hover:bg-slate-50"
                       >
                         <span>
@@ -182,7 +179,7 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
                           Tiền đơn {formatCurrency(o.amount)} · Đã trả {formatCurrency(o.paid)} ·{' '}
                           <strong className="text-amber-700">Còn {formatCurrency(o.remaining)}</strong>
                         </span>
-                      </button>
+                      </a>
                     </li>
                   ))}
                 </ul>

@@ -15,6 +15,7 @@ import { UsersPage } from './pages/UsersPage';
 import { BrandsPage } from './pages/BrandsPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { DocumentTitle } from './pageTitles';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ export const App: React.FC = () => {
       <ToastProvider>
         <AuthProvider>
           <BrowserRouter>
+            <DocumentTitle />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
 

@@ -154,6 +154,8 @@ export const CustomersPage: React.FC = () => {
     }
   };
 
+  const deletingCustomer = (customers as Customer[]).find((c) => c.id === deletingCustomerId);
+
   const handleDelete = () => {
     if (deletingCustomerId) {
       deleteMutation.mutate(deletingCustomerId, {
@@ -417,7 +419,15 @@ export const CustomersPage: React.FC = () => {
         onClose={() => setDeletingCustomerId(null)}
         onConfirm={handleDelete}
         title="Xác nhận xóa khách hàng"
-        message="Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống?"
+        message={
+          <>
+            Bạn có chắc chắn muốn xóa khách hàng{' '}
+            <strong className="font-bold text-slate-900">{deletingCustomer?.companyName}</strong> khỏi hệ thống? Thao
+            tác này không thể hoàn tác.
+          </>
+        }
+        confirmPhrase={deletingCustomer?.companyName}
+        confirmText="Xóa khách hàng"
         isLoading={deleteMutation.isPending}
       />
     </div>

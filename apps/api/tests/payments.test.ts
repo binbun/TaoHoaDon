@@ -155,4 +155,22 @@ describe('Customer debt & payments', () => {
     expect(debt.body.data.openingDebt).toBe(1000000);
     expect(debt.body.data.currentDebt).toBe(4500000);
   });
+
+  it('filters the quotation list by date range, both ends inclusive', async () => {
+    const cust = await request(app)
+      .post('/api/customers')
+      .set(auth())
+      .send({ companyName: `Khách test lọc ngày ${Date.now()}` });
+    const id = cust.body.data.id;
+    for (const day of ['2026-09-30', '2026-10-01', '2026-10-15', '2026-10-31', '2026-11-01']) {
+      await createFor(id, 1000000, day);
+    }
+
+    const res = await request(app)
+      .get(`/api/quotations?customerId=${id}&fromDate=2026-10-01&toDate=2026-10-31`)
+      .set(auth());
+    const days = res.body.data.map((q: any) => q.quotationDate.slice(0, 10)).sort();
+    expect(days).toEqual(['2026-10-01', '2026-10-15', '2026-10-31']);
+  });
 });
+

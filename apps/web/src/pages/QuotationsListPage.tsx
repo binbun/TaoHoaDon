@@ -61,7 +61,41 @@ import {
   Loader2,
   MoreVertical,
   Layers,
+  X,
 } from 'lucide-react';
+
+// Local calendar day as YYYY-MM-DD (what <input type="date"> uses)
+const toDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+const DATE_PRESETS: { key: string; label: string; range: () => [string, string] }[] = [
+  { key: 'today', label: 'Hôm nay', range: () => [toDay(new Date()), toDay(new Date())] },
+  {
+    key: '7d',
+    label: '7 ngày qua',
+    range: () => {
+      const from = new Date();
+      from.setDate(from.getDate() - 6);
+      return [toDay(from), toDay(new Date())];
+    },
+  },
+  {
+    key: 'this-month',
+    label: 'Tháng này',
+    range: () => {
+      const now = new Date();
+      return [toDay(new Date(now.getFullYear(), now.getMonth(), 1)), toDay(new Date(now.getFullYear(), now.getMonth() + 1, 0))];
+    },
+  },
+  {
+    key: 'last-month',
+    label: 'Tháng trước',
+    range: () => {
+      const now = new Date();
+      return [toDay(new Date(now.getFullYear(), now.getMonth() - 1, 1)), toDay(new Date(now.getFullYear(), now.getMonth(), 0))];
+    },
+  },
+];
 
 export const QuotationsListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -69,6 +103,8 @@ export const QuotationsListPage: React.FC = () => {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -76,7 +112,14 @@ export const QuotationsListPage: React.FC = () => {
   const { data: responseData, isLoading } = useQuotations({
     search,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
   }) as any;
+
+  const activePreset = DATE_PRESETS.find((p) => {
+    const [from, to] = p.range();
+    return from === fromDate && to === toDate;
+  })?.key;
 
   const deleteMutation = useDeleteQuotation();
   const duplicateMutation = useDuplicateQuotation();
@@ -170,6 +213,69 @@ export const QuotationsListPage: React.FC = () => {
               ))}
             </TabsList>
           </Tabs>
+        </div>
+
+        {/* Date Range Filter */}
+        <div className="flex flex-col lg:flex-row lg:items-center gap-2.5 sm:gap-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wider shrink-0">
+            <Calendar className="w-4 h-4 text-slate-400" />
+            Ngày đơn hàng
+          </div>
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
+            <label className="flex flex-col sm:flex-row sm:items-center gap-1 text-xs text-slate-500">
+              <span>Từ</span>
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate || undefined}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="h-9 rounded-lg border border-slate-200 px-2 text-base sm:text-sm text-slate-800 focus:border-[#1B9550] focus:outline-none focus:ring-2 focus:ring-[#1B9550]/20"
+              />
+            </label>
+            <label className="flex flex-col sm:flex-row sm:items-center gap-1 text-xs text-slate-500">
+              <span>Đến</span>
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(e) => setToDate(e.target.value)}
+                className="h-9 rounded-lg border border-slate-200 px-2 text-base sm:text-sm text-slate-800 focus:border-[#1B9550] focus:outline-none focus:ring-2 focus:ring-[#1B9550]/20"
+              />
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {DATE_PRESETS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => {
+                  const [from, to] = p.range();
+                  setFromDate(from);
+                  setToDate(to);
+                }}
+                className={`h-8 px-2.5 rounded-lg border text-xs font-medium transition-colors ${
+                  activePreset === p.key
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+            {(fromDate || toDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFromDate('');
+                  setToDate('');
+                }}
+                className="h-8 px-2 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                Bỏ lọc ngày
+              </button>
+            )}
+          </div>
         </div>
       </Card>
 

@@ -15,7 +15,7 @@ import { getCarriedDebt, getCustomerDebtDetail } from '../payments/payments.serv
 export async function getQuotations(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const currentUser = req.user;
-    const { search, status, customerId, creatorId, page = '1', limit = '50' } = req.query;
+    const { search, status, customerId, creatorId, fromDate, toDate, page = '1', limit = '50' } = req.query;
 
     const pageNum = parseInt(page as string, 10) || 1;
     const limitNum = parseInt(limit as string, 10) || 50;
@@ -40,6 +40,18 @@ export async function getQuotations(req: AuthenticatedRequest, res: Response, ne
 
     if (customerId && typeof customerId === 'string') {
       where.customerId = customerId;
+    }
+
+    // Date range on quotationDate (YYYY-MM-DD, both ends inclusive); dates are stored at UTC midnight
+    const isDay = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    if (isDay(fromDate) || isDay(toDate)) {
+      where.quotationDate = {};
+      if (isDay(fromDate)) where.quotationDate.gte = new Date(`${fromDate}T00:00:00.000Z`);
+      if (isDay(toDate)) {
+        const end = new Date(`${toDate}T00:00:00.000Z`);
+        end.setUTCDate(end.getUTCDate() + 1);
+        where.quotationDate.lt = end;
+      }
     }
 
     if (search && typeof search === 'string') {

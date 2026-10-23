@@ -6,13 +6,20 @@ import { customerKeys } from './useCustomers';
 
 export const quotationKeys = {
   all: ['quotations'] as const,
-  list: (params?: { search?: string; status?: string; creatorId?: string }) =>
-    ['quotations', 'list', params] as const,
+  list: (params?: QuotationListParams) => ['quotations', 'list', params] as const,
   detail: (id: string) => ['quotations', 'detail', id] as const,
   dashboardStats: ['dashboard-stats'] as const,
 };
 
-export function useQuotations(params?: { search?: string; status?: string; creatorId?: string }) {
+export interface QuotationListParams {
+  search?: string;
+  status?: string;
+  creatorId?: string;
+  fromDate?: string; // YYYY-MM-DD
+  toDate?: string; // YYYY-MM-DD
+}
+
+export function useQuotations(params?: QuotationListParams) {
   return useQuery<Quotation[]>({
     queryKey: quotationKeys.list(params),
     queryFn: () => {
@@ -20,6 +27,8 @@ export function useQuotations(params?: { search?: string; status?: string; creat
       if (params?.search) searchParams.append('search', params.search);
       if (params?.status) searchParams.append('status', params.status);
       if (params?.creatorId) searchParams.append('creatorId', params.creatorId);
+      if (params?.fromDate) searchParams.append('fromDate', params.fromDate);
+      if (params?.toDate) searchParams.append('toDate', params.toDate);
       const query = searchParams.toString();
       return apiClient(`/quotations${query ? `?${query}` : ''}`);
     },

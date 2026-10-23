@@ -85,7 +85,8 @@ export interface CustomerDebtOrder {
 
 export interface CustomerDebtDetail {
   customerId: string;
-  openingDebt: number;
+  openingDebt: number; // effective opening debt (customer field, or "Dư nợ cũ" of the oldest order)
+  openingFromQuotation?: { id: string; quotationNumber: string } | null;
   openingRemaining: number;
   currentDebt: number;
   orders: CustomerDebtOrder[];

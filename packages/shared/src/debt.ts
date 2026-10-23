@@ -7,6 +7,10 @@
  *
  * An order's own amount excludes its "Dư nợ cũ" line (grandTotal − previousDebt),
  * otherwise old debt carried onto the invoice would be counted twice.
+ *
+ * Opening debt (owed before the app was used) is the customer's "Nợ đầu kỳ" when set; otherwise
+ * it is the "Dư nợ cũ" typed on the customer's oldest order, since that is what they owed
+ * before their first order in the app.
  */
 
 export interface DebtOrderInput {
@@ -54,11 +58,35 @@ export function getOrderDebtState(order: DebtOrderInput, payments: DebtPaymentIn
   return { id: order.id, amount, paid, remaining: counts ? Math.max(0, amount - paid) : 0 };
 }
 
-export function calculateCustomerDebt(
+export function getEffectiveOpeningDebt(
   openingDebt: number,
+  orders: DebtOrderInput[]
+): { amount: number; fromQuotationId: string | null } {
+  if (openingDebt > 0) return { amount: round(openingDebt), fromQuotationId: null };
+
+  // Oldest by date; ties keep the given order (callers sort by date, then creation time)
+  const oldest = orders.reduce<DebtOrderInput | null>(
+    (first, o) =>
+      !first || new Date(o.quotationDate).getTime() < new Date(first.quotationDate).getTime() ? o : first,
+    null
+  );
+  const carried = round(oldest?.previousDebt || 0);
+  return carried > 0 ? { amount: carried, fromQuotationId: oldest!.id } : { amount: 0, fromQuotationId: null };
+}
+
+export function calculateCustomerDebt(
+  customerOpeningDebt: number,
   orders: DebtOrderInput[],
   payments: DebtPaymentInput[]
-): { currentDebt: number; openingRemaining: number; orders: OrderDebtState[] } {
+): {
+  currentDebt: number;
+  openingDebt: number;
+  openingFromQuotationId: string | null;
+  openingRemaining: number;
+  orders: OrderDebtState[];
+} {
+  const opening = getEffectiveOpeningDebt(customerOpeningDebt || 0, orders);
+  const openingDebt = opening.amount;
   const orderStates = orders.map((o) => getOrderDebtState(o, payments));
   const unallocated = payments.filter((p) => !p.quotationId).reduce((sum, p) => sum + p.amount, 0);
   const ordersRemaining = orderStates.reduce((sum, o) => sum + o.remaining, 0);
@@ -66,8 +94,10 @@ export function calculateCustomerDebt(
   const overpaid = orderStates.reduce((sum, o) => sum + Math.max(0, o.paid - o.amount), 0);
 
   return {
-    currentDebt: round((openingDebt || 0) + ordersRemaining - unallocated - overpaid),
-    openingRemaining: Math.max(0, round((openingDebt || 0) - unallocated)),
+    currentDebt: round(openingDebt + ordersRemaining - unallocated - overpaid),
+    openingDebt,
+    openingFromQuotationId: opening.fromQuotationId,
+    openingRemaining: Math.max(0, round(openingDebt - unallocated)),
     orders: orderStates,
   };
 }

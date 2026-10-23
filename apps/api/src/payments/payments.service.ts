@@ -16,7 +16,7 @@ const ORDER_SELECT = {
 export async function loadCustomerLedger(db: Db, customerId: string) {
   const [customer, orders, payments] = await Promise.all([
     db.customer.findUnique({ where: { id: customerId }, select: { id: true, openingDebt: true } }),
-    db.quotation.findMany({ where: { customerId }, select: ORDER_SELECT, orderBy: { quotationDate: 'asc' } }),
+    db.quotation.findMany({ where: { customerId }, select: ORDER_SELECT, orderBy: [{ quotationDate: 'asc' }, { createdAt: 'asc' }] }),
     db.payment.findMany({
       where: { customerId },
       include: {
@@ -36,7 +36,10 @@ export async function getCustomerDebtDetail(customerId: string) {
   const debt = calculateCustomerDebt(customer.openingDebt, orders, payments);
   return {
     customerId,
-    openingDebt: customer.openingDebt,
+    openingDebt: debt.openingDebt,
+    openingFromQuotation: orders
+      .filter((o) => o.id === debt.openingFromQuotationId)
+      .map((o) => ({ id: o.id, quotationNumber: o.quotationNumber }))[0] ?? null,
     openingRemaining: debt.openingRemaining,
     currentDebt: debt.currentDebt,
     orders: orders
@@ -51,7 +54,11 @@ export async function getCustomerDebtDetail(customerId: string) {
 export async function getCustomerDebtMap(customers: { id: string; openingDebt: number }[]) {
   const ids = customers.map((c) => c.id);
   const [orders, payments] = await Promise.all([
-    prisma.quotation.findMany({ where: { customerId: { in: ids } }, select: { ...ORDER_SELECT, customerId: true } }),
+    prisma.quotation.findMany({
+      where: { customerId: { in: ids } },
+      select: { ...ORDER_SELECT, customerId: true },
+      orderBy: [{ quotationDate: 'asc' }, { createdAt: 'asc' }],
+    }),
     prisma.payment.findMany({ where: { customerId: { in: ids } }, select: { customerId: true, quotationId: true, amount: true } }),
   ]);
 

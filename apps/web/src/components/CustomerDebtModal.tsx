@@ -133,6 +133,11 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
                   <span>Nợ đầu kỳ:</span>
                   <strong className="text-slate-900">{formatCurrency(debt.openingDebt)}</strong>
                 </div>
+                {debt.openingFromQuotation && (
+                  <div className="text-[11px] text-slate-400 -mt-0.5">
+                    Lấy từ "Dư nợ cũ" của đơn đầu tiên {debt.openingFromQuotation.quotationNumber}
+                  </div>
+                )}
                 <div className="flex justify-between gap-2">
                   <span>Nợ đầu kỳ còn lại:</span>
                   <strong className="text-slate-900">{formatCurrency(debt.openingRemaining)}</strong>

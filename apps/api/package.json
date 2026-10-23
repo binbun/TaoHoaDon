@@ -10,7 +10,7 @@
     "db:generate": "prisma generate --schema=../../prisma/schema.prisma",
     "db:push": "prisma db push --schema=../../prisma/schema.prisma",
     "db:seed": "tsx ../../prisma/seed.ts",
-    "test": "vitest run"
+    "test": "vitest run --no-file-parallelism"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",

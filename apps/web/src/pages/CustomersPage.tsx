@@ -387,7 +387,7 @@ export const CustomersPage: React.FC = () => {
             placeholder="0"
             value={formatThousands(openingDebt)}
             onChange={(e) => setOpeningDebt(parseThousands(e.target.value))}
-            helperText="Số tiền khách còn nợ từ trước khi dùng phần mềm. Nợ của các đơn hàng và các khoản thanh toán sẽ được tự động cộng/trừ."
+            helperText={'Số tiền khách còn nợ từ trước khi dùng phần mềm. Để 0 thì hệ thống tự lấy "Dư nợ cũ" ghi trên đơn hàng đầu tiên của khách. Nợ các đơn và các khoản thanh toán được tự động cộng/trừ.'}
           />
 
           <div className="mt-6 flex justify-end gap-2.5 pt-4 border-t border-slate-100">

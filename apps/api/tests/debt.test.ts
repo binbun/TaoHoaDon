@@ -72,4 +72,28 @@ describe('Customer debt ledger', () => {
     expect(debt.orders[0].remaining).toBe(0);
     expect(debt.currentDebt).toBe(-500000);
   });
+
+  it('uses the oldest order\'s "Dư nợ cũ" as opening debt when none is set on the customer', () => {
+    // First order in the app already carried 10,061,000 owed from before
+    const orders = [
+      order('FIRST', 31595000, { previousDebt: 10061000, quotationDate: '2026-10-01' }),
+      order('LATER', 32595000, { previousDebt: 31595000, quotationDate: '2026-10-20' }),
+    ];
+    const debt = calculateCustomerDebt(0, orders, []);
+    expect(debt.openingDebt).toBe(10061000);
+    expect(debt.openingFromQuotationId).toBe('FIRST');
+    expect(debt.currentDebt).toBe(10061000 + 21534000 + 1000000);
+  });
+
+  it('prefers the customer\'s own opening debt over the oldest order', () => {
+    const debt = calculateCustomerDebt(2000000, [order('FIRST', 15000000, { previousDebt: 10000000 })], []);
+    expect(debt.openingDebt).toBe(2000000);
+    expect(debt.openingFromQuotationId).toBeNull();
+    expect(debt.currentDebt).toBe(7000000);
+  });
+
+  it('counts opening debt from an oldest order that is still a draft', () => {
+    const debt = calculateCustomerDebt(0, [order('FIRST', 31595000, { previousDebt: 10061000, status: 'DRAFT' })], []);
+    expect(debt.currentDebt).toBe(10061000);
+  });
 });

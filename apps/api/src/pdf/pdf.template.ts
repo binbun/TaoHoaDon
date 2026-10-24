@@ -210,7 +210,8 @@ export function renderQuotationHtml(quotation: Quotation): string {
     }
 
     .col-stt { width: 5%; text-align: center; color: #64748b; white-space: nowrap; }
-    .col-code { width: 13%; font-weight: 700; color: #0f172a; font-family: monospace; font-size: 11px; white-space: nowrap; }
+    .col-code { width: 13%; font-weight: 700; color: #0f172a; font-size: 11px; white-space: nowrap; }
+    td.col-code { font-family: monospace; }
     .col-product { width: 35%; }
     .col-unit { width: 7%; text-align: center; color: #475569; white-space: nowrap; }
     .col-qty { width: 6%; text-align: center; font-weight: 600; white-space: nowrap; }
@@ -800,10 +801,14 @@ export function renderDeliverySlipHtml(quotation: Quotation): string {
     .col-code {
       width: 130px;
       text-align: center;
-      font-family: monospace;
       font-weight: 700;
       font-size: 11px;
       color: #0f172a;
+    }
+
+    /* Codes only: the "Mã hàng" header stays in Inter (monospace fonts render Vietnamese badly) */
+    td.col-code {
+      font-family: monospace;
     }
 
     .col-name {

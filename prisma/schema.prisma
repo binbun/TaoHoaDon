@@ -73,6 +73,8 @@ model Quotation {
   discountTotal   Float           @default(0)
   taxableTotal    Float           @default(0)
   vatTotal        Float           @default(0)
+  orderDiscount   Float           @default(0) // "Giảm giá": fixed amount off the goods total
+  discountNote    String?
   previousDebt    Float           @default(0)
   grandTotal      Float           @default(0)
   createdBy       String?

@@ -261,4 +261,28 @@ describe('Debt workflow rules', () => {
     expect((await pay(c, 100000, undefined, '21/10/2026')).status).toBe(400);
     expect((await createOrder(c, 100000, '2026-10-20T17:30:00.000Z')).status).toBe(400);
   });
+
+  it('order discount ("Giảm giá") lowers what the customer owes and prints on the invoice', async () => {
+    const c = await newCustomer(1000000);
+    const tooMuch = await request(app)
+      .post('/api/quotations')
+      .set(asAdmin())
+      .send({ customerId: c, quotationDate: '2026-10-20', title: 'HÓA ĐƠN BÁN HÀNG', status: 'SENT', orderDiscount: 6000000, items: [item(5000000)] });
+    expect(tooMuch.status).toBe(400);
+
+    const order = (
+      await request(app)
+        .post('/api/quotations')
+        .set(asAdmin())
+        .send({ customerId: c, quotationDate: '2026-10-20', title: 'HÓA ĐƠN BÁN HÀNG', status: 'SENT', orderDiscount: 500000, discountNote: 'Khách quen', items: [item(5000000)] })
+    ).body.data;
+    expect(order).toMatchObject({ orderDiscount: 500000, discountNote: 'Khách quen', previousDebt: 1000000, grandTotal: 5500000 });
+    expect((await debtOf(c)).currentDebt).toBe(5500000);
+    expect(await reportRow(order.id)).toMatchObject({ orderAmount: 4500000, grandTotal: 5500000 });
+
+    // Paid 4,500,000: a bigger discount would leave money paid beyond the order
+    await pay(c, 4500000, order.id);
+    const blocked = await editOrder(order.id, { customerId: c, orderDiscount: 1000000, items: [item(5000000)] });
+    expect(blocked.status).toBe(400);
+  });
 });

@@ -144,6 +144,8 @@ export interface QuotationSummary {
   discountTotal: number;
   taxableTotal: number;
   vatTotal: number;
+  goodsTotal?: number; // after VAT, before the order discount
+  orderDiscount?: number; // "Giảm giá": fixed amount off the goods total
   previousDebt?: number;
   grandTotal: number;
 }
@@ -166,6 +168,8 @@ export interface QuotationInput {
   note?: string | null;
   status?: QuotationStatus;
   previousDebt?: number;
+  orderDiscount?: number;
+  discountNote?: string | null;
   customer?: QuotationCustomerInput;
   items: QuotationItemInput[];
 }
@@ -184,6 +188,8 @@ export interface Quotation {
   discountTotal: number;
   taxableTotal: number;
   vatTotal: number;
+  orderDiscount?: number; // "Giảm giá" for this order
+  discountNote?: string | null;
   previousDebt?: number;
   grandTotal: number;
   items: CalculatedQuotationItem[];

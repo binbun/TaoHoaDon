@@ -45,9 +45,10 @@ export function calculateItemRow(item: QuotationItemInput, fallbackId = ''): Cal
 }
 
 /**
- * Calculates complete quotation summary from list of item inputs and previous debt.
+ * Calculates complete quotation summary from list of item inputs, previous debt and an order discount.
+ * The order discount ("Giảm giá") is a fixed amount taken off the goods total after VAT, never below 0.
  */
-export function calculateQuotationTotals(items: QuotationItemInput[], previousDebt = 0): {
+export function calculateQuotationTotals(items: QuotationItemInput[], previousDebt = 0, orderDiscount = 0): {
   calculatedItems: CalculatedQuotationItem[];
   summary: QuotationSummary;
 } {
@@ -68,7 +69,9 @@ export function calculateQuotationTotals(items: QuotationItemInput[], previousDe
     return calculated;
   });
 
-  const grandTotalAcc = orderTotalAcc.plus(debt);
+  const goodsTotal = orderTotalAcc.round();
+  const discount = Decimal.min(goodsTotal, Decimal.max(0, new Decimal(orderDiscount || 0)));
+  const grandTotalAcc = goodsTotal.minus(discount).plus(debt);
 
   return {
     calculatedItems,
@@ -77,6 +80,8 @@ export function calculateQuotationTotals(items: QuotationItemInput[], previousDe
       discountTotal: discountAcc.round().toNumber(),
       taxableTotal: taxableAcc.round().toNumber(),
       vatTotal: vatAcc.round().toNumber(),
+      goodsTotal: goodsTotal.toNumber(),
+      orderDiscount: discount.round().toNumber(),
       previousDebt: debt.round().toNumber(),
       grandTotal: grandTotalAcc.round().toNumber(),
     },

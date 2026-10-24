@@ -112,6 +112,9 @@ export const QuotationSchema = z.object({
   status: QuotationStatusSchema.default('DRAFT'),
   // Ignored by the API: "Dư nợ cũ" is computed from the customer's debt
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
+  // "Giảm giá": fixed amount off this order's goods (the API rejects more than the goods total)
+  orderDiscount: z.coerce.number().int('Số tiền giảm giá phải là số nguyên').min(0, 'Giảm giá không được âm').default(0),
+  discountNote: z.string().max(255).optional().nullable(),
   customer: QuotationCustomerSchema.optional(),
   items: z.array(QuotationItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm/dịch vụ'),
 });

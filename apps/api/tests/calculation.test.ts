@@ -136,4 +136,17 @@ describe('Calculation Engine - Quotation & VAT & Discount', () => {
     expect(res.vatAmount).toBe(40000);
     expect(res.total).toBe(540000);
   });
+
+  it('takes the order discount off the goods total, before adding old debt', () => {
+    const items: QuotationItemInput[] = [
+      { productNameSnapshot: 'Giá xoong', unit: 'Bộ', quantity: 2, unitPrice: 2500000, discount: 0, vatRate: 0, sortOrder: 0 },
+    ];
+    const { summary } = calculateQuotationTotals(items, 1000000, 300000);
+    expect(summary.goodsTotal).toBe(5000000);
+    expect(summary.orderDiscount).toBe(300000);
+    expect(summary.grandTotal).toBe(5700000); // 5,000,000 − 300,000 + 1,000,000 old debt
+
+    // Never more than the goods themselves
+    expect(calculateQuotationTotals(items, 0, 9000000).summary.grandTotal).toBe(0);
+  });
 });

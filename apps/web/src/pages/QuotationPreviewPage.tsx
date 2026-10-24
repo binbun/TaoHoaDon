@@ -518,6 +518,7 @@ export const QuotationPreviewPage: React.FC = () => {
                       2 +
                       (quotation.discountTotal > 0 ? 1 : 0) +
                       (quotation.vatTotal > 0 ? 1 : 0) +
+                      ((quotation.orderDiscount ?? 0) > 0 ? 1 : 0) +
                       (quotation.previousDebt && quotation.previousDebt > 0 ? 1 : 0)
                     }
                     className="py-2.5 px-2 align-top text-left"
@@ -569,6 +570,14 @@ export const QuotationPreviewPage: React.FC = () => {
                   <tr className="text-slate-700 text-[12px]">
                     <td className="py-1 px-2.5 text-right whitespace-nowrap">Thuế GTGT (VAT):</td>
                     <td className="py-1 px-2.5 text-right font-bold text-slate-900 whitespace-nowrap">{formatCurrency(quotation.vatTotal)}</td>
+                  </tr>
+                )}
+                {(quotation.orderDiscount ?? 0) > 0 && (
+                  <tr className="text-rose-600 text-[12px]">
+                    <td className="py-1 px-2.5 text-right whitespace-nowrap">
+                      Giảm giá{quotation.discountNote ? ` (${quotation.discountNote})` : ''}:
+                    </td>
+                    <td className="py-1 px-2.5 text-right font-bold whitespace-nowrap">-{formatCurrency(quotation.orderDiscount)}</td>
                   </tr>
                 )}
                 {quotation.previousDebt && quotation.previousDebt > 0 ? (

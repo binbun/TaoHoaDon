@@ -25,6 +25,12 @@ import { getCarriedDebt, getCustomerDebtDetail, getOrderPaid, lockCustomer, reco
 // Today in Vietnam (UTC+7) as YYYY-MM-DD
 const vietnamToday = () => new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
+// "Giảm giá" is a fixed amount off the goods total, so it can't be more than that total
+const discountError = (items: QuotationItemInput[], orderDiscount: number) => {
+  const { goodsTotal = 0 } = calculateQuotationTotals(items).summary;
+  return orderDiscount > goodsTotal ? `Giảm giá không được lớn hơn tiền hàng (${formatCurrency(goodsTotal)})` : null;
+};
+
 export async function getQuotations(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const currentUser = req.user;
@@ -209,13 +215,22 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
       });
     }
 
+    const invalidDiscount = discountError(validatedData.items as QuotationItemInput[], validatedData.orderDiscount);
+    if (invalidDiscount) {
+      return res.status(400).json({
+        success: false,
+        message: invalidDiscount,
+      });
+    }
+
     const newQuotation = await prisma.$transaction(async (tx) => {
       await lockCustomer(tx, validatedData.customerId);
       // "Dư nợ cũ" is the customer's debt before this order, not a typed value
       const previousDebt = await getCarriedDebt(tx, validatedData.customerId);
       const { calculatedItems, summary } = calculateQuotationTotals(
         validatedData.items as QuotationItemInput[],
-        previousDebt
+        previousDebt,
+        validatedData.orderDiscount
       );
 
       const created = await tx.quotation.create({
@@ -231,6 +246,8 @@ export async function createQuotation(req: AuthenticatedRequest, res: Response, 
           discountTotal: summary.discountTotal,
           taxableTotal: summary.taxableTotal,
           vatTotal: summary.vatTotal,
+          orderDiscount: summary.orderDiscount || 0,
+          discountNote: summary.orderDiscount ? validatedData.discountNote?.trim() || null : null,
           previousDebt: summary.previousDebt || 0,
           grandTotal: summary.grandTotal,
           createdBy: currentUser.id,
@@ -338,6 +355,14 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
       });
     }
 
+    const invalidDiscount = discountError(validatedData.items as QuotationItemInput[], validatedData.orderDiscount);
+    if (invalidDiscount) {
+      return res.status(400).json({
+        success: false,
+        message: invalidDiscount,
+      });
+    }
+
     // Run in transaction: update customer, delete old items, create new items, update quotation
     const result = await prisma.$transaction(async (tx) => {
       await lockCustomer(tx, existing.customerId);
@@ -348,7 +373,8 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
       // Keep the saved "Dư nợ cũ"
       const { calculatedItems, summary } = calculateQuotationTotals(
         validatedData.items as QuotationItemInput[],
-        current.previousDebt
+        current.previousDebt,
+        validatedData.orderDiscount
       );
       const paid = await getOrderPaid(tx, id);
       const amount = getOrderAmount(summary);
@@ -405,6 +431,8 @@ export async function updateQuotation(req: AuthenticatedRequest, res: Response, 
           discountTotal: summary.discountTotal,
           taxableTotal: summary.taxableTotal,
           vatTotal: summary.vatTotal,
+          orderDiscount: summary.orderDiscount || 0,
+          discountNote: summary.orderDiscount ? validatedData.discountNote?.trim() || null : null,
           previousDebt: summary.previousDebt || 0,
           grandTotal: summary.grandTotal,
           items: {

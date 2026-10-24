@@ -80,6 +80,9 @@ export const QuotationBuilderPage: React.FC = () => {
   const [quotationDate, setQuotationDate] = useState(todayDay);
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
+  // "Giảm giá": fixed amount off this order's goods
+  const [orderDiscount, setOrderDiscount] = useState<number | string>(0);
+  const [discountNote, setDiscountNote] = useState('');
   const DEFAULT_WARRANTY_NOTE = `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.
 - Bảo hành sản phẩm 24 tháng lỗi 1 đổi 1 đối với phụ kiện GROB
 - Miễn phí vận chuyển trong khu vực, giao hàng toàn quốc`;
@@ -191,6 +194,8 @@ export const QuotationBuilderPage: React.FC = () => {
   const loadFromQuotation = (q: Quotation, keepItemIds: boolean) => {
     setTitle(q.title);
     setNote(q.note || '');
+    setOrderDiscount(q.orderDiscount ?? 0);
+    setDiscountNote(q.discountNote || '');
     setSelectedCustomerId(q.customerId);
 
     if (q.customer) {
@@ -334,7 +339,8 @@ export const QuotationBuilderPage: React.FC = () => {
       ...it,
       sortOrder: idx,
     })),
-    Number(previousDebt) || 0
+    Number(previousDebt) || 0,
+    Number(orderDiscount) || 0
   );
 
   // Save Quotation
@@ -354,6 +360,11 @@ export const QuotationBuilderPage: React.FC = () => {
         error(`Dòng thứ ${i + 1} chưa có tên phụ kiện`);
         return;
       }
+    }
+
+    if ((Number(orderDiscount) || 0) > (summary.goodsTotal ?? 0)) {
+      error(`Giảm giá không được lớn hơn tiền hàng (${formatCurrency(summary.goodsTotal)})`);
+      return;
     }
 
     // Customers never pay more than they owe, so an order can't go below what was paid on it
@@ -385,6 +396,8 @@ export const QuotationBuilderPage: React.FC = () => {
         // Edits send the status only when it was changed, so the API keeps one that payments set meanwhile
         status: isEditMode && status === existingQuote?.status ? undefined : (status as any),
         note: note.trim() || undefined,
+        orderDiscount: Number(orderDiscount) || 0,
+        discountNote: discountNote.trim() || null,
         customerId,
         customer: {
           companyName: companyName.trim(),
@@ -975,6 +988,31 @@ export const QuotationBuilderPage: React.FC = () => {
               <div className="flex items-center justify-between text-slate-600 pt-3">
                 <span>Tiền thuế VAT:</span>
                 <span className="font-bold text-slate-900">{formatCurrency(summary.vatTotal)}</span>
+              </div>
+
+              <div className="pt-3 space-y-2">
+                <Input
+                  label="Giảm giá (đ)"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatThousands(orderDiscount)}
+                  onChange={(e) => setOrderDiscount(parseThousands(e.target.value))}
+                />
+                {Number(orderDiscount) > 0 && (
+                  <>
+                    <Input
+                      label="Lý do giảm giá (in trên hóa đơn)"
+                      placeholder="VD: Khách quen, khuyến mãi tháng 10"
+                      value={discountNote}
+                      onChange={(e) => setDiscountNote(e.target.value)}
+                    />
+                    <div className="flex items-center justify-between text-rose-600">
+                      <span>Giảm giá:</span>
+                      <span className="font-bold">-{formatCurrency(summary.orderDiscount)}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {Number(previousDebt) > 0 && (

@@ -2,6 +2,9 @@ import { Quotation, formatCurrency, formatNumber, formatDate, generateVietQrUrl 
 import { PAYMENT_QR_BASE64 } from './paymentQr';
 import { GROB_LOGO_BASE64 } from './grobLogo';
 
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 export function renderQuotationHtml(quotation: Quotation): string {
   const customer = quotation.customer;
   const items = quotation.items || [];
@@ -577,6 +580,12 @@ export function renderQuotationHtml(quotation: Quotation): string {
           <span>Tiền thuế VAT:</span>
           <span>${formatCurrency(quotation.vatTotal)}</span>
         </div>
+        ${quotation.orderDiscount && quotation.orderDiscount > 0 ? `
+          <div class="summary-row discount">
+            <span>Giảm giá${quotation.discountNote ? ` (${escapeHtml(quotation.discountNote)})` : ''}:</span>
+            <span>-${formatCurrency(quotation.orderDiscount)}</span>
+          </div>
+        ` : ''}
         ${(quotation.previousDebt && quotation.previousDebt > 0) ? `
           <div class="summary-row" style="color: #b91c1c; font-weight: 600;">
             <span>Dư nợ cũ:</span>

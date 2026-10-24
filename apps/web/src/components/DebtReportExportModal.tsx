@@ -12,6 +12,7 @@ import { Modal } from './Modal';
 import { Button } from './Button';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import { todayDay } from '../lib/utils';
 import {
   Select,
   SelectContent,
@@ -24,11 +25,6 @@ interface DebtReportExportModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const todayDay = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
 
 const monthKey = (m: Pick<LunarMonth, 'month' | 'leap'>) => `${m.month}${m.leap ? 'N' : ''}`;
 
@@ -128,8 +124,10 @@ export const DebtReportExportModal: React.FC<DebtReportExportModalProps> = ({ is
         )}
 
         <p className="text-[11px] text-slate-500 leading-relaxed">
-          File Excel liệt kê các đơn hàng tạo trong tháng (Ngày tạo, Số đơn hàng, Tên KH, Tổng tiền hàng, Nợ cũ, Tổng
-          thanh toán, Đã TT, Còn lại): trang <strong>Tất cả</strong> gồm mọi khách hàng, sau đó mỗi khách hàng một trang riêng.
+          File Excel gồm trang <strong>Tổng hợp</strong> (nợ đầu tháng, phát sinh, đã thanh toán, nợ cuối tháng của từng
+          khách), trang <strong>Tất cả</strong> liệt kê các đơn hàng tạo trong tháng (Ngày tạo, Số đơn hàng, Tên KH, Tổng tiền
+          hàng, Nợ cũ, Tổng thanh toán, Đã TT, Còn lại), sau đó mỗi khách hàng một trang riêng. Đã TT và Còn lại tính đến
+          hết tháng.
         </p>
 
         <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">

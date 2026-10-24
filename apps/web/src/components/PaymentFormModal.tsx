@@ -5,6 +5,7 @@ import { Input } from './Input';
 import { Button } from './Button';
 import { useCreatePayment } from '../hooks';
 import { useToast } from '../context/ToastContext';
+import { todayDay } from '../lib/utils';
 
 interface PaymentFormModalProps {
   isOpen: boolean;
@@ -14,12 +15,8 @@ interface PaymentFormModalProps {
   quotationId?: string | null;
   quotationNumber?: string;
   suggestedAmount?: number;
+  maxAmount: number; // the customer's current debt: customers never pay more than they owe
 }
-
-const todayIso = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
 
 export const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
   isOpen,
@@ -29,28 +26,34 @@ export const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
   quotationId,
   quotationNumber,
   suggestedAmount = 0,
+  maxAmount,
 }) => {
   const { error } = useToast();
   const createMutation = useCreatePayment();
 
   const [amount, setAmount] = useState<number | string>('');
-  const [paidAt, setPaidAt] = useState(todayIso());
+  const [paidAt, setPaidAt] = useState(todayDay());
   const [note, setNote] = useState('');
 
   // Reset the form every time the modal opens
   useEffect(() => {
     if (isOpen) {
-      setAmount(suggestedAmount > 0 ? suggestedAmount : '');
-      setPaidAt(todayIso());
+      const suggested = Math.min(suggestedAmount, maxAmount);
+      setAmount(suggested > 0 ? suggested : '');
+      setPaidAt(todayDay());
       setNote('');
     }
-  }, [isOpen, suggestedAmount]);
+  }, [isOpen, suggestedAmount, maxAmount]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const value = Number(amount) || 0;
     if (value <= 0) {
       error('Vui lòng nhập số tiền khách thanh toán');
+      return;
+    }
+    if (value > maxAmount) {
+      error(`Số tiền vượt quá tổng nợ hiện tại của khách (${formatCurrency(maxAmount)})`);
       return;
     }
 
@@ -79,11 +82,9 @@ export const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
           placeholder="0"
           value={formatThousands(amount)}
           onChange={(e) => setAmount(parseThousands(e.target.value))}
-          helperText={
-            suggestedAmount > 0
-              ? `Còn nợ: ${formatCurrency(suggestedAmount)}. Khách trả thiếu thì nhập đúng số đã trả, phần còn lại vẫn được tính là nợ.`
-              : undefined
-          }
+          helperText={`${
+            quotationId && suggestedAmount > 0 ? `Đơn này còn nợ: ${formatCurrency(suggestedAmount)}. ` : ''
+          }Tổng nợ của khách: ${formatCurrency(maxAmount)}, không nhập quá số này. Khách trả thiếu thì nhập đúng số đã trả, phần còn lại vẫn được tính là nợ.`}
           required
           autoFocus
         />
@@ -102,8 +103,8 @@ export const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
         />
         <p className="text-[11px] text-slate-500 leading-relaxed">
           {quotationId
-            ? 'Số tiền trừ vào đơn này trước; nếu trả dư sẽ trừ tiếp vào nợ đầu kỳ và các đơn cũ nhất, còn dư thì ghi có cho khách.'
-            : 'Số tiền trừ vào nợ đầu kỳ trước, sau đó lần lượt các đơn cũ nhất; còn dư thì ghi có cho khách.'}
+            ? 'Số tiền trừ vào đơn này trước, phần còn lại trừ vào nợ đầu kỳ rồi lần lượt các đơn cũ nhất.'
+            : 'Số tiền trừ vào nợ đầu kỳ trước, sau đó lần lượt các đơn cũ nhất.'}
         </p>
 
         <div className="mt-6 flex justify-end gap-2.5 pt-4 border-t border-slate-100">

@@ -7,6 +7,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { Skeleton } from './Skeleton';
 import { PaymentFormModal } from './PaymentFormModal';
 import { useCustomerDebt, useDeletePayment, useUpdateCustomer } from '../hooks';
+import { useIsManager } from '../context/AuthContext';
 
 // Rows from one payment share a batchId; show them as a single entry
 function groupPayments(payments: Payment[]) {
@@ -35,6 +36,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
   emptyText = 'Chưa có khoản thanh toán nào',
 }) => {
   const deleteMutation = useDeletePayment();
+  const isManager = useIsManager();
   const [deletingBatchId, setDeletingBatchId] = useState<string | null>(null);
   const groups = groupPayments(payments);
 
@@ -55,19 +57,21 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
               {g.note && <div className="text-slate-600 mt-0.5 break-words">{g.note}</div>}
               <div className="text-[11px] text-slate-400 mt-0.5">
                 {g.parts
-                  .map((p) => `${p.quotation?.quotationNumber || 'Nợ đầu kỳ / ghi có'}: ${formatCurrency(p.amount)}`)
+                  .map((p) => `${p.quotation?.quotationNumber || 'Nợ đầu kỳ'}: ${formatCurrency(p.amount)}`)
                   .join(' · ')}
               </div>
             </div>
-            <button
-              type="button"
-              aria-label="Xóa khoản thanh toán"
-              title="Xóa khoản thanh toán"
-              onClick={() => setDeletingBatchId(g.batchId)}
-              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {isManager && (
+              <button
+                type="button"
+                aria-label="Xóa khoản thanh toán"
+                title="Xóa khoản thanh toán"
+                onClick={() => setDeletingBatchId(g.batchId)}
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -99,6 +103,7 @@ interface CustomerDebtModalProps {
 export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, onClose }) => {
   const { data: debt, isLoading } = useCustomerDebt(customer?.id);
   const updateCustomerMutation = useUpdateCustomer();
+  const isManager = useIsManager();
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [openingDraft, setOpeningDraft] = useState<number | string | null>(null);
 
@@ -145,15 +150,17 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
                     <span>Nợ đầu kỳ:</span>
                     <span className="flex items-center gap-1">
                       <strong className="text-slate-900">{formatCurrency(debt.openingDebt)}</strong>
-                      <button
-                        type="button"
-                        aria-label="Sửa nợ đầu kỳ"
-                        title="Sửa nợ đầu kỳ"
-                        onClick={() => setOpeningDraft(debt.openingDebt)}
-                        className="p-1 text-slate-400 hover:text-[#1B9550] hover:bg-emerald-50 rounded"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
+                      {isManager && (
+                        <button
+                          type="button"
+                          aria-label="Sửa nợ đầu kỳ"
+                          title="Sửa nợ đầu kỳ"
+                          onClick={() => setOpeningDraft(debt.openingDebt)}
+                          className="p-1 text-slate-400 hover:text-[#1B9550] hover:bg-emerald-50 rounded"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </span>
                   </div>
                 ) : (
@@ -215,6 +222,8 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
               className="w-full sm:w-auto justify-center"
               leftIcon={<Plus className="w-4 h-4" />}
               onClick={() => setIsPaymentOpen(true)}
+              disabled={currentDebt <= 0}
+              title={currentDebt <= 0 ? 'Khách không còn nợ' : undefined}
             >
               Ghi nhận thanh toán
             </Button>
@@ -267,6 +276,7 @@ export const CustomerDebtModal: React.FC<CustomerDebtModalProps> = ({ customer, 
           customerId={customer.id}
           customerName={customer.companyName}
           suggestedAmount={Math.max(0, currentDebt)}
+          maxAmount={Math.max(0, currentDebt)}
         />
       )}
     </>

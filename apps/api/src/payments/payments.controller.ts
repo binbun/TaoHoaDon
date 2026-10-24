@@ -1,10 +1,10 @@
 import { Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
 import { prisma } from '../prisma';
-import { PaymentSchema, allocatePayment } from '@taohoadon/shared';
+import { PaymentSchema, allocatePayment, calculateCustomerDebt, formatCurrency } from '@taohoadon/shared';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { createAuditLog } from '../audit/audit.service';
-import { getCustomerDebtDetail, loadCustomerLedger, syncOrderStatuses } from './payments.service';
+import { getCustomerDebtDetail, loadCustomerLedger, lockCustomer, syncOrderStatuses } from './payments.service';
 
 export async function getCustomerDebt(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
@@ -32,6 +32,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response, ne
     const validatedData = PaymentSchema.parse(req.body);
 
     const result = await prisma.$transaction(async (tx) => {
+      await lockCustomer(tx, customerId);
       const { customer, orders, payments } = await loadCustomerLedger(tx, customerId);
       if (!customer) return { error: 'Không tìm thấy thông tin khách hàng' };
 
@@ -40,6 +41,17 @@ export async function createPayment(req: AuthenticatedRequest, res: Response, ne
         const order = orders.find((o) => o.id === validatedData.quotationId);
         if (!order) return { error: 'Đơn hàng không thuộc khách hàng này' };
         preferredId = order.id;
+      }
+
+      // Customers never pay more than they owe
+      const { currentDebt } = calculateCustomerDebt(customer.openingDebt, orders, payments);
+      if (validatedData.amount > currentDebt) {
+        return {
+          error:
+            currentDebt > 0
+              ? `Số tiền vượt quá tổng nợ hiện tại của khách (${formatCurrency(currentDebt)})`
+              : 'Khách hàng không còn nợ',
+        };
       }
 
       const allocations = allocatePayment(validatedData.amount, customer.openingDebt, orders, payments, preferredId);
@@ -108,23 +120,27 @@ export async function deletePayment(req: AuthenticatedRequest, res: Response, ne
     const currentUser = req.user!;
     const { id: customerId, batchId } = req.params;
 
-    const rows = await prisma.payment.findMany({ where: { customerId, batchId } });
+    const rows = await prisma.$transaction(async (tx) => {
+      await lockCustomer(tx, customerId);
+      const rows = await tx.payment.findMany({ where: { customerId, batchId } });
+      if (rows.length === 0) return rows;
+
+      await tx.payment.deleteMany({ where: { customerId, batchId } });
+      const removed = new Map<string, number>();
+      for (const r of rows) {
+        if (r.quotationId) removed.set(r.quotationId, (removed.get(r.quotationId) ?? 0) + r.amount);
+      }
+      const { orders } = await loadCustomerLedger(tx, customerId);
+      await syncOrderStatuses(tx, orders, [...removed.keys()], removed);
+      return rows;
+    });
+
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Không tìm thấy khoản thanh toán',
       });
     }
-
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.deleteMany({ where: { customerId, batchId } });
-      const { orders } = await loadCustomerLedger(tx, customerId);
-      await syncOrderStatuses(
-        tx,
-        orders,
-        rows.filter((r) => r.quotationId).map((r) => r.quotationId!)
-      );
-    });
 
     await createAuditLog({
       req,

@@ -4,6 +4,7 @@
   "private": true,
   "main": "dist/server.js",
   "scripts": {
+    "predev": "npm run build --workspace=@taohoadon/shared",
     "dev": "tsx watch src/server.ts",
     "build": "tsup src/server.ts --format cjs --clean",
     "start": "node dist/server.js",

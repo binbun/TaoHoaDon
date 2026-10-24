@@ -105,6 +105,12 @@ export const AuditLogsPage: React.FC = () => {
         return <Badge variant="danger">Xóa đơn hàng</Badge>;
       case 'DUPLICATE_QUOTATION':
         return <Badge variant="purple">Nhân bản đơn hàng</Badge>;
+      case 'CREATE_PAYMENT':
+        return <Badge variant="success">Ghi nhận thanh toán</Badge>;
+      case 'DELETE_PAYMENT':
+        return <Badge variant="danger">Xóa thanh toán</Badge>;
+      case 'UPDATE_OPENING_DEBT':
+        return <Badge variant="warning">Sửa nợ đầu kỳ</Badge>;
       case 'EXPORT_PDF':
         return <Badge variant="default">Xuất file PDF</Badge>;
       default:
@@ -209,6 +215,9 @@ export const AuditLogsPage: React.FC = () => {
                 <SelectItem value="UPDATE_QUOTATION">Cập nhật đơn hàng</SelectItem>
                 <SelectItem value="DELETE_QUOTATION">Xóa đơn hàng</SelectItem>
                 <SelectItem value="DUPLICATE_QUOTATION">Nhân bản đơn hàng</SelectItem>
+                <SelectItem value="CREATE_PAYMENT">Ghi nhận thanh toán</SelectItem>
+                <SelectItem value="DELETE_PAYMENT">Xóa thanh toán</SelectItem>
+                <SelectItem value="UPDATE_OPENING_DEBT">Sửa nợ đầu kỳ</SelectItem>
                 <SelectItem value="EXPORT_PDF">Xuất file PDF</SelectItem>
                 <SelectItem value="CREATE_USER">Tạo tài khoản</SelectItem>
                 <SelectItem value="UPDATE_USER">Sửa tài khoản</SelectItem>

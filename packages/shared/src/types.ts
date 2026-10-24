@@ -65,6 +65,7 @@ export interface Payment {
   quotationId?: string | null;
   quotation?: { id: string; quotationNumber: string } | null;
   batchId: string;
+  recordedOnQuotationId?: string | null; // invoice the payment was entered on
   amount: number;
   paidAt: string;
   note?: string | null;

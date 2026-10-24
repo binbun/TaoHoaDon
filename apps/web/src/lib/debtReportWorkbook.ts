@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { LunarMonth, formatLunarMonth, solarToLunar } from '@taohoadon/shared';
+import { DebtReportRow, LunarMonth, formatLunarMonth, solarToLunar } from '@taohoadon/shared';
 
 export const showDay = (day: string) => day.split('-').reverse().join('/');
 
@@ -12,13 +12,14 @@ export interface DebtReportOrder {
   orderAmount: number;
   previousDebt: number;
   grandTotal: number;
-  paid: number; // money recorded on this invoice
-  remaining: number; // grandTotal − paid (0 once marked paid)
+  paid: number; // paid on this invoice by the end of the month
+  remaining: number; // grandTotal − paid
 }
 
 export interface DebtReportResponse {
   fromDate: string;
   toDate: string;
+  rows: DebtReportRow[];
   orders: DebtReportOrder[];
 }
 
@@ -26,10 +27,21 @@ const MONEY_FORMAT = '#,##0';
 
 const HEADER = ['Ngày tạo', 'Số đơn hàng', 'Tên KH', 'Tổng tiền hàng', 'Nợ cũ', 'Tổng thanh toán', 'Đã TT', 'Còn lại'];
 
+const SUMMARY_HEADER = ['Tên KH', 'Số điện thoại', 'Nợ đầu tháng', 'Phát sinh', 'Đã thanh toán', 'Nợ cuối tháng'];
+
 const lunarDay = (day: string) => {
   const l = solarToLunar(day);
   return `${l.day}/${l.month}${l.leap ? ' nhuận' : ''} ÂL`;
 };
+
+// Thousands separators for the money columns
+function formatMoneyColumns(sheet: XLSX.WorkSheet, firstMoneyColumn: number) {
+  for (const [ref, cell] of Object.entries(sheet)) {
+    if (!ref.startsWith('!') && (cell as XLSX.CellObject).t === 'n' && XLSX.utils.decode_cell(ref).c >= firstMoneyColumn) {
+      (cell as XLSX.CellObject).z = MONEY_FORMAT;
+    }
+  }
+}
 
 function buildOrdersSheet(title: string, orders: DebtReportOrder[], month: LunarMonth) {
   const sheet = XLSX.utils.aoa_to_sheet([
@@ -63,13 +75,35 @@ function buildOrdersSheet(title: string, orders: DebtReportOrder[], month: Lunar
     { s: { r: 1, c: 0 }, e: { r: 1, c: HEADER.length - 1 } },
   ];
   sheet['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 34 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 16 }];
+  formatMoneyColumns(sheet, 3);
+  return sheet;
+}
 
-  // Thousands separators for the money columns
-  for (const [ref, cell] of Object.entries(sheet)) {
-    if (!ref.startsWith('!') && (cell as XLSX.CellObject).t === 'n' && XLSX.utils.decode_cell(ref).c >= 3) {
-      (cell as XLSX.CellObject).z = MONEY_FORMAT;
-    }
-  }
+// One row per customer with debt or activity in the month; unlike invoice balances, these add up
+function buildSummarySheet(rows: DebtReportRow[], month: LunarMonth) {
+  const active = rows.filter((r) => r.openingBalance || r.billed || r.paid || r.closingBalance);
+  const total = (pick: (r: DebtReportRow) => number) => active.reduce((sum, r) => sum + pick(r), 0);
+  const sheet = XLSX.utils.aoa_to_sheet([
+    [`TỔNG HỢP CÔNG NỢ - ${formatLunarMonth(month).toUpperCase()}`],
+    [`Dương lịch ${showDay(month.start)} – ${showDay(month.end)}`],
+    [],
+    SUMMARY_HEADER,
+    ...active.map((r) => [r.companyName, r.phone || '', r.openingBalance, r.billed, r.paid, r.closingBalance]),
+    [
+      `TỔNG ${active.length} KHÁCH HÀNG`,
+      '',
+      total((r) => r.openingBalance),
+      total((r) => r.billed),
+      total((r) => r.paid),
+      total((r) => r.closingBalance),
+    ],
+  ]);
+  sheet['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: SUMMARY_HEADER.length - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: SUMMARY_HEADER.length - 1 } },
+  ];
+  sheet['!cols'] = [{ wch: 34 }, { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 18 }];
+  formatMoneyColumns(sheet, 2);
   return sheet;
 }
 
@@ -89,7 +123,10 @@ export function buildWorkbook(report: DebtReportResponse, month: LunarMonth) {
   const workbook = XLSX.utils.book_new();
   const used = new Set<string>();
 
-  // First tab: every customer
+  // First tab: each customer's debt for the month
+  XLSX.utils.book_append_sheet(workbook, buildSummarySheet(report.rows, month), makeSheetName('Tổng hợp', used));
+
+  // Then every order of the month
   XLSX.utils.book_append_sheet(
     workbook,
     buildOrdersSheet('DANH SÁCH ĐƠN HÀNG', report.orders, month),

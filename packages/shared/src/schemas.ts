@@ -62,9 +62,17 @@ export const CustomerSchema = z.object({
   openingDebt: z.coerce.number().min(0, 'Nợ đầu kỳ không được âm').optional(),
 });
 
+// A calendar day as YYYY-MM-DD; stored at UTC midnight so reports read back the same day
+const daySchema = (emptyMessage: string, invalidMessage: string) =>
+  z
+    .string()
+    .min(1, emptyMessage)
+    .regex(/^\d{4}-\d{2}-\d{2}$/, invalidMessage)
+    .refine((day) => !Number.isNaN(Date.parse(day)), invalidMessage);
+
 export const PaymentSchema = z.object({
   amount: z.coerce.number().int('Số tiền phải là số nguyên').positive('Số tiền thanh toán phải lớn hơn 0'),
-  paidAt: z.string().min(1, 'Ngày thanh toán không được để trống'),
+  paidAt: daySchema('Ngày thanh toán không được để trống', 'Ngày thanh toán không hợp lệ'),
   note: z.string().max(500).optional().nullable(),
   quotationId: z.string().optional().nullable(),
 });
@@ -92,18 +100,25 @@ export const QuotationCustomerSchema = z.object({
   taxCode: z.string().max(50).optional().nullable(),
 });
 
+export const QuotationStatusSchema = z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']);
+
 export const QuotationSchema = z.object({
   quotationNumber: z.string().optional(),
   customerId: z.string().min(1, 'Vui lòng chọn hoặc tạo khách hàng'),
-  quotationDate: z.string().min(1, 'Ngày tạo đơn không được để trống'),
+  quotationDate: daySchema('Ngày tạo đơn không được để trống', 'Ngày tạo đơn không hợp lệ'),
   validUntil: z.string().optional(),
   title: z.string().min(1, 'Tiêu đề đơn hàng không được để trống').default('HÓA ĐƠN BÁN HÀNG'),
   note: z.string().max(1000).optional().nullable(),
-  status: z.enum(['DRAFT', 'SENT', 'PAID', 'ACCEPTED']).default('DRAFT'),
+  status: QuotationStatusSchema.default('DRAFT'),
   // Ignored by the API: "Dư nợ cũ" is computed from the customer's debt
   previousDebt: z.coerce.number().min(0, 'Dư nợ cũ không được âm').default(0).optional(),
   customer: QuotationCustomerSchema.optional(),
   items: z.array(QuotationItemSchema).min(1, 'Đơn hàng phải có ít nhất 1 sản phẩm/dịch vụ'),
+});
+
+// Editing keeps the saved status when none is sent
+export const UpdateQuotationSchema = QuotationSchema.extend({
+  status: QuotationStatusSchema.optional(),
 });
 
 export const BrandSchema = z.object({

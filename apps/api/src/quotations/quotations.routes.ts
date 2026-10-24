@@ -5,7 +5,6 @@ import {
   createQuotation,
   updateQuotation,
   deleteQuotation,
-  duplicateQuotation,
   downloadQuotationPdf,
   downloadQuotationImage,
 } from './quotations.controller';
@@ -21,7 +20,6 @@ router.get('/:id', getQuotationById);
 router.post('/', createQuotation);
 router.patch('/:id', updateQuotation);
 router.delete('/:id', deleteQuotation);
-router.post('/:id/duplicate', duplicateQuotation);
 router.get('/:id/pdf', downloadQuotationPdf);
 router.get('/:id/image', downloadQuotationImage);
 router.get('/:id/png', downloadQuotationImage);

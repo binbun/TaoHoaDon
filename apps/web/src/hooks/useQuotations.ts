@@ -107,28 +107,12 @@ export function useDeleteQuotation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
       queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
+      // The order's bill leaves the customer's debt
+      queryClient.invalidateQueries({ queryKey: customerKeys.all });
       success('Đã xóa đơn hàng thành công');
     },
     onError: (err: any) => {
       error(err.message || 'Không thể xóa đơn hàng');
-    },
-  });
-}
-
-export function useDuplicateQuotation() {
-  const queryClient = useQueryClient();
-  const { success, error } = useToast();
-
-  return useMutation({
-    mutationFn: (id: string) =>
-      apiClient<Quotation>(`/quotations/${id}/duplicate`, { method: 'POST' }),
-    onSuccess: (newQuote) => {
-      queryClient.invalidateQueries({ queryKey: quotationKeys.all });
-      queryClient.invalidateQueries({ queryKey: quotationKeys.dashboardStats });
-      success(`Đã nhân bản sang đơn hàng ${newQuote.quotationNumber}!`);
-    },
-    onError: (err: any) => {
-      error(err.message || 'Không thể nhân bản đơn hàng');
     },
   });
 }

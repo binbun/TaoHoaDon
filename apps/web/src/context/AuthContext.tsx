@@ -138,3 +138,9 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Managers may delete payments, change "Nợ đầu kỳ" and export the debt report (the API enforces it too)
+export const useIsManager = () => {
+  const { user } = useAuth();
+  return user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+};

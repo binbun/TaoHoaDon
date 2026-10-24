@@ -7,6 +7,8 @@ import {
 } from '../hooks';
 import { Customer, formatCurrency, formatThousands, getCanChiYear, parseThousands, solarToLunar } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
+import { useIsManager } from '../context/AuthContext';
+import { todayDay } from '../lib/utils';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -91,11 +93,11 @@ export const CustomersPage: React.FC = () => {
   const createMutation = useCreateCustomer();
   const updateMutation = useUpdateCustomer();
   const deleteMutation = useDeleteCustomer();
+  const isManager = useIsManager();
 
   // Today's date in the lunar calendar, shown next to the search box
   const todayLunar = useMemo(() => {
-    const d = new Date();
-    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = todayDay();
     return { solar: day.split('-').reverse().join('/'), lunar: solarToLunar(day) };
   }, []);
 
@@ -150,7 +152,7 @@ export const CustomersPage: React.FC = () => {
       phone: phone.trim() || null,
       address: address.trim() || null,
       taxCode: taxCode.trim() || null,
-      openingDebt: Number(openingDebt) || 0,
+      ...(isManager ? { openingDebt: Number(openingDebt) || 0 } : {}),
     };
 
     if (editingCustomer) {
@@ -189,14 +191,16 @@ export const CustomersPage: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            variant="outline"
-            className="justify-center"
-            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
-            onClick={() => setIsDebtExportOpen(true)}
-          >
-            Xuất công nợ
-          </Button>
+          {isManager && (
+            <Button
+              variant="outline"
+              className="justify-center"
+              leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+              onClick={() => setIsDebtExportOpen(true)}
+            >
+              Xuất công nợ
+            </Button>
+          )}
           <Button
             variant="primary"
             className="justify-center"
@@ -418,15 +422,17 @@ export const CustomersPage: React.FC = () => {
             onChange={(e) => setAddress(e.target.value)}
           />
 
-          <Input
-            label="Nợ đầu kỳ (đ)"
-            type="text"
-            inputMode="numeric"
-            placeholder="0"
-            value={formatThousands(openingDebt)}
-            onChange={(e) => setOpeningDebt(parseThousands(e.target.value))}
-            helperText="Số tiền khách còn nợ từ trước khi dùng phần mềm. Nợ của các đơn hàng và các khoản thanh toán được tự động cộng/trừ, và đơn mới sẽ tự lấy dư nợ hiện tại làm Dư nợ cũ."
-          />
+          {isManager && (
+            <Input
+              label="Nợ đầu kỳ (đ)"
+              type="text"
+              inputMode="numeric"
+              placeholder="0"
+              value={formatThousands(openingDebt)}
+              onChange={(e) => setOpeningDebt(parseThousands(e.target.value))}
+              helperText="Số tiền khách còn nợ từ trước khi dùng phần mềm. Nợ của các đơn hàng và các khoản thanh toán được tự động cộng/trừ, và đơn mới sẽ tự lấy dư nợ hiện tại làm Dư nợ cũ."
+            />
+          )}
 
           <div className="mt-6 flex justify-end gap-2.5 pt-4 border-t border-slate-100">
             <Button

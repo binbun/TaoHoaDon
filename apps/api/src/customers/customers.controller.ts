@@ -1,7 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../prisma';
-import { CustomerSchema } from '@taohoadon/shared';
-import { getCustomerDebtMap } from '../payments/payments.service';
+import { CustomerSchema, formatCurrency } from '@taohoadon/shared';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { createAuditLog } from '../audit/audit.service';
+import { getCustomerDebtMap, lockCustomer } from '../payments/payments.service';
+
+const canSetOpeningDebt = (req: AuthenticatedRequest) => req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'ADMIN';
+
+const logOpeningDebt = (req: AuthenticatedRequest, customer: { id: string; companyName: string }, from: number, to: number) =>
+  createAuditLog({
+    req,
+    userId: req.user?.id,
+    userName: req.user?.name,
+    userEmail: req.user?.email,
+    action: 'UPDATE_OPENING_DEBT',
+    resource: 'CUSTOMER',
+    resourceId: customer.id,
+    details: { companyName: customer.companyName, from, to },
+  });
 
 export async function getCustomers(req: Request, res: Response, next: NextFunction) {
   try {
@@ -69,9 +85,17 @@ export async function getCustomerById(req: Request, res: Response, next: NextFun
   }
 }
 
-export async function createCustomer(req: Request, res: Response, next: NextFunction) {
+export async function createCustomer(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const validatedData = CustomerSchema.parse(req.body);
+    const openingDebt = validatedData.openingDebt ?? 0;
+
+    if (openingDebt !== 0 && !canSetOpeningDebt(req)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Chỉ quản trị viên được nhập nợ đầu kỳ',
+      });
+    }
 
     const customer = await prisma.customer.create({
       data: {
@@ -81,9 +105,11 @@ export async function createCustomer(req: Request, res: Response, next: NextFunc
         phone: validatedData.phone?.trim() || null,
         address: validatedData.address?.trim() || null,
         taxCode: validatedData.taxCode?.trim() || null,
-        openingDebt: validatedData.openingDebt ?? 0,
+        openingDebt,
       },
     });
+
+    if (openingDebt !== 0) await logOpeningDebt(req, customer, 0, openingDebt);
 
     return res.status(201).json({
       success: true,
@@ -95,7 +121,7 @@ export async function createCustomer(req: Request, res: Response, next: NextFunc
   }
 }
 
-export async function updateCustomer(req: Request, res: Response, next: NextFunction) {
+export async function updateCustomer(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
     const validatedData = CustomerSchema.partial().parse(req.body);
@@ -111,11 +137,29 @@ export async function updateCustomer(req: Request, res: Response, next: NextFunc
       });
     }
 
-    // "Dư nợ cũ" on every order already includes the opening debt, so shift unpaid orders by the change
-    const openingDelta =
-      validatedData.openingDebt !== undefined ? Math.round(validatedData.openingDebt - existing.openingDebt) : 0;
+    const newOpeningDebt = validatedData.openingDebt;
+    if (newOpeningDebt !== undefined && Math.round(newOpeningDebt - existing.openingDebt) !== 0 && !canSetOpeningDebt(req)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Chỉ quản trị viên được sửa nợ đầu kỳ',
+      });
+    }
 
-    const { updated, adjustedQuotations } = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
+      await lockCustomer(tx, id);
+      const before = (await tx.customer.findUniqueOrThrow({ where: { id } })).openingDebt;
+      // "Dư nợ cũ" on every order already includes the opening debt, so shift unpaid orders by the change
+      const openingDelta = newOpeningDebt !== undefined ? Math.round(newOpeningDebt - before) : 0;
+
+      // Money already paid toward the opening debt must stay covered by it: customers never overpay
+      if (newOpeningDebt !== undefined && openingDelta < 0) {
+        const paid = await tx.payment.aggregate({ where: { customerId: id, quotationId: null }, _sum: { amount: true } });
+        const paidOpening = Math.round(paid._sum.amount || 0);
+        if (newOpeningDebt < paidOpening) {
+          return { error: `Nợ đầu kỳ không được nhỏ hơn số khách đã trả cho nợ đầu kỳ (${formatCurrency(paidOpening)})` };
+        }
+      }
+
       const updated = await tx.customer.update({
         where: { id },
         data: {
@@ -146,8 +190,18 @@ export async function updateCustomer(req: Request, res: Response, next: NextFunc
         }
       }
 
-      return { updated, adjustedQuotations };
+      return { updated, adjustedQuotations, before };
     });
+
+    if ('error' in result) {
+      return res.status(400).json({
+        success: false,
+        message: result.error,
+      });
+    }
+
+    const { updated, adjustedQuotations, before } = result;
+    if (updated.openingDebt !== before) await logOpeningDebt(req, updated, before, updated.openingDebt);
 
     return res.json({
       success: true,

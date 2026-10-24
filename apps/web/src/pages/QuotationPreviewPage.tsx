@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toBlob } from 'html-to-image';
-import { useQuotation, useDuplicateQuotation } from '../hooks';
+import { useQuotation } from '../hooks';
 import { formatCurrency, formatNumber, formatDate, generateEmvcoQrPayload } from '@taohoadon/shared';
 import { QRCodeSVG } from 'qrcode.react';
 import { getFullApiUrl } from '../api/client';
@@ -45,9 +45,8 @@ export const QuotationPreviewPage: React.FC = () => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Quotation Details & Duplicate Mutation from custom hooks
+  // Fetch Quotation Details from custom hooks
   const { data: quotation, isLoading, isError } = useQuotation(id);
-  const duplicateMutation = useDuplicateQuotation();
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const handleCopy = (text: string, field: string) => {
@@ -57,12 +56,9 @@ export const QuotationPreviewPage: React.FC = () => {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  // Opens a prefilled new order; nothing is saved (or owed) until it is saved
   const handleDuplicate = () => {
-    if (id) {
-      duplicateMutation.mutate(id, {
-        onSuccess: (newQuote) => navigate(`/quotations/${newQuote.id}/preview`),
-      });
-    }
+    if (id) navigate(`/quotations/new?copyFrom=${id}`);
   };
 
   // Download Server-Side Puppeteer PDF
@@ -235,7 +231,6 @@ export const QuotationPreviewPage: React.FC = () => {
                 className="text-xs px-2.5 py-1.5 flex-shrink-0"
                 leftIcon={<Copy className="w-3.5 h-3.5" />}
                 onClick={handleDuplicate}
-                isLoading={duplicateMutation.isPending}
               >
                 Nhân bản
               </Button>
@@ -349,6 +344,8 @@ export const QuotationPreviewPage: React.FC = () => {
             className="text-xs justify-center"
             leftIcon={<Plus className="w-3.5 h-3.5" />}
             onClick={() => setIsPaymentOpen(true)}
+            disabled={(quotation.customerDebt ?? 0) <= 0}
+            title={(quotation.customerDebt ?? 0) <= 0 ? 'Khách không còn nợ' : undefined}
           >
             Ghi nhận thanh toán
           </Button>
@@ -388,6 +385,7 @@ export const QuotationPreviewPage: React.FC = () => {
         quotationId={quotation.id}
         quotationNumber={quotation.quotationNumber}
         suggestedAmount={quotation.remainingAmount ?? 0}
+        maxAmount={Math.max(0, quotation.customerDebt ?? 0)}
       />
 
       {/* Mobile Tip for A4 Sheet Viewing */}

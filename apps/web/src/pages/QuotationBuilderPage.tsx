@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   useCustomers,
   useProducts,
@@ -12,13 +12,16 @@ import {
 } from '../hooks';
 import {
   Product,
+  Quotation,
   QuotationItemInput,
   calculateQuotationTotals,
   formatCurrency,
   formatThousands,
+  getOrderAmount,
   parseThousands,
 } from '@taohoadon/shared';
 import { useToast } from '../context/ToastContext';
+import { todayDay } from '../lib/utils';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -65,13 +68,16 @@ import {
 export const QuotationBuilderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  // "Nhân bản": a new order prefilled from another one
+  const [searchParams] = useSearchParams();
+  const copyFromId = isEditMode ? undefined : searchParams.get('copyFrom') || undefined;
   const navigate = useNavigate();
   const { success, error } = useToast();
 
   // Quotation Info State
   const [quotationNumber, setQuotationNumber] = useState('');
   const [title, setTitle] = useState('HÓA ĐƠN BÁN HÀNG');
-  const [quotationDate, setQuotationDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [quotationDate, setQuotationDate] = useState(todayDay);
   const [status, setStatus] = useState<string>('DRAFT');
   const [previousDebt, setPreviousDebt] = useState<number | string>(0);
   const DEFAULT_WARRANTY_NOTE = `- Toàn bộ phụ kiện Inox SUS304 bảo hành hoen gỉ vĩnh viễn chính hãng.
@@ -105,8 +111,13 @@ export const QuotationBuilderPage: React.FC = () => {
     return rawProducts?.data || [];
   }, [rawProducts]);
   const { data: existingQuote, isError: isQuoteError } = useQuotation(id);
+  const { data: copySource } = useQuotation(copyFromId);
   // Edit mode: block the form until the existing quotation has populated the state
   const [isQuoteHydrated, setIsQuoteHydrated] = useState(!isEditMode);
+  // Payments already cover this order: its status follows them (delete a payment to reopen it)
+  const isFullyPaid =
+    isEditMode && !!existingQuote && (existingQuote.orderAmount ?? 0) > 0 && (existingQuote.paidAmount ?? 0) >= (existingQuote.orderAmount ?? 0);
+  const wasSettled = isEditMode && !!existingQuote && ['PAID', 'ACCEPTED'].includes(existingQuote.status);
 
   const createQuotationMutation = useCreateQuotation();
   const updateQuotationMutation = useUpdateQuotation();
@@ -176,44 +187,65 @@ export const QuotationBuilderPage: React.FC = () => {
     return list;
   }, [dbBrands]);
 
+  // Title, note, customer and line items of a saved quotation, as form state
+  const loadFromQuotation = (q: Quotation, keepItemIds: boolean) => {
+    setTitle(q.title);
+    setNote(q.note || '');
+    setSelectedCustomerId(q.customerId);
+
+    if (q.customer) {
+      setCompanyName(q.customer.companyName);
+      setPhone(q.customer.phone || '');
+      setAddress(q.customer.address || '');
+      setTaxCode(q.customer.taxCode || '');
+    }
+
+    setItems(
+      q.items.map((item, index) => ({
+        id: keepItemIds ? item.id : `temp_${Date.now()}_${index}`,
+        productId: item.productId,
+        productCodeSnapshot: item.productCodeSnapshot || (item as any).product?.code || '',
+        productNameSnapshot: item.productNameSnapshot,
+        descriptionSnapshot: item.descriptionSnapshot,
+        unit: item.unit,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        vatRate: item.vatRate ?? 0,
+        sortOrder: item.sortOrder ?? index,
+      }))
+    );
+  };
+
   // Populate data when editing
   useEffect(() => {
     if (existingQuote) {
+      loadFromQuotation(existingQuote, true);
       setQuotationNumber(existingQuote.quotationNumber);
-      setTitle(existingQuote.title);
       setQuotationDate(existingQuote.quotationDate.split('T')[0]);
       setStatus(existingQuote.status);
       setPreviousDebt(existingQuote.previousDebt ?? 0);
-      setNote(existingQuote.note || '');
-      setSelectedCustomerId(existingQuote.customerId);
-
-      if (existingQuote.customer) {
-        setCompanyName(existingQuote.customer.companyName);
-        setPhone(existingQuote.customer.phone || '');
-        setAddress(existingQuote.customer.address || '');
-        setTaxCode(existingQuote.customer.taxCode || '');
-      }
-
-      setItems(
-        existingQuote.items.map((item, index) => ({
-          id: item.id,
-          productId: item.productId,
-          productCodeSnapshot: item.productCodeSnapshot || (item as any).product?.code || '',
-          productNameSnapshot: item.productNameSnapshot,
-          descriptionSnapshot: item.descriptionSnapshot,
-          unit: item.unit,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discount: item.discount,
-          vatRate: item.vatRate ?? 0,
-          sortOrder: item.sortOrder ?? index,
-        }))
-      );
       setIsQuoteHydrated(true);
     }
   }, [existingQuote]);
 
-  // Handle customer selection change
+  // "Nhân bản": copy the source once; it is only saved (and owed) when the user saves it
+  const [isCopyLoaded, setIsCopyLoaded] = useState(false);
+  useEffect(() => {
+    if (copySource && !isCopyLoaded) {
+      loadFromQuotation(copySource, false);
+      setIsCopyLoaded(true);
+    }
+  }, [copySource, isCopyLoaded]);
+
+  // New orders show the customer's current debt as "Dư nợ cũ"; the API works out the real value on save
+  useEffect(() => {
+    if (isEditMode) return;
+    const found = customers.find((c) => c.id === selectedCustomerId);
+    setPreviousDebt(found ? Math.max(0, found.currentDebt ?? 0) : 0);
+  }, [isEditMode, selectedCustomerId, customers]);
+
+  // Handle customer selection change (new orders only: an order's customer is fixed once created)
   const handleSelectCustomer = (cId: string) => {
     setSelectedCustomerId(cId);
     const found = customers.find((c) => c.id === cId);
@@ -222,14 +254,6 @@ export const QuotationBuilderPage: React.FC = () => {
       setPhone(found.phone || '');
       setAddress(found.address || '');
       setTaxCode(found.taxCode || '');
-      // Mirrors the API: edits keep the saved value unless the order moves to another customer
-      if (isEditMode && existingQuote && cId === existingQuote.customerId) {
-        setPreviousDebt(existingQuote.previousDebt ?? 0);
-      } else {
-        setPreviousDebt(Math.max(0, found.currentDebt ?? 0));
-      }
-    } else {
-      setPreviousDebt(0);
     }
   };
 
@@ -332,6 +356,13 @@ export const QuotationBuilderPage: React.FC = () => {
       }
     }
 
+    // Customers never pay more than they owe, so an order can't go below what was paid on it
+    const paidOnOrder = existingQuote?.paidAmount ?? 0;
+    if (isEditMode && getOrderAmount(summary) < paidOnOrder) {
+      error(`Tiền hàng của đơn không được nhỏ hơn số khách đã trả cho đơn (${formatCurrency(paidOnOrder)})`);
+      return;
+    }
+
     try {
       let customerId = selectedCustomerId;
 
@@ -351,7 +382,8 @@ export const QuotationBuilderPage: React.FC = () => {
         quotationNumber: quotationNumber.trim() || undefined,
         title: title.trim(),
         quotationDate,
-        status: status as any,
+        // Edits send the status only when it was changed, so the API keeps one that payments set meanwhile
+        status: isEditMode && status === existingQuote?.status ? undefined : (status as any),
         note: note.trim() || undefined,
         customerId,
         customer: {
@@ -500,6 +532,7 @@ export const QuotationBuilderPage: React.FC = () => {
                 <Select
                   value={selectedCustomerId || 'NEW'}
                   onValueChange={(val) => handleSelectCustomer(val === 'NEW' ? '' : val)}
+                  disabled={isEditMode}
                 >
                   <SelectTrigger id="quick-customer-select">
                     <SelectValue placeholder="-- Nhập thông tin khách hàng mới --" />
@@ -513,6 +546,11 @@ export const QuotationBuilderPage: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {isEditMode && (
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Không thể đổi khách hàng của đơn đã tạo (công nợ và thanh toán gắn với khách hàng). Cần cho khách khác thì tạo đơn mới.
+                  </p>
+                )}
               </div>
 
               <Input
@@ -591,6 +629,7 @@ export const QuotationBuilderPage: React.FC = () => {
                   <Select
                     value={status === 'ACCEPTED' ? 'PAID' : status}
                     onValueChange={setStatus}
+                    disabled={isFullyPaid}
                   >
                     <SelectTrigger id="quotation-status-select">
                       <SelectValue />
@@ -601,6 +640,18 @@ export const QuotationBuilderPage: React.FC = () => {
                       <SelectItem value="PAID">Đã thanh toán (Paid)</SelectItem>
                     </SelectContent>
                   </Select>
+                  {isFullyPaid ? (
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Đã thanh toán đủ. Tăng tiền hàng thì đơn mở lại với phần còn thiếu; muốn mở lại hẳn, hãy xóa khoản thanh toán.
+                    </p>
+                  ) : (
+                    status === 'PAID' &&
+                    !wasSettled && (
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Khi lưu sẽ ghi nhận khách đã trả phần tiền hàng còn lại của đơn (không gồm Dư nợ cũ).
+                      </p>
+                    )
+                  )}
                 </div>
               </div>
 

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   useQuotations,
   useDeleteQuotation,
-  useDuplicateQuotation,
 } from '../hooks';
 import { Quotation, formatCurrency, formatDate, getOrderAmount } from '@taohoadon/shared';
 import { getFullApiUrl } from '../api/client';
@@ -139,7 +138,6 @@ export const QuotationsListPage: React.FC = () => {
   const hasDateFilter = !!(fromDate || toDate);
 
   const deleteMutation = useDeleteQuotation();
-  const duplicateMutation = useDuplicateQuotation();
 
   const quotations: Quotation[] = responseData?.data || (Array.isArray(responseData) ? responseData : []);
 
@@ -439,14 +437,9 @@ export const QuotationsListPage: React.FC = () => {
                         <DropdownMenuTrigger asChild>
                           <button
                             aria-label="Thao tác khác"
-                            disabled={duplicateMutation.isPending && duplicateMutation.variables === q.id}
-                            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95 disabled:cursor-wait"
+                            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
                           >
-                            {duplicateMutation.isPending && duplicateMutation.variables === q.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-                            ) : (
-                              <MoreVertical className="w-4 h-4" />
-                            )}
+                            <MoreVertical className="w-4 h-4" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -454,10 +447,8 @@ export const QuotationsListPage: React.FC = () => {
                             <Edit className="w-4 h-4 text-indigo-500 mr-2" />
                             <span>Chỉnh sửa</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => duplicateMutation.mutate(q.id)}
-                            disabled={duplicateMutation.isPending}
-                          >
+                          {/* Opens a prefilled new order; nothing is saved (or owed) until it is saved */}
+                          <DropdownMenuItem onClick={() => navigate(`/quotations/new?copyFrom=${q.id}`)}>
                             <Copy className="w-4 h-4 text-emerald-500 mr-2" />
                             <span>Nhân bản</span>
                           </DropdownMenuItem>
@@ -495,6 +486,7 @@ export const QuotationsListPage: React.FC = () => {
             <AlertDialogTitle>Xác nhận xóa đơn hàng</AlertDialogTitle>
             <AlertDialogDescription>
               Bạn có chắc chắn muốn xóa đơn hàng này? Toàn bộ danh sách chi tiết phụ kiện bên trong sẽ bị xóa và không thể khôi phục.
+              Đơn đã có thanh toán thì cần xóa các khoản thanh toán của đơn trước.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

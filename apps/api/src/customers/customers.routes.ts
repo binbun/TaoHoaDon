@@ -7,7 +7,7 @@ import {
   deleteCustomer,
 } from './customers.controller';
 import { getCustomerDebt, createPayment, deletePayment } from '../payments/payments.controller';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, requireRole } from '../middleware/auth';
 
 const router = Router();
 
@@ -20,6 +20,6 @@ router.patch('/:id', updateCustomer);
 router.delete('/:id', deleteCustomer);
 router.get('/:id/debt', getCustomerDebt);
 router.post('/:id/payments', createPayment);
-router.delete('/:id/payments/:batchId', deletePayment);
+router.delete('/:id/payments/:batchId', requireRole(['SUPER_ADMIN', 'ADMIN']), deletePayment);
 
 export default router;

@@ -1,6 +1,7 @@
+import { randomUUID } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma';
-import { calculateCustomerDebt, getOrderAmount, DebtOrderInput } from '@taohoadon/shared';
+import { calculateCustomerDebt, getOrderAmount, isCovered, syncOrderStatus, DebtOrderInput } from '@taohoadon/shared';
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -12,6 +13,14 @@ const ORDER_SELECT = {
   grandTotal: true,
   previousDebt: true,
 } as const;
+
+/**
+ * Locks the customer until the transaction ends, so changes to one customer's debt (payments,
+ * order amounts, opening debt) run one at a time and their "never more than owed" checks can't race.
+ */
+export async function lockCustomer(tx: Prisma.TransactionClient, customerId: string) {
+  await tx.$queryRaw`SELECT 1 FROM "Customer" WHERE "id" = ${customerId} FOR UPDATE`;
+}
 
 export async function loadCustomerLedger(db: Db, customerId: string) {
   const [customer, orders, payments] = await Promise.all([
@@ -46,16 +55,27 @@ export async function getCustomerDebtDetail(customerId: string) {
   };
 }
 
-/**
- * The customer's debt right now, used as an order's "Dư nợ cũ" (never negative on an invoice).
- * Pass excludeQuotationId to leave an order out (e.g. the order being moved to this customer).
- */
-export async function getCarriedDebt(db: Db, customerId: string, excludeQuotationId?: string) {
+/** The customer's debt right now, used as a new order's "Dư nợ cũ" (never negative on an invoice). */
+export async function getCarriedDebt(db: Db, customerId: string) {
   const { customer, orders, payments } = await loadCustomerLedger(db, customerId);
   if (!customer) return 0;
-  const kept = orders.filter((o) => o.id !== excludeQuotationId);
-  const keptPayments = payments.filter((p) => p.quotationId !== excludeQuotationId);
-  return Math.max(0, calculateCustomerDebt(customer.openingDebt, kept, keptPayments).currentDebt);
+  return Math.max(0, calculateCustomerDebt(customer.openingDebt, orders, payments).currentDebt);
+}
+
+/** Money recorded against one order. */
+export async function getOrderPaid(db: Db, quotationId: string) {
+  const sum = await db.payment.aggregate({ where: { quotationId }, _sum: { amount: true } });
+  return Math.round(sum._sum.amount || 0);
+}
+
+/** "Đã thanh toán" chosen by hand: records that the customer paid what was left on the order. */
+export async function recordOrderPaid(
+  db: Db,
+  data: { customerId: string; quotationId: string; amount: number; paidAt: Date; createdBy: string }
+) {
+  await db.payment.create({
+    data: { ...data, batchId: randomUUID(), recordedOnQuotationId: data.quotationId, note: 'Đánh dấu đã thanh toán' },
+  });
 }
 
 /** Current debt for many customers at once (customer list). */
@@ -83,20 +103,23 @@ export async function getCustomerDebtMap(customers: { id: string; openingDebt: n
 }
 
 /**
- * Keeps order status in line with its payments: fully paid → PAID,
- * a PAID order that is no longer covered after a payment is removed → SENT.
+ * Keeps order statuses in line with their payments after payments were added or removed
+ * (see syncOrderStatus). removed holds the amount just deleted from each order.
  */
-export async function syncOrderStatuses(db: Db, orders: DebtOrderInput[], quotationIds: string[]) {
-  for (const id of quotationIds) {
+export async function syncOrderStatuses(
+  db: Db,
+  orders: DebtOrderInput[],
+  quotationIds: string[],
+  removed = new Map<string, number>()
+) {
+  for (const id of new Set(quotationIds)) {
     const order = orders.find((o) => o.id === id);
     if (!order) continue;
-    const paid = await db.payment.aggregate({ where: { quotationId: id }, _sum: { amount: true } });
-    const remaining = getOrderAmount(order) - Math.round(paid._sum.amount || 0);
-
-    if (remaining <= 0 && order.status !== 'PAID') {
-      await db.quotation.update({ where: { id }, data: { status: 'PAID' } });
-    } else if (remaining > 0 && order.status === 'PAID') {
-      await db.quotation.update({ where: { id }, data: { status: 'SENT' } });
+    const amount = getOrderAmount(order);
+    const paid = await getOrderPaid(db, id);
+    const status = syncOrderStatus(order.status, amount, paid, isCovered(amount, paid + (removed.get(id) ?? 0)));
+    if (status !== order.status) {
+      await db.quotation.update({ where: { id }, data: { status } });
     }
   }
 }

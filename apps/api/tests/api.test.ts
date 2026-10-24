@@ -142,20 +142,6 @@ describe('API Integration Endpoints', () => {
     expect(reloadRes.body.data.customer.address).toBe(updatedAddress);
   });
 
-  it('POST /api/quotations/:id/duplicate should duplicate quotation with new number and draft status', async () => {
-    const res = await request(app)
-      .post(`/api/quotations/${createdQuotationId}/duplicate`)
-      .set('Authorization', `Bearer ${authToken}`);
-
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.status).toBe('DRAFT');
-    // Same bill as the source; the source's unpaid bill is carried as "Dư nợ cũ"
-    expect(Number(res.body.data.grandTotal) - Number(res.body.data.previousDebt)).toBe(9720000);
-    expect(Number(res.body.data.previousDebt)).toBe(9720000);
-    expect(res.body.data.quotationNumber).not.toBe(createdQuotationId);
-  });
-
   it('GET /api/dashboard/stats should return aggregated KPIs', async () => {
     const res = await request(app)
       .get('/api/dashboard/stats')

@@ -78,6 +78,26 @@ npm run dev:web
 
 ---
 
+## 🤖 Trợ Lý AI (Chatbox)
+
+Nút ✨ ở góc phải màn hình mở trợ lý AI (dùng Google Gemini). Trợ lý có thể:
+
+- Tìm sản phẩm, khách hàng, xem công nợ, tra cứu đơn hàng, thống kê doanh số theo ngày.
+- Soạn **bản nháp** đơn hàng từ câu lệnh, ví dụ: *"Tạo đơn cho Minh Phát: 2 tủ bếp 90, 1 giá bát 60 chiết khấu 10%"*.
+
+An toàn: AI chỉ **đọc** dữ liệu theo đúng quyền của người dùng (USER chỉ thấy đơn của mình). Giá, VAT lấy từ danh mục và tiền được tính bằng `calculateQuotationTotals`, AI không tự tính. Đơn chỉ được lưu khi người dùng bấm **"Tạo đơn nháp"** (gọi API tạo đơn bình thường, có ghi nhật ký).
+
+Cấu hình trong `apps/api/.env`:
+
+```bash
+GEMINI_API_KEY="..."          # lấy tại https://aistudio.google.com/apikey
+AI_MODEL="gemini-2.5-flash"   # tùy chọn
+```
+
+Không có khóa API thì nút trợ lý tự ẩn. Mã nguồn: `apps/api/src/assistant/`, `apps/web/src/components/AssistantChat.tsx`.
+
+---
+
 ## 🧪 Chạy Bộ Kiểm Thử (Unit Tests)
 
 Bộ test kiểm tra độ chính xác của công thức tính tiền tệ, chiết khấu, thuế VAT và các trường hợp biên:

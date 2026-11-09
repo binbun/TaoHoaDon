@@ -14,6 +14,7 @@ import { clsx } from 'clsx';
 
 import { TooltipProvider } from '../components/ui/tooltip';
 import { DeliveryTruckLoader } from '../components/DeliveryTruckLoader';
+import { AssistantChat } from '../components/AssistantChat';
 
 export const AppLayout: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -52,6 +53,9 @@ export const AppLayout: React.FC = () => {
             <Outlet />
           </main>
         </div>
+
+      {/* AI assistant chatbox (hidden when no AI key is configured) */}
+      <AssistantChat />
 
       {/* Mobile Bottom Navigation Bar (iPhone / Android) */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-2 py-1.5 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">

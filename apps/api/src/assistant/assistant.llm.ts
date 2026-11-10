@@ -46,7 +46,9 @@ export function getAiConfig() {
     reasoningEffort: effort && effort !== 'default' ? effort : undefined,
     // A local server (Ollama) needs no key; a cloud provider does
     enabled: Boolean(apiKey) || Boolean(process.env.AI_BASE_URL),
-    timeoutMs: Number(process.env.AI_TIMEOUT_MS) || 90_000,
+    // Per attempt. A busy model sometimes hangs instead of answering 503, so give up early
+    // and let the retry / fallback logic try again.
+    timeoutMs: Number(process.env.AI_TIMEOUT_MS) || 30_000,
     // Tried when the main model is overloaded. Set AI_FALLBACK_MODEL="none" to turn off.
     fallbackModel:
       process.env.AI_FALLBACK_MODEL === 'none'
@@ -62,7 +64,8 @@ export class LlmError extends Error {
 }
 
 /** Errors worth retrying: overloaded (503), server error (500/502/504), rate limit (429). */
-const RETRYABLE = new Set([429, 500, 502, 503, 504]);
+const TIMEOUT = 408; // our own code for "no answer within timeoutMs"
+const RETRYABLE = new Set([TIMEOUT, 429, 500, 502, 503, 504]);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -83,6 +86,8 @@ export async function chatCompletion(
 
   let lastStatus = 0;
   for (const attempt of attempts) {
+    // A model that just hung is overloaded: skip its remaining retries and go to the fallback
+    if (lastStatus === TIMEOUT && attempt.model === config.model) continue;
     if (attempt.waitMs) await sleep(attempt.waitMs);
     const { status, text } = await requestOnce(config, attempt.model, messages, tools, fetchImpl);
 
@@ -94,7 +99,9 @@ export async function chatCompletion(
   }
 
   throw new LlmError(
-    lastStatus === 503 || lastStatus === 500 || lastStatus === 502 || lastStatus === 504
+    lastStatus === TIMEOUT
+      ? 'Trợ lý AI phản hồi quá lâu (Gemini đang quá tải), vui lòng thử lại sau ít phút.'
+      : lastStatus === 503 || lastStatus === 500 || lastStatus === 502 || lastStatus === 504
       ? 'Dịch vụ AI (Gemini) đang quá tải, vui lòng thử lại sau ít phút.'
       : lastStatus === 429
       ? 'Đã vượt giới hạn sử dụng AI, vui lòng thử lại sau ít phút.'
@@ -135,13 +142,12 @@ async function requestOnce(
     console.log(`[Assistant] ${model} answered in ${Date.now() - startedAt}ms (HTTP ${response.status})`);
     return { status: response.status, text };
   } catch (err: any) {
-    console.error(
-      `[Assistant] AI request to ${model} failed after ${Date.now() - startedAt}ms:`,
-      err?.name === 'AbortError' ? `timeout (${config.timeoutMs}ms)` : err?.cause ?? err
-    );
-    throw new LlmError(
-      err?.name === 'AbortError' ? 'Trợ lý AI phản hồi quá lâu, vui lòng thử lại.' : 'Không kết nối được tới dịch vụ AI.'
-    );
+    if (err?.name === 'AbortError') {
+      console.error(`[Assistant] ${model} gave no answer within ${config.timeoutMs}ms (timeout)`);
+      return { status: TIMEOUT, text: 'timeout' };
+    }
+    console.error(`[Assistant] AI request to ${model} failed after ${Date.now() - startedAt}ms:`, err?.cause ?? err);
+    throw new LlmError('Không kết nối được tới dịch vụ AI.');
   } finally {
     clearTimeout(timer);
   }

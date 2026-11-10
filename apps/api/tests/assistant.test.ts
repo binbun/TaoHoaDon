@@ -280,11 +280,27 @@ describe('Assistant API routes', () => {
     delete process.env.AI_REASONING_EFFORT;
   });
 
-  it('reports a timeout clearly', async () => {
+  it('moves to the fallback model when the main model hangs, and reports a timeout clearly', async () => {
     process.env.AI_TIMEOUT_MS = '50';
-    vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => new Promise((_resolve, reject) => {
-      init.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })));
-    })));
+    process.env.AI_RETRY_DELAYS_MS = '1,1';
+    const models: string[] = [];
+    const hang = (init: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })));
+      });
+    vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => {
+      const model = JSON.parse(String(init.body)).model;
+      models.push(model);
+      return model === 'gemini-3.8-flash'
+        ? hang(init)
+        : Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'Đã trả lời' } }] }), { status: 200 }));
+    }));
+    const ok = await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.reply).toBe('Đã trả lời');
+    expect(models).toEqual(['gemini-3.8-flash', 'gemini-3.5-flash-lite']); // no waiting on the hung model again
+
+    vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => hang(init)));
     const res = await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
     delete process.env.AI_TIMEOUT_MS;
     expect(res.status).toBe(502);

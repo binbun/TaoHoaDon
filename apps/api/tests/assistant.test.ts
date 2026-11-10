@@ -129,6 +129,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   delete process.env.GEMINI_API_KEY;
+  delete process.env.AI_RETRY_DELAYS_MS;
   vi.unstubAllGlobals();
 });
 
@@ -290,7 +291,46 @@ describe('Assistant API routes', () => {
     expect(res.body.message).toContain('quá lâu');
   });
 
+  it('retries when Gemini is overloaded, then uses the fallback model', async () => {
+    process.env.AI_RETRY_DELAYS_MS = '1,1';
+    const overloaded = '[{"error":{"code":503,"message":"This model is currently experiencing high demand.","status":"UNAVAILABLE"}}]';
+    const models: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body));
+      models.push(body.model);
+      if (body.model === 'gemini-3.8-flash') return new Response(overloaded, { status: 503 });
+      return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'Xin chào' } }] }), { status: 200 });
+    }));
+    const res = await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(res.status).toBe(200);
+    expect(res.body.data.reply).toBe('Xin chào');
+    expect(models).toEqual(['gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.5-flash-lite']);
+
+    // Everything overloaded -> clear message; no fallback when turned off
+    process.env.AI_FALLBACK_MODEL = 'none';
+    models.length = 0;
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
+      models.push(JSON.parse(String(init.body)).model);
+      return new Response(overloaded, { status: 503 });
+    }));
+    const busy = await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(busy.status).toBe(502);
+    expect(busy.body.message).toContain('quá tải');
+    expect(models).toHaveLength(3);
+    delete process.env.AI_FALLBACK_MODEL;
+    delete process.env.AI_RETRY_DELAYS_MS;
+  });
+
+  it('does not retry errors that retrying cannot fix', async () => {
+    const calls = vi.fn(async () => new Response('{"error":"bad key"}', { status: 401 }));
+    vi.stubGlobal('fetch', calls);
+    const res = await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(res.body.message).toContain('Khóa API');
+    expect(calls).toHaveBeenCalledTimes(1);
+  });
+
   it('turns provider errors into a friendly 502', async () => {
+    process.env.AI_RETRY_DELAYS_MS = '1,1';
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"quota"}', { status: 429 })));
     const res = await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
     expect(res.status).toBe(502);

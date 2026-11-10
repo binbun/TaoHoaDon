@@ -47,6 +47,13 @@ export function getAiConfig() {
     // A local server (Ollama) needs no key; a cloud provider does
     enabled: Boolean(apiKey) || Boolean(process.env.AI_BASE_URL),
     timeoutMs: Number(process.env.AI_TIMEOUT_MS) || 90_000,
+    // Tried when the main model is overloaded. Set AI_FALLBACK_MODEL="none" to turn off.
+    fallbackModel:
+      process.env.AI_FALLBACK_MODEL === 'none'
+        ? undefined
+        : process.env.AI_FALLBACK_MODEL || (isGemini ? 'gemini-3.5-flash-lite' : undefined),
+    // First try, then retries after these waits (ms)
+    retryDelaysMs: [0, ...(process.env.AI_RETRY_DELAYS_MS ?? '1500,4000').split(',').map(Number).filter((n) => n >= 0)],
   };
 }
 
@@ -54,35 +61,82 @@ export class LlmError extends Error {
   statusCode = 502;
 }
 
+/** Errors worth retrying: overloaded (503), server error (500/502/504), rate limit (429). */
+const RETRYABLE = new Set([429, 500, 502, 503, 504]);
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Sends the conversation to the model. Temporary failures are retried with a short wait
+ * (Gemini often answers 503 "high demand" for a few seconds), then sent once to
+ * AI_FALLBACK_MODEL (default for Gemini: gemini-3.5-flash-lite) before giving up.
+ */
 export async function chatCompletion(
   messages: LlmMessage[],
   tools: LlmToolSpec[] | undefined,
   fetchImpl: FetchLike = fetch
 ): Promise<LlmMessage> {
   const config = getAiConfig();
+  const attempts: { model: string; waitMs: number }[] = [
+    ...config.retryDelaysMs.map((waitMs, i) => ({ model: config.model, waitMs: i === 0 ? 0 : waitMs })),
+    ...(config.fallbackModel && config.fallbackModel !== config.model ? [{ model: config.fallbackModel, waitMs: 0 }] : []),
+  ];
+
+  let lastStatus = 0;
+  for (const attempt of attempts) {
+    if (attempt.waitMs) await sleep(attempt.waitMs);
+    const { status, text } = await requestOnce(config, attempt.model, messages, tools, fetchImpl);
+
+    if (status >= 200 && status < 300) return parseMessage(text);
+
+    lastStatus = status;
+    console.error(`[Assistant] AI provider error ${status} from ${attempt.model}:`, text.slice(0, 500));
+    if (!RETRYABLE.has(status)) break; // bad key, bad request, unknown model: retrying won't help
+  }
+
+  throw new LlmError(
+    lastStatus === 503 || lastStatus === 500 || lastStatus === 502 || lastStatus === 504
+      ? 'Dịch vụ AI (Gemini) đang quá tải, vui lòng thử lại sau ít phút.'
+      : lastStatus === 429
+      ? 'Đã vượt giới hạn sử dụng AI, vui lòng thử lại sau ít phút.'
+      : lastStatus === 401 || lastStatus === 403
+      ? 'Khóa API của dịch vụ AI không hợp lệ.'
+      : lastStatus === 404
+      ? `Không tìm thấy model AI "${config.model}". Hãy kiểm tra biến AI_MODEL.`
+      : 'Dịch vụ AI đang gặp lỗi, vui lòng thử lại.'
+  );
+}
+
+async function requestOnce(
+  config: ReturnType<typeof getAiConfig>,
+  model: string,
+  messages: LlmMessage[],
+  tools: LlmToolSpec[] | undefined,
+  fetchImpl: FetchLike
+): Promise<{ status: number; text: string }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
   const startedAt = Date.now();
-
-  let response: Response;
   try {
-    response = await fetchImpl(`${config.baseUrl}/chat/completions`, {
+    const response = await fetchImpl(`${config.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
       },
       body: JSON.stringify({
-        model: config.model,
+        model,
         messages,
         ...(tools?.length ? { tools } : {}),
         ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}),
       }),
       signal: controller.signal,
     });
+    const text = await response.text();
+    console.log(`[Assistant] ${model} answered in ${Date.now() - startedAt}ms (HTTP ${response.status})`);
+    return { status: response.status, text };
   } catch (err: any) {
     console.error(
-      `[Assistant] AI request to ${config.model} failed after ${Date.now() - startedAt}ms:`,
+      `[Assistant] AI request to ${model} failed after ${Date.now() - startedAt}ms:`,
       err?.name === 'AbortError' ? `timeout (${config.timeoutMs}ms)` : err?.cause ?? err
     );
     throw new LlmError(
@@ -91,20 +145,9 @@ export async function chatCompletion(
   } finally {
     clearTimeout(timer);
   }
+}
 
-  const text = await response.text();
-  console.log(`[Assistant] ${config.model} answered in ${Date.now() - startedAt}ms (HTTP ${response.status})`);
-  if (!response.ok) {
-    console.error(`[Assistant] AI provider error ${response.status}:`, text.slice(0, 500));
-    const message =
-      response.status === 429
-        ? 'Đã vượt giới hạn sử dụng AI, vui lòng thử lại sau ít phút.'
-        : response.status === 401 || response.status === 403
-        ? 'Khóa API của dịch vụ AI không hợp lệ.'
-        : 'Dịch vụ AI đang gặp lỗi, vui lòng thử lại.';
-    throw new LlmError(message);
-  }
-
+function parseMessage(text: string): LlmMessage {
   let data: any;
   try {
     data = JSON.parse(text);

@@ -3,7 +3,7 @@
  *
  * Default: Google Gemini through its OpenAI-compatible endpoint.
  * Switch provider with env vars only (no code change):
- *   Gemini : AI_BASE_URL unset, GEMINI_API_KEY=...,  AI_MODEL=gemini-2.5-flash
+ *   Gemini : AI_BASE_URL unset, GEMINI_API_KEY=...,  AI_MODEL=gemini-3.8-flash
  *   OpenAI : AI_BASE_URL=https://api.openai.com/v1, AI_API_KEY=..., AI_MODEL=gpt-4o-mini
  *   Ollama : AI_BASE_URL=http://localhost:11434/v1, AI_MODEL=llama3.1 (no key)
  */
@@ -35,13 +35,18 @@ const GEMINI_OPENAI_URL = 'https://generativelanguage.googleapis.com/v1beta/open
 export function getAiConfig() {
   const apiKey = process.env.AI_API_KEY || process.env.GEMINI_API_KEY || '';
   const baseUrl = (process.env.AI_BASE_URL || GEMINI_OPENAI_URL).replace(/\/+$/, '');
+  const isGemini = baseUrl.includes('generativelanguage.googleapis.com');
+  // How long the model "thinks" before answering. Gemini 3 defaults to high, which makes every
+  // tool step slow; low is plenty for lookups and drafts. "default" = don't send the parameter.
+  const effort = (process.env.AI_REASONING_EFFORT ?? (isGemini ? 'low' : 'default')).trim();
   return {
     apiKey,
     baseUrl,
-    model: process.env.AI_MODEL || 'gemini-2.5-flash',
+    model: process.env.AI_MODEL || 'gemini-3.8-flash',
+    reasoningEffort: effort && effort !== 'default' ? effort : undefined,
     // A local server (Ollama) needs no key; a cloud provider does
     enabled: Boolean(apiKey) || Boolean(process.env.AI_BASE_URL),
-    timeoutMs: Number(process.env.AI_TIMEOUT_MS) || 60_000,
+    timeoutMs: Number(process.env.AI_TIMEOUT_MS) || 90_000,
   };
 }
 
@@ -57,6 +62,7 @@ export async function chatCompletion(
   const config = getAiConfig();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+  const startedAt = Date.now();
 
   let response: Response;
   try {
@@ -66,10 +72,19 @@ export async function chatCompletion(
         'Content-Type': 'application/json',
         ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
       },
-      body: JSON.stringify({ model: config.model, messages, ...(tools?.length ? { tools } : {}) }),
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        ...(tools?.length ? { tools } : {}),
+        ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}),
+      }),
       signal: controller.signal,
     });
   } catch (err: any) {
+    console.error(
+      `[Assistant] AI request to ${config.model} failed after ${Date.now() - startedAt}ms:`,
+      err?.name === 'AbortError' ? `timeout (${config.timeoutMs}ms)` : err?.cause ?? err
+    );
     throw new LlmError(
       err?.name === 'AbortError' ? 'Trợ lý AI phản hồi quá lâu, vui lòng thử lại.' : 'Không kết nối được tới dịch vụ AI.'
     );
@@ -78,6 +93,7 @@ export async function chatCompletion(
   }
 
   const text = await response.text();
+  console.log(`[Assistant] ${config.model} answered in ${Date.now() - startedAt}ms (HTTP ${response.status})`);
   if (!response.ok) {
     console.error(`[Assistant] AI provider error ${response.status}:`, text.slice(0, 500));
     const message =

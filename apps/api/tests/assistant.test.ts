@@ -259,10 +259,35 @@ describe('Assistant API routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.reply).toBe('Bản nháp đã sẵn sàng.');
     expect(res.body.data.drafts[0].preview.summary.grandTotal).toBe(3_600_000);
-    expect(requests[0].model).toBe('gemini-2.5-flash');
+    expect(requests[0].model).toBe('gemini-3.8-flash');
+    expect(requests[0].reasoning_effort).toBe('low'); // Gemini 3 thinks at "high" by default, which is slow
     expect(requests[0].messages[0].content).toContain('Admin');
     expect(fetchImpl.mock.calls[0][0]).toBe('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
     expect((fetchImpl.mock.calls[0][1] as any).headers.Authorization).toBe('Bearer test-key');
+  });
+
+  it('sends no reasoning_effort to other providers unless asked', async () => {
+    process.env.AI_BASE_URL = 'https://api.openai.com/v1';
+    const { fetchImpl, requests } = fakeGemini([{ text: 'ok' }]);
+    vi.stubGlobal('fetch', fetchImpl);
+    await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(requests[0].reasoning_effort).toBeUndefined();
+    process.env.AI_REASONING_EFFORT = 'medium';
+    await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(requests[1].reasoning_effort).toBe('medium');
+    delete process.env.AI_BASE_URL;
+    delete process.env.AI_REASONING_EFFORT;
+  });
+
+  it('reports a timeout clearly', async () => {
+    process.env.AI_TIMEOUT_MS = '50';
+    vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => new Promise((_resolve, reject) => {
+      init.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })));
+    })));
+    const res = await request(app).post('/api/assistant/chat').set(auth).send({ messages: [{ role: 'user', content: 'hi' }] });
+    delete process.env.AI_TIMEOUT_MS;
+    expect(res.status).toBe(502);
+    expect(res.body.message).toContain('quá lâu');
   });
 
   it('turns provider errors into a friendly 502', async () => {

@@ -91,7 +91,7 @@ Cấu hình trong `apps/api/.env`:
 
 ```bash
 GEMINI_API_KEY="..."          # lấy tại https://aistudio.google.com/apikey
-AI_MODEL="gemini-2.5-flash"   # tùy chọn
+AI_MODEL="gemini-3.8-flash"   # tùy chọn
 ```
 
 Không có khóa API thì nút trợ lý tự ẩn. Mã nguồn: `apps/api/src/assistant/`, `apps/web/src/components/AssistantChat.tsx`.
